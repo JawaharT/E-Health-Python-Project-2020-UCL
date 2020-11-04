@@ -1,2 +1,5 @@
 # Environment
-venv/.DS_Store
+venv/
+
+# MacOS System file
+.DS_Store
