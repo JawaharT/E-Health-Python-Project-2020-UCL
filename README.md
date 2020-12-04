@@ -4,6 +4,8 @@
     <li>use tabulate package to print result from DB</li>
     <li>Keep your venv folder out of the reop it takes up a lot of space. If you have any package use pip freeze and export to the reqirement.txt</li>
 </ul>
+<p>ER Diagram:</p>
+<p>https://dbdiagram.io/d/5fca43c99a6c525a03b9cfdb</p>
 
 <p>Feature List:</p>
 <p>General</p>
@@ -74,3 +76,4 @@
     <li>cancel appiontment</li>
     <li>allow patient to place a recommendation and review of appointments</li>
 </ul>
+
