@@ -1,4 +1,10 @@
 # E-Health-Python-Project-2020-UCL
+<p>Note to Programming:</p>
+<ul>
+    <li>use tabulate package to print result from DB</li>
+    <li>Keep your venv folder out of the reop it takes up a lot of space. If you have any package use pip freeze and export to the reqirement.txt</li>
+</ul>
+
 <p>Feature List:</p>
 <p>General</p>
 <ul>
