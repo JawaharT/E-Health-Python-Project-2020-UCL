@@ -1,72 +1,55 @@
-CREATE TABLE "UserGroup" (
-  "type" varchar(10) PRIMARY KEY
+-- SQLite
+PRAGMA foreign_keys = ON;
+DROP TABLE IF EXISTS UserGroup;
+CREATE TABLE UserGroup (
+  UserType varchar(10) PRIMARY KEY
 );
 
-CREATE TABLE "Users" (
-  "ID" varchar(10) PRIMARY KEY,
-  "username" varchar(50) UNIQUE,
-  "password" varchar(40),
-  "firstName" varchar(50),
-  "lastName" varchar(50),
-  "phoneNo" varchar(20),
-  "address" varchar(100),
-  "postCode" varchar(9),
-  "type" varchar(10)
+DROP TABLE IF EXISTS Users;
+CREATE TABLE Users (
+  ID varchar(10) PRIMARY KEY CHECK ((ID LIKE 'G%') OR (ID LIKE 'A%') OR (ID LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]')),
+  username varchar(50) UNIQUE,
+  passCode varchar(40),
+  firstName varchar(50),
+  lastName varchar(50),
+  phoneNo varchar(20) UNIQUE,
+  HomeAddress varchar(100),
+  postCode varchar(9),
+  UserType varchar(10),
+  FOREIGN KEY (UserType) REFERENCES UserGroup (UserType) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE "availability" (
-  "StaffID" integer(10),
-  "Timeslot" datetime,
-  PRIMARY KEY ("StaffID", "Timeslot")
+DROP TABLE IF EXISTS available_time;
+CREATE TABLE available_time (
+  StaffID integer(10) CHECK(StaffID LIKE 'G%'),
+  Timeslot datetime,
+  PRIMARY KEY (StaffID, Timeslot),
+  FOREIGN KEY (StaffID) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE "VisitBooking" (
-  "NHSNo" integer(10),
-  "StaffID" integer(10),
-  "Timeslot" datetime,
-  "Rating" int,
-  "Confirmed" char(1),
-  "Attended" char(1),
-  "Diagnosis" text,
-  "Notes" text,
-  PRIMARY KEY ("NHSNo", "StaffID", "Timeslot")
+DROP TABLE IF EXISTS VisitBooking;
+CREATE TABLE VisitBooking (
+  NHSNo integer(10) CHECK(NHSNo LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
+  StaffID integer(10),
+  Timeslot datetime,
+  Rating int CHECK(Rating >= 0 OR Rating <= 10),
+  Confirmed char(1) CHECK(Confirmed IN ('Y', 'N')),
+  Attended char(1) CHECK(Attended IN ('Y', 'N')),
+  Diagnosis text,
+  Notes text,
+  PRIMARY KEY (NHSNo, StaffID, Timeslot),
+  FOREIGN KEY (StaffID, Timeslot) REFERENCES available_time (StaffID, Timeslot) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (NHSNo) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE "perscription" (
-  "NHSNo" integer(10),
-  "StaffID" integer(10),
-  "Timeslot" datetime,
-  "drugName" varchar(70),
-  "quantity" integer,
-  "drugNotes" text,
-  PRIMARY KEY ("NHSNo", "StaffID", "Timeslot", "drugName")
+DROP TABLE IF EXISTS perscription;
+CREATE TABLE perscription (
+  NHSNo integer(10),
+  StaffID integer(10),
+  Timeslot datetime,
+  drugName varchar(70),
+  quantity integer,
+  drugNotes text,
+  PRIMARY KEY (NHSNo, StaffID, Timeslot, drugName),
+  FOREIGN KEY (NHSNo, StaffID, Timeslot) REFERENCES VisitBooking (NHSNo, StaffID, Timeslot) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
-ALTER TABLE "Users" ADD FOREIGN KEY ("type") REFERENCES "UserGroup" ("type") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "availability" ADD FOREIGN KEY ("StaffID") REFERENCES "Users" ("ID") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "VisitBooking" ADD FOREIGN KEY ("StaffID", "Timeslot") REFERENCES "availability" ("StaffID", "Timeslot") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "VisitBooking" ADD FOREIGN KEY ("NHSNo") REFERENCES "Users" ("ID") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "perscription" ADD FOREIGN KEY ("NHSNo", "StaffID", "Timeslot") REFERENCES "VisitBooking" ("NHSNo", "StaffID", "Timeslot") ON DELETE CASCADE ON UPDATE CASCADE;
-
-
-COMMENT ON COLUMN "UserGroup"."type" IS 'admin, GP or patient';
-
-COMMENT ON COLUMN "Users"."ID" IS 'NHSNo or StarffNo starting with G or A';
-
-COMMENT ON COLUMN "Users"."password" IS 'sha';
-
-COMMENT ON COLUMN "availability"."StaffID" IS 'Check if starting with G as it is for GP';
-
-COMMENT ON COLUMN "VisitBooking"."NHSNo" IS 'Check if all number as it is for patient';
-
-COMMENT ON COLUMN "VisitBooking"."StaffID" IS 'Check if starting with G as it is for GP';
-
-COMMENT ON COLUMN "VisitBooking"."Rating" IS 'Constraint: 0 - 10';
-
-COMMENT ON COLUMN "VisitBooking"."Confirmed" IS 'Y or N';
-
-COMMENT ON COLUMN "VisitBooking"."Attended" IS 'Y or N';
