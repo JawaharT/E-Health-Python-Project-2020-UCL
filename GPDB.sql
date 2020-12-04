@@ -7,7 +7,7 @@ CREATE TABLE UserGroup (
 
 DROP TABLE IF EXISTS Users;
 CREATE TABLE Users (
-  ID varchar(10) PRIMARY KEY CHECK ((ID LIKE 'G%') OR (ID LIKE 'A%') OR (ID LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]')),
+  ID varchar(10) PRIMARY KEY CHECK ((ID LIKE 'G%') OR (ID LIKE 'A%') OR (ID BETWEEN 1000000000 AND 9999999999)),
   username varchar(50) UNIQUE,
   passCode varchar(40),
   firstName varchar(50),
@@ -29,7 +29,7 @@ CREATE TABLE available_time (
 
 DROP TABLE IF EXISTS VisitBooking;
 CREATE TABLE VisitBooking (
-  NHSNo integer(10) CHECK(NHSNo LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
+  NHSNo integer(10) CHECK(NHSNo BETWEEN 1000000000 AND 9999999999),
   StaffID integer(10),
   Timeslot datetime,
   Rating int CHECK(Rating >= 0 OR Rating <= 10),
