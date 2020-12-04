@@ -7,14 +7,12 @@ def checkPatientUsername(dbconn):
     username = input("Enter Username: ")
 
     cursor = dbconn.cursor()
-    cursor.execute("select username from patients")
-    records = cursor.fetchall()
+    cursor.execute("select exists (select 1 from patients where username = ?)", (username,))
 
-    for record in records[0]:
-        if username in record:
-            print("Found username.")
-        else:
-            print("Not found/does not exist.")
+    if cursor.fetchone():
+        print("Found username.")
+    else:
+        print("Not found/does not exist.")
 
 
 if __name__ == '__main__':
