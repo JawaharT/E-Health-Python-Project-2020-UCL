@@ -1,15 +1,5 @@
 """Main Program here."""
-import sqlite3
-
-
-def getConnection():
-    """"""
-    dbconn = None
-    try:
-        dbconn = sqlite3.connect("database.db")
-    except sqlite3.Error as e:
-        print(e)
-    return dbconn
+from CreateDatabase import create_connection
 
 
 def checkPatientUsername(dbconn):
@@ -28,5 +18,5 @@ def checkPatientUsername(dbconn):
 
 
 if __name__ == '__main__':
-    conn = getConnection()
+    conn = create_connection("database.db")
     checkPatientUsername(conn)
