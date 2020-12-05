@@ -22,7 +22,7 @@
 #     """Create a table from the create_table_sql statement
 #     :param conn: Connection object
 #     :param create_table_sql: a CREATE TABLE statement"""
-#     try:
+#     t
 #         c = conn.cursor()
 #         c.execute(create_table_sql)
 #     except sqlite3.Error as e:

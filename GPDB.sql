@@ -26,16 +26,16 @@ CREATE TABLE Users (
 
 DROP TABLE IF EXISTS available_time;
 CREATE TABLE available_time (
-  StaffID integer(10) CHECK(StaffID LIKE 'G%'),
+  StaffID varchar(10) CHECK(StaffID LIKE 'G%'),
   Timeslot datetime,
   PRIMARY KEY (StaffID, Timeslot),
   FOREIGN KEY (StaffID) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-DROP TABLE IF EXISTS VisitBooking;
-CREATE TABLE VisitBooking (
-  NHSNo integer(10) CHECK(NHSNo BETWEEN 1000000000 AND 9999999999),
-  StaffID integer(10),
+DROP TABLE IF EXISTS Visit;
+CREATE TABLE Visit(
+  NHSNo varchar(10) CHECK(NHSNo BETWEEN 1000000000 AND 9999999999),
+  StaffID varchar(10),
   Timeslot datetime,
   Rating int CHECK(Rating >= 0 OR Rating <= 10),
   Confirmed char(1) CHECK(Confirmed IN ('T', 'F')),
@@ -49,8 +49,8 @@ CREATE TABLE VisitBooking (
 
 DROP TABLE IF EXISTS perscription;
 CREATE TABLE perscription (
-  NHSNo integer(10),
-  StaffID integer(10),
+  NHSNo varchar(10),
+  StaffID varchar(10),
   Timeslot datetime,
   drugName BLOB,
   quantity BLOB,
