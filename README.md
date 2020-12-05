@@ -53,7 +53,9 @@
         </ul>
     </li>
     <li>add perscription<ul>
-            <li style="margin-left: 20px;">calculation of perscription cost</li>
+            <li style="margin-left: 20px;">calculation of perscription cost nhsfee*number of row in perscription</li>
+            <li style="margin-left: 20px;">Allow the doctor to write down instruction using abbreviations, See the Latin abbreviations part in</li>
+                <li style="margin-left: 40px;">https://bnf.nice.org.uk/about/abbreviations-and-symbols.html</li>
         </ul>
     </li>
     <li>book followup appointments</li>
@@ -74,6 +76,7 @@
         </ul>
     </li>
     <li>cancel appiontment</li>
-    <li>allow patient to place a recommendation and review of appointments</li>
+    <li>allow patient to place a rate appointments</li>
+    <li>allow patient review appiontments and perscription, translating the Latin abbreviations to readable form if needed</li>
 </ul>
 
