@@ -10,10 +10,10 @@
 <p>Feature List:</p>
 <p>General</p>
 <ul>
-    <li>Create SQL DB</li>
+    <li>Create SQL DB (Done)</li>
     <li>login system</li>
-    <li>save password as encrypted</li>
-    <li>encryption of all data stored</li>
+    <li>save password as encrypted (wrote the hash function)</li>
+    <li>encryption of all data stored(wrote the encrypt/decrypt function)</li>
 </ul>
 <p>admin</p>
 <ul>
