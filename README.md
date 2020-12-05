@@ -13,7 +13,9 @@
     <li>Create SQL DB (Done)</li>
     <li>login system</li>
     <li>save password as encrypted (wrote the hash function)</li>
-    <li>encryption of all data stored(wrote the encrypt/decrypt function)</li>
+    <li>encryption of all data stored(wrote the encrypt/decrypt function)<ul>
+        <li style="margin-left: 20px;">beware that the use of LIKE, ORDER BY etc. will not work for encrypted attributes, I avioded encrypting those</li>
+    </ul>
 </ul>
 <p>admin</p>
 <ul>
@@ -54,8 +56,9 @@
     </li>
     <li>add perscription<ul>
             <li style="margin-left: 20px;">calculation of perscription cost nhsfee*number of row in perscription</li>
-            <li style="margin-left: 20px;">Allow the doctor to write down instruction using abbreviations, See the Latin abbreviations part in</li>
+            <li style="margin-left: 20px;">Allow the doctor to write down instruction using abbreviations, See the Latin abbreviations part in<ul>
                 <li style="margin-left: 40px;">https://bnf.nice.org.uk/about/abbreviations-and-symbols.html</li>
+             </ul>
         </ul>
     </li>
     <li>book followup appointments</li>
