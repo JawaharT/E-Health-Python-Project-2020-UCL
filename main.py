@@ -1,13 +1,24 @@
 """Main Program here."""
-from CreateDatabase import create_connection
-import sqlite3
+import databaseHelp
 
 
-def checkUsername(dbconn, usertype):
+def checkUsername():
     """Check if username is valid."""
     while True:
         username = input("Enter Username: ")
+        queryHelper = databaseHelp.SQLQuerry("SELECT 1 FROM Users WHERE USERNAME = {0}".format(username))
 
+        try:
+            if queryHelper.executeFetchAll() is not None:
+                print("Found username.")
+                break
+            else:
+                print("Not found/does not exist. Please try again.")
+                continue
+        except Exception as e:
+            print(e)
+            break
+        """
         try:
             cursor = dbconn.cursor()
             cursor.execute("SELECT 1 FROM {0} WHERE USERNAME = ?".format(usertype), (username,))
@@ -21,11 +32,15 @@ def checkUsername(dbconn, usertype):
         except sqlite3.Error as e:
             print(e)
             break
-
+        """
 
 if __name__ == '__main__':
     # Exception handling if database not present/cannot connect
-    conn = create_connection("GPDB.db")
-    checkUsername(conn, "Users")
-    if conn:
-        conn.close()
+    #conn = create_connection("GPDB.db")
+    #checkUsername(conn, "Users")
+    #if conn:
+    #    conn.close()
+
+    #newDatabase = databaseHelp.database()
+    #conn = newDatabase.create_connection()
+    checkUsername()
