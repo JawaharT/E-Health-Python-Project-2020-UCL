@@ -1,8 +1,9 @@
 """Main Program here."""
 import databaseHelp
+from login import currentUser
+from parserHelp import parser
 
-
-def checkUsername():
+def checkUsername(): # i puttd it in a class
     """Check if username is valid."""
     while True:
         username = input("Enter Username: ")
@@ -43,4 +44,12 @@ if __name__ == '__main__':
 
     #newDatabase = databaseHelp.database()
     #conn = newDatabase.create_connection()
-    checkUsername()
+    #checkUsername()
+    print("Wellcome to Group 6 GP System")
+    loginOrRegster = parser.RegisterOrLoginParser()
+    user = None
+    if loginOrRegster == 'L':
+        user = currentUser()
+        
+    elif loginOrRegster == 'R':
+        print("register")

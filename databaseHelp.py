@@ -184,9 +184,10 @@ class SQLQuerry(database):
         """
         database.__init__(self, db_file)
         self.querry = querry
-    def executeFetchAll(self, parameters={}):
+    def executeFetchAll(self, decrypter=None,parameters={}, ):
         """
         :param parameters: dictionary of parameters for the querry
+        :param decrypter: if an encryption object is putted in it will decrypt the result
         :return: a list of tuples for the result array 
         execute the querry using the parameters and return the array
         references: https://blog.finxter.com/sqlite-python-placeholder-four-methods-for-sql-statements
@@ -196,6 +197,18 @@ class SQLQuerry(database):
         cur.execute(self.querry, parameters)
         result = cur.fetchall()
         database.close_connection(conn)
+        if isinstance(decrypter, encryptionHelper):
+            decryptedResult = list()
+            for row in result:
+                currentrow = list()
+                for cell in row:
+                    if isinstance(cell, bytes):
+                        currentrow.append(decrypter.decryptMessage(cell))
+                    else:
+                        currentrow.append(cell)
+                decryptedResult.append(currentrow)
+            return decryptedResult
+        
         return result
     def executeCommit(self, parameters={}):
         """
@@ -226,18 +239,18 @@ if __name__ == '__main__':
     # print(result)
 
     # # testng for storing encrypted value and decrypting it
-    # Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    # EH = encryptionHelper()
-    # result = Q.executeCommit(("G01", 
-    #                         "testGP", 
-    #                         passwordHelper.hashPW("testGPPW"), 
-    #                         EH.encryptToBits("testGPFitstName"),
-    #                         EH.encryptToBits("testGPLastName"),
-    #                         EH.encryptToBits("0123450233"),
-    #                         EH.encryptToBits("testGPHome Address, test Road"),
-    #                         EH.encryptToBits("A1 7RT"),
-    #                         "GP",
-    #                         "F"))
+    Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    EH = encryptionHelper()
+    result = Q.executeCommit(("G01", 
+                            "testGP", 
+                            passwordHelper.hashPW("testGPPW"), 
+                            EH.encryptToBits("testGPFitstName"),
+                            EH.encryptToBits("testGPLastName"),
+                            EH.encryptToBits("0123450233"),
+                            EH.encryptToBits("testGPHome Address, test Road"),
+                            EH.encryptToBits("A1 7RT"),
+                            "GP",
+                            "F"))
     # Q2 = SQLQuerry("SELECT * FROM Users")
     # result = Q2.executeFetchAll()
     # print(result)
