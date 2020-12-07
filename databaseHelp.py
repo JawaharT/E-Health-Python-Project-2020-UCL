@@ -239,11 +239,12 @@ if __name__ == '__main__':
     # print(result)
 
     # # testng for storing encrypted value and decrypting it
-    Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
     EH = encryptionHelper()
     result = Q.executeCommit(("G01", 
                             "testGP", 
                             passwordHelper.hashPW("testGPPW"), 
+                            EH.encryptToBits("1991-01-04"),
                             EH.encryptToBits("testGPFitstName"),
                             EH.encryptToBits("testGPLastName"),
                             EH.encryptToBits("0123450233"),
@@ -254,6 +255,7 @@ if __name__ == '__main__':
     result = Q.executeCommit(("1929282829", 
                             "testPatient", 
                             passwordHelper.hashPW("tPPW"), 
+                            EH.encryptToBits("1982-02-03"),
                             EH.encryptToBits("testPatientFitstName"),
                             EH.encryptToBits("testPatientLastName"),
                             EH.encryptToBits("2929192821"),
@@ -264,6 +266,7 @@ if __name__ == '__main__':
     result = Q.executeCommit(("2929282822", 
                             "testPatient2", 
                             passwordHelper.hashPW("tPPW2"), 
+                            EH.encryptToBits("1984-02-03"),
                             EH.encryptToBits("testPatient2FitstName"),
                             EH.encryptToBits("testPatient2LastName"),
                             EH.encryptToBits("1929292823"),

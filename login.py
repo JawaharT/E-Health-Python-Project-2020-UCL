@@ -81,7 +81,7 @@ class currentUser():
             time.sleep(3)
             sys.exit(1)
         #retrieving the full information from DATAbase instead of just the password for authentication
-        fullUQuerry = SQLQuerry("SELECT ID, username, passCode, firstName, lastName, phoneNo, HomeAddress, postCode, UserType, deactivated  FROM Users WHERE username == ?")
+        fullUQuerry = SQLQuerry("SELECT ID, username, passCode, firstName, lastName, phoneNo, HomeAddress, postCode, UserType, deactivated, birthday FROM Users WHERE username == ?")
         fullUserArray = fullUQuerry.executeFetchAll(decrypter=self.encryptionKey, parameters=('testGP',))
         #ifthe account is deactivated stop login
         if fullUserArray[0][9] == 'T':
@@ -99,7 +99,7 @@ class currentUser():
         self.postCode = fullUserArray[0][7]
         self.UserType = fullUserArray[0][8]
         self.deactivated = fullUserArray[0][9]
-
+        self.birthday = fullUserArray[0][10]
         
 
 
