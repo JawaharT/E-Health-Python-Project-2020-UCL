@@ -27,8 +27,11 @@ class currentUser():
         fullUserArray = None
 
         for i in range(4, -1, -1):
+            #limit to 5 try of password
             try:
+                #trying to get username
                 tryUsername = parser.stringParser("Please enter your username")
+                #retrieving the user if exist to compare to PW
                 usernameQuerry = SQLQuerry("SELECT username, passCode FROM Users WHERE username == ?")
                 qResult = usernameQuerry.executeFetchAll(parameters=(tryUsername,))
                 if tryUsername == '--quit':
@@ -47,18 +50,20 @@ class currentUser():
             time.sleep(3)
             sys.exit(1)
         if tryUsername == '--quit':
+            #catch the interruption of the user
             print("user Exit quitting")
             time.sleep(3)
             sys.exit(1)
         for i in range(4, -1, -1):
             try:
+                #the PW is saved in hash so need to convert to hash to compare special parsing function becasue it will hide the needed 
                 tryPW = passwordHelper.hashPW(getpass.getpass("Enter your password: "))
                 #print(tryPW)
                 #print(userloginArray[1])
                 if tryPW == '--quit':
                     break
                 if tryPW == userloginArray[1]:
-                    #load encryption key
+                    #load encryption key if PW is correct
                     self.encryptionKey = encryptionHelper()
                     print("key loaded")
                     break
@@ -70,17 +75,20 @@ class currentUser():
             print("too many wrong username programming terminating ...")
             time.sleep(3)
             sys.exit(1)
+        #catch the user terminaion
         if tryUsername == '--quit':
             print("user Exit quitting")
             time.sleep(3)
             sys.exit(1)
+        #retrieving the full information from DATAbase instead of just the password for authentication
         fullUQuerry = SQLQuerry("SELECT ID, username, passCode, firstName, lastName, phoneNo, HomeAddress, postCode, UserType, deactivated  FROM Users WHERE username == ?")
         fullUserArray = fullUQuerry.executeFetchAll(decrypter=self.encryptionKey, parameters=('testGP',))
-        
+        #ifthe account is deactivated stop login
         if fullUserArray[0][9] == 'T':
             print('account deactivated please contact admin')
             time.sleep(3)
             sys.exit(1)
+        #loading the user info into a state
         self.ID = fullUserArray[0][0]
         self.username = fullUserArray[0][1]
         self.passCode = fullUserArray[0][2]

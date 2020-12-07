@@ -187,7 +187,7 @@ class SQLQuerry(database):
     def executeFetchAll(self, decrypter=None,parameters={}, ):
         """
         :param parameters: dictionary of parameters for the querry
-        :param decrypter: if an encryption object is avaliable due to successful login it will decrypt the result
+        :param decrypter: if an encryption object is avaliable due to successful login it will use it to decrypt the result
         :return: a list of tuples for the result array 
         execute the querry using the parameters and return the array
         references: https://blog.finxter.com/sqlite-python-placeholder-four-methods-for-sql-statements
@@ -250,6 +250,26 @@ if __name__ == '__main__':
                             EH.encryptToBits("testGPHome Address, test Road"),
                             EH.encryptToBits("A1 7RT"),
                             "GP",
+                            "F"))
+    result = Q.executeCommit(("1929282829", 
+                            "testPatient", 
+                            passwordHelper.hashPW("tPPW"), 
+                            EH.encryptToBits("testPatientFitstName"),
+                            EH.encryptToBits("testPatientLastName"),
+                            EH.encryptToBits("2929192821"),
+                            EH.encryptToBits("testPatientHome Address, test Road"),
+                            EH.encryptToBits("A0 5QS"),
+                            "Patient",
+                            "F"))
+    result = Q.executeCommit(("2929282822", 
+                            "testPatient2", 
+                            passwordHelper.hashPW("tPPW2"), 
+                            EH.encryptToBits("testPatient2FitstName"),
+                            EH.encryptToBits("testPatient2LastName"),
+                            EH.encryptToBits("1929292823"),
+                            EH.encryptToBits("testPatient2Home Address, test Road"),
+                            EH.encryptToBits("B0 5QK"),
+                            "Patient",
                             "F"))
     # Q2 = SQLQuerry("SELECT * FROM Users")
     # result = Q2.executeFetchAll()

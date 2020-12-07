@@ -34,27 +34,26 @@ CREATE TABLE available_time (
 
 DROP TABLE IF EXISTS Visit;
 CREATE TABLE Visit(
+  BookingNo INT,
   NHSNo varchar(10) CHECK(NHSNo BETWEEN 1000000000 AND 9999999999),
   StaffID varchar(10),
   Timeslot datetime,
-  Rating int CHECK(Rating >= 0 OR Rating <= 10),
-  Confirmed char(1) CHECK(Confirmed IN ('T', 'F')),
-  Attended char(1) CHECK(Attended IN ('T', 'F', 'P')),
+  /*Rating int CHECK(Rating >= 0 OR Rating <= 10),*/
+  Confirmed char(1) CHECK(Confirmed IN ('T', 'F', 'P')),
+  Attended char(1) CHECK(Attended IN ('T', 'F')),
   Diagnosis BLOB,
   Notes BLOB,
-  PRIMARY KEY (NHSNo, StaffID, Timeslot),
+  PRIMARY KEY (BookingNo),
   FOREIGN KEY (StaffID, Timeslot) REFERENCES available_time (StaffID, Timeslot) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (NHSNo) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 DROP TABLE IF EXISTS perscription;
 CREATE TABLE perscription (
-  NHSNo varchar(10),
-  StaffID varchar(10),
-  Timeslot datetime,
+  BookingNo INT,
   drugName BLOB,
   quantity BLOB,
   Instructions BLOB,
-  PRIMARY KEY (NHSNo, StaffID, Timeslot, drugName),
-  FOREIGN KEY (NHSNo, StaffID, Timeslot) REFERENCES VisitBooking (NHSNo, StaffID, Timeslot) ON DELETE CASCADE ON UPDATE CASCADE
+  PRIMARY KEY (BookingNo, drugName),
+  FOREIGN KEY (BookingNo) REFERENCES VisitBooking (BookingNo) ON DELETE CASCADE ON UPDATE CASCADE
 );

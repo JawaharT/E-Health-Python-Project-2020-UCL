@@ -35,7 +35,7 @@ class parser:
                 print("Invalid Input")
     
     @staticmethod
-    def integerParser(question):
+    def integerParser(question, allowback=True):
         """
         repeat until a valid integer is inputted
         :param question: qustion to ask user
@@ -44,8 +44,12 @@ class parser:
         while True:
             try:
                 print(question)
-                result = int(input())
-                return result
+                inputString = input()
+                if (allowback == True) and (inputString == '--back'):
+                    return inputString
+                else:
+                    result = int(inputString)
+                    return result
             except ValueError:
                 os.system('cls' if os.name == 'nt' else "printf '\033c'")
                 print("This is not a valid integer !")
