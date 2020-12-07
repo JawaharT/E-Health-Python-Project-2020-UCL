@@ -31,6 +31,8 @@ class currentUser():
                 tryUsername = parser.stringParser("Please enter your username")
                 usernameQuerry = SQLQuerry("SELECT username, passCode FROM Users WHERE username == ?")
                 qResult = usernameQuerry.executeFetchAll(parameters=(tryUsername,))
+                if tryUsername == '--quit':
+                    break
                 if len(qResult) != 1:
                     raise DBRecordError
                 else:
@@ -44,13 +46,17 @@ class currentUser():
             print("too many wrong username programming terminating ...")
             time.sleep(3)
             sys.exit(1)
-
-
+        if tryUsername == '--quit':
+            print("user Exit quitting")
+            time.sleep(3)
+            sys.exit(1)
         for i in range(4, -1, -1):
             try:
                 tryPW = passwordHelper.hashPW(getpass.getpass("Enter your password: "))
                 #print(tryPW)
                 #print(userloginArray[1])
+                if tryPW == '--quit':
+                    break
                 if tryPW == userloginArray[1]:
                     #load encryption key
                     self.encryptionKey = encryptionHelper()
@@ -62,6 +68,10 @@ class currentUser():
                 print(f"Invalid Password {i} attempts remaining")
         else:
             print("too many wrong username programming terminating ...")
+            time.sleep(3)
+            sys.exit(1)
+        if tryUsername == '--quit':
+            print("user Exit quitting")
             time.sleep(3)
             sys.exit(1)
         fullUQuerry = SQLQuerry("SELECT ID, username, passCode, firstName, lastName, phoneNo, HomeAddress, postCode, UserType, deactivated  FROM Users WHERE username == ?")

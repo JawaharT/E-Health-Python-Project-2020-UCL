@@ -2,6 +2,11 @@
 import databaseHelp
 from login import currentUser
 from parserHelp import parser
+import time
+
+from parserHelp import parser
+
+from GP import GPNavigator
 
 def checkUsername(): # i puttd it in a class
     """Check if username is valid."""
@@ -45,11 +50,20 @@ if __name__ == '__main__':
     #newDatabase = databaseHelp.database()
     #conn = newDatabase.create_connection()
     #checkUsername()
-    print("Wellcome to Group 6 GP System")
-    loginOrRegster = parser.RegisterOrLoginParser()
-    user = None
-    if loginOrRegster == 'L':
-        user = currentUser()
-        
-    elif loginOrRegster == 'R':
-        print("register")
+    while True:
+        print("Wellcome to Group 6 GP System")
+        loginOrRegster = parser.selectionParser(options={"R":"register", "L":"login","--quit":"quit"})
+        user = None
+        if loginOrRegster == 'L':
+            user = currentUser()
+            if user.UserType == "GP":
+                GPNavigator.mainNavigator(user)
+            
+        elif loginOrRegster == 'R':
+            #not done
+            print("register")
+            quit()
+        elif loginOrRegster == "--quit":
+            print("quitting...")
+            time.sleep(3)
+            SystemExit(1)

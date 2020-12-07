@@ -187,7 +187,7 @@ class SQLQuerry(database):
     def executeFetchAll(self, decrypter=None,parameters={}, ):
         """
         :param parameters: dictionary of parameters for the querry
-        :param decrypter: if an encryption object is putted in it will decrypt the result
+        :param decrypter: if an encryption object is avaliable due to successful login it will decrypt the result
         :return: a list of tuples for the result array 
         execute the querry using the parameters and return the array
         references: https://blog.finxter.com/sqlite-python-placeholder-four-methods-for-sql-statements

@@ -1,6 +1,8 @@
 import datetime
 from databaseHelp import database
 import time
+import os
+
 
 class not0Or30Min(Exception):
     '''
@@ -29,7 +31,7 @@ class parser:
                 print(question)
                 result = input()
                 return result
-            except:
+            except ValueError:
                 print("Invalid Input")
     
     @staticmethod
@@ -45,9 +47,10 @@ class parser:
                 result = int(input())
                 return result
             except ValueError:
-                print("This is not a valid integer")
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("This is not a valid integer !")
     @staticmethod
-    def datetimeParser(question, limitToHalfHourInterval=False):
+    def timeParser(question, limitToHalfHourInterval=True, allowback=True):
         """
         repeat until a valid datetime is inputted
         :param question: qustion to ask user
@@ -56,24 +59,30 @@ class parser:
         """
         while True:
             try:
-                print(question, "Please input datetime in this format 'YYYY-MM-DD HH:MM'")
+                print(question, "Please input datetime in this format 'HH:MM'")
+                if allowback == True:
+                    print("Or enter '--back' to go back to previous page")
                 inputString = input()
-                inputDatetime = datetime.datetime.strptime(inputString, '%Y-%m-%d %H:%M')
+                if allowback == True and inputString == '--back':
+                    return inputString
+                inputDatetime = datetime.datetime.strptime(inputString, '%H:%M')
                 if limitToHalfHourInterval==False :
                     return inputDatetime
                 else:
-                    if inputDatetime.minute == 0 or inputDatetime.minute == 30:
+                    if inputDatetime.minute in [0, 15, 30, 45]:
                         return inputDatetime
                     else:
                         raise not0Or30Min()
             except ValueError:
-                print("This is not a valid date and time")
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("This is not a valid date and time!")
 
             except not0Or30Min:
-                print("Appiontments are limited to half hour session")    
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("Appiontments are limited to 15 min session!")    
 
     @staticmethod
-    def dateParser(question):
+    def dateParser(question, allowback=True):
         """
         repeat until a valid datet is inputted
         :param question: qustion to ask user
@@ -82,11 +91,16 @@ class parser:
         while True:
             try:
                 print(question, "Please input datetime in this format 'YYYY-MM-DD'")
+                if allowback == True:
+                    print("Or enter '--back' to go back to previous page")
                 inputString = input()
+                if allowback == True and inputString == '--back':
+                    return inputString
                 inputDate = datetime.datetime.strptime(inputString, '%Y-%m-%d')
                 return inputDate
             except ValueError:
-                print("This is not a valid date")
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("This is not a valid date!")
 
     @staticmethod
     def nhsNoParser(question="Please Input your NHS Number"):
@@ -104,7 +118,8 @@ class parser:
                 else:
                     raise ValueError
             except ValueError:
-                print("This is not a valid NHSNo")
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("This is not a valid NHSNo!")
 
     @staticmethod
     def AdminStaffNoParser(question="Please Input Admin's Staff Number"):
@@ -123,7 +138,8 @@ class parser:
                     raise ValueError
                 return result
             except ValueError:
-                print("Invalid number for Admin Staff, Format should be A########")   
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("Invalid number for Admin Staff, Format should be A######## !")   
     @staticmethod
     def GPStaffNoParser(question="Please Input GP's Staff Number"):
         """
@@ -141,7 +157,8 @@ class parser:
                     raise ValueError
                 return result
             except ValueError:
-                print("Invalid number for Admin Staff, Format should be G########")   
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("Invalid number for Admin Staff, Format should be G######## !")   
 
     @staticmethod
     def TrueFalseParser(question):
@@ -159,7 +176,8 @@ class parser:
                     raise ValueError
                 return result
             except ValueError:
-                print("only 'T' (for true) or 'F' (for false) are allowed")
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("only 'T' (for true) or 'F' (for false) are allowed !")
 
     @staticmethod
     def TrueFalsePendingParser(question):
@@ -177,7 +195,8 @@ class parser:
                     raise ValueError
                 return result
             except ValueError:
-                print("only 'P' (for pending), 'T' (for true) or 'F' (for false) are allowed")
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("only 'P' (for pending), 'T' (for true) or 'F' (for false) are allowed !")
 
     def RegisterOrLoginParser():
         """
@@ -196,8 +215,68 @@ class parser:
                     raise ValueError
                 return result
             except ValueError:
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
                 print("only 'L' (for Login) or 'R' (for Register) are allowed")
 
+    def selectionParser(options={"--back": "back"}):
+        """
+        prompt to ask for valid input from a user
+        :param options: dictionary to store valid response
+        :return: input
+        """
+        while True:
+            try:
+                print("Please select the following options:")
+                for key in options:
+                    print(f"Enter '{key}' to {options[key]}")
+                
+                result = input()
+                if result not in options:
+                    raise ValueError
+                return result
+            except ValueError:
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("Invalid Input!!")
+    def listNumberParser(question, fullNumRange, allowback=True):
+        """
+        prompt to ask for number range from a user
+        :param options: dictionary to store valid response
+        :return: list of unique integer selected by user
+        """
+        while True:
+            try:
+                print(question)
+                print("use ',' to separate each value")
+                print("use 'a-b' to select the number in range a to b inclusive")
+                if allowback == True:
+                    print("Or enter '--back' to go back to previous page")
+                resultFinal = []
+                resultRaw = input()
+                if allowback == True and resultRaw == '--back':
+                    return resultRaw
+                resultRaw = resultRaw.replace(" ", "")    
+                resultList = resultRaw.split(',')
+                for element in resultList:
+                    if '-' not in element:
+                        resultFinal.append(int(element))
+                    else:
+                        numRange = element.split('-')
+                        #map is a generator!!!
+                        numRange = list(map(int,numRange))
+                        #print(numRange)
+                        listNumRange = list(range(min(numRange), max(numRange)+1))
+                        #print(listNumRange)
+                        resultFinal += listNumRange
+                resultFinal = list(set(resultFinal))
+                #print(resultFinal)
+                for num in resultFinal:
+                    if not min(fullNumRange) <= num <= max(fullNumRange):
+                        raise ValueError
+                resultFinal.sort()
+                return resultFinal
+            except ValueError:
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print("Invalid Input!! either not an integer or out of range")
 
 if __name__ == "__main__":
     # print(parser.integerParser("type in Integer"))
@@ -209,4 +288,6 @@ if __name__ == "__main__":
     # print(parser.GPStaffNoParser())
     # print(parser.TrueFalsePendingParser("tfp"))
     # print(parser.TrueFalseParser('tf'))
+    # print(parser.selectionParser(options={"A": "add availability","C": "confirm bookings","S": "start appointment","--back": "back to previous page"}))
+    # print(parser.listNumberParser("numrange test", (2,15)))
     pass
