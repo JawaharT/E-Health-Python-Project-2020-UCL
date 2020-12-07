@@ -14,6 +14,7 @@ CREATE TABLE Users (
   ID varchar(10) PRIMARY KEY CHECK ((ID LIKE 'G%') OR (ID LIKE 'A%') OR (ID BETWEEN 1000000000 AND 9999999999)),
   username varchar(50) UNIQUE,
   passCode varchar(64),
+  birthday BLOB,
   firstName BLOB,
   lastName BLOB,
   phoneNo BLOB,

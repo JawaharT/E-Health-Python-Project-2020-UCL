@@ -58,6 +58,7 @@
     <li>add perscription<ul>
             <li style="margin-left: 20px;">calculation of perscription cost nhsfee*number of row in perscription</li>
             <li style="margin-left: 20px;">Allow the doctor to write down instruction using abbreviations, See the Latin abbreviations part in<ul>
+                <li style="margin-left: 40px;">maybe in patient viewing perscription side, include a table for translation of latin abbrivations</li>
                 <li style="margin-left: 40px;">https://bnf.nice.org.uk/about/abbreviations-and-symbols.html</li>
              </ul>
         </ul>
