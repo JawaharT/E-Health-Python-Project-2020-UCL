@@ -1,10 +1,8 @@
 """Main Program here."""
 import databaseHelp
 from login import currentUser
-from login import loginHelp
 from parserHelp import parser
 import time
-import os
 
 from parserHelp import parser
 
@@ -53,16 +51,13 @@ if __name__ == '__main__':
     #conn = newDatabase.create_connection()
     #checkUsername()
     while True:
-        os.system('cls' if os.name == 'nt' else "printf '\033c'")
         print("Wellcome to Group 6 GP System")
         loginOrRegster = parser.selectionParser(options={"R":"register", "L":"login","--quit":"quit"})
         user = None
         if loginOrRegster == 'L':
-            loginParam = loginHelp.Login()
-            if loginParam != False:
-                user = currentUser(loginParam[0], loginParam[1])
-                if user.UserType == "GP":
-                    GPNavigator.mainNavigator(user)
+            user = currentUser()
+            if user.UserType == "GP":
+                GPNavigator.mainNavigator(user)
             
         elif loginOrRegster == 'R':
             #not done
