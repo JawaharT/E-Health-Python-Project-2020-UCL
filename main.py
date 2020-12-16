@@ -10,6 +10,8 @@ from parserHelp import parser
 
 from GP import GPNavigator
 
+from Admin import AdminNavigator
+
 def checkUsername(): # i puttd it in a class
     """Check if username is valid."""
     while True:
@@ -63,6 +65,8 @@ if __name__ == '__main__':
                 user = currentUser(loginParam[0], loginParam[1])
                 if user.UserType == "GP":
                     GPNavigator.mainNavigator(user)
+                elif user.UserType == "Admin":
+                    AdminNavigator.mainNavigator(user)
             
         elif loginOrRegster == 'R':
             #not done
