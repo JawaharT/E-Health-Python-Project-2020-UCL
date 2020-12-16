@@ -49,8 +49,8 @@ CREATE TABLE Visit(
   FOREIGN KEY (NHSNo) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-DROP TABLE IF EXISTS perscription;
-CREATE TABLE perscription (
+DROP TABLE IF EXISTS prescription;
+CREATE TABLE prescription (
   BookingNo INT,
   drugName BLOB,
   quantity BLOB,
