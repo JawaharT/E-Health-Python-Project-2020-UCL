@@ -46,7 +46,10 @@ class AdminNavigator():
 
             if currentPage == "D":
                 currentPage = AdminNavigator.delete_GP(user)
-                continue
+            if currentPage == "A":
+                currentPage = AdminNavigator.Add_GP_Patient(user)
+            if currentPage == "E":
+                currentPage = AdminNavigator.Edit_GP_Patient(user)
 
 
 
@@ -82,11 +85,44 @@ class AdminNavigator():
                 break
 
 
-    def add_GP_patient(self):
-        pass
+    def add_GP_Patient(self):
 
-    def Edit_GP_patient(self):
-        pass
+
+
+
+
+
+
+
+
+
+    def Edit_GP_Patient(self):
+        # show all GPs and Patients
+        viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' and 'Patient'")
+
+        viewallGPsandPatientsResult = viewallGPsandPatients.executeFetchAll()
+        viewallGPsandPatientsTable, GPandPatient,usertype = [], [], []
+        for nameIndex in range(len(viewallGPsandPatientsResult)):
+            GPandPatient.append(viewallGPsandPatientsResult[nameIndex][0])
+            viewallGPsandPatientsTable.append([nameIndex + 1, viewallGPsandPatientsResult[nameIndex][0]])
+
+        print(tabulate(viewallGPsandPatientsTable, headers=("ID", "Username","Usertype")))
+
+        # select a user from the table
+        while True:
+            print("Please match name exactly. Press Enter to go back.")
+            selectedUser = input("Write the name of GP or Patient to Update the information: ")
+            if selecteduser == "":
+                break
+            if selectedUser not in GPandPatient:
+                print("This name does not exist. Please try again.")
+                continue
+            else:
+                # Update query
+                UpdateQuery = SQLQuerry("UPDATE Users SET firstName = "",  lastName = "", phoneNo = "", HomeAddress ="", postcode ="",WHERE username=:who")
+                UpdateQuery.executeCommit({"who": selectedUser})
+                print("Done.")
+                break
 
 
 if __name__ == "__main__":
