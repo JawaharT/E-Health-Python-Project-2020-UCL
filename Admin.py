@@ -2,6 +2,7 @@ import os
 from tabulate import tabulate
 
 from encryption import encryptionHelper, passwordHelper
+from login import currentUser, loginHelp
 from parserHelp import parser
 from databaseHelp import SQLQuerry
 import time
@@ -54,7 +55,7 @@ class AdminNavigator():
         :return: updated table with the deleted GP record
         """
         # show all users that are deactivated for deletion
-        allDeactivatedGPs = SQLQuerry("SELECT username FROM Users WHERE Deactivated = 'F' AND UserType= 'GP'")
+        allDeactivatedGPs = SQLQuerry("SELECT username FROM Users WHERE Deactivated = 'T' AND UserType= 'GP'")
 
         allDeactivatedGPsResult = allDeactivatedGPs.executeFetchAll()
         allDeactivatedGPsTable, onlyGPs = [], []
@@ -66,8 +67,10 @@ class AdminNavigator():
 
         # select a user from the table
         while True:
-            print("Please match name exactly.")
+            print("Please match name exactly. Press Enter to go back.")
             selectedGP = input("Write the name of GP to delete: ")
+            if selectedGP == "":
+                break
             if selectedGP not in onlyGPs:
                 print("This name does not exist. Please try again.")
                 continue
@@ -76,8 +79,6 @@ class AdminNavigator():
                 deleteQuery = SQLQuerry("DELETE FROM Users WHERE username=:who")
                 deleteQuery.executeCommit({"who": selectedGP})
                 print("Done.")
-                allDeactivatedGPs = SQLQuerry("SELECT username FROM Users WHERE Deactivated = 'F' AND UserType= 'GP'")
-                print(allDeactivatedGPs.executeFetchAll())
                 break
 
 
@@ -101,7 +102,7 @@ if __name__ == "__main__":
                               EH.encryptToBits("testGP1Home Address, test Road"),
                               EH.encryptToBits("AB1 7RT"),
                               "GP",
-                              "F"))
+                              "T"))
     result = Q.executeCommit(("GP2",
                               "testGP2",
                               passwordHelper.hashPW("testGPPW3"),
@@ -112,7 +113,7 @@ if __name__ == "__main__":
                               EH.encryptToBits("testGP2Home Address, test Road"),
                               EH.encryptToBits("AC1 7RT"),
                               "GP",
-                              "F"))
+                              "T"))
     result = Q.executeCommit(("GP3",
                               "testGP3",
                               passwordHelper.hashPW("testGPPW"),
@@ -123,18 +124,20 @@ if __name__ == "__main__":
                               EH.encryptToBits("testGP3Home Address, test Road"),
                               EH.encryptToBits("AD1 7RT"),
                               "GP",
-                              "F"))
-    # admin user
-    result = Q.executeCommit(("GP3",
-                              "testGP3",
-                              passwordHelper.hashPW("testGPPW"),
+                              "T"))
+
+    # example admin user
+    result = Q.executeCommit(("Admin12",
+                              "testAdmin124",
+                              passwordHelper.hashPW("testAdmin"),
                               EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testGP3FitstName"),
-                              EH.encryptToBits("testGP3LastName"),
-                              EH.encryptToBits("0123450289"),
-                              EH.encryptToBits("testGP3Home Address, test Road"),
-                              EH.encryptToBits("AD1 7RT"),
-                              "GP",
+                              EH.encryptToBits("testAdminFitstName"),
+                              EH.encryptToBits("testAdminLastName"),
+                              EH.encryptToBits("0123450281"),
+                              EH.encryptToBits("test Admin Home Address, test Road"),
+                              EH.encryptToBits("AD4 7RT"),
+                              "Admin",
                               "F"))
-    AdminNavigator.mainNavigator()
-    #AdminNavigator().delete_GP()
+    loginParam = loginHelp.Login()
+    user = currentUser(loginParam[0], loginParam[1])
+    AdminNavigator.mainNavigator(user)
