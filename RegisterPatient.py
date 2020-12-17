@@ -16,6 +16,7 @@ def insertIntoDB():
                                              "M"))
 
 
+
 if __name__ == '__main__':
     # test user inputs before inserting into database using insertIntoDB function
     pass

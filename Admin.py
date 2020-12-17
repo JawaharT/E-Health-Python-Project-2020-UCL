@@ -32,7 +32,7 @@ class AdminNavigator():
 
         while True:
             userInput = parser.selectionParser(
-                options={"D": "Delete/Deactivate existing GP", "G": "Add New GP", "P": "Add new Patient",
+                options={"D": "Delete/Deactivate existing GP", "A": "Add New GP and Patient", "E": "Edit GP and Patient",
                          "--logout": "logout"})
             if userInput == "--logout":
                 # reason for quitting is that it dumps the login info so the logout is complete and the key is not
@@ -82,10 +82,10 @@ class AdminNavigator():
                 break
 
 
-    def add_GP(self):
+    def add_GP_patient(self):
         pass
 
-    def add_patient(self):
+    def Edit_GP_patient(self):
         pass
 
 
