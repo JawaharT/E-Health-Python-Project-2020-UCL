@@ -47,9 +47,9 @@ class AdminNavigator():
             if currentPage == "D":
                 currentPage = AdminNavigator.delete_GP(user)
             if currentPage == "A":
-                currentPage = AdminNavigator.Add_GP_Patient(user)
+                currentPage = AdminNavigator.add_GP_Patient(user)
             if currentPage == "E":
-                currentPage = AdminNavigator.Edit_GP_Patient(user)
+                currentPage = AdminNavigator.edit_GP_Patient(user)
 
 
 
@@ -86,6 +86,7 @@ class AdminNavigator():
 
 
     def add_GP_Patient(self):
+        pass
 
 
 
@@ -96,7 +97,8 @@ class AdminNavigator():
 
 
 
-    def Edit_GP_Patient(self):
+    def edit_GP_Patient(self):
+
         # show all GPs and Patients
         viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' and 'Patient'")
 
@@ -112,7 +114,7 @@ class AdminNavigator():
         while True:
             print("Please match name exactly. Press Enter to go back.")
             selectedUser = input("Write the name of GP or Patient to Update the information: ")
-            if selecteduser == "":
+            if selectedUser == "":
                 break
             if selectedUser not in GPandPatient:
                 print("This name does not exist. Please try again.")
@@ -120,11 +122,11 @@ class AdminNavigator():
             else:
                 # Update query
                 print("Please update the information:")
-                newfirstName = input("Please enter the new Firstname")
-                newlastName = input("Please enter the new Lastname")
-                newphoneNo = input("Please enter the new phone number")
-                newHomeAddress = input("Please enter the new home address")
-                newpostCode = input("Please enter the new postcode")
+                newfirstName = str(input("Please enter the new Firstname:"))
+                newlastName = str(input("Please enter the new Lastname:"))
+                newphoneNo = int(input("Please enter the new phone number:"))
+                newHomeAddress = str(input("Please enter the new home address:"))
+                newpostCode = str(input("Please enter the new postcode:"))
                 UpdateQuery = SQLQuerry("UPDATE Users SET firstName = 'newfirstName',  lastName = 'newlastName', phoneNo = 'newphoneNo', HomeAddress ='newHomeAddress', postcode ='newpostCode' WHERE username=:who")
                 UpdateQuery.executeCommit({"who": selectedUser})
                 print("Done.")
