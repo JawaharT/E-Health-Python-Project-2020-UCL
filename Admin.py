@@ -119,7 +119,13 @@ class AdminNavigator():
                 continue
             else:
                 # Update query
-                UpdateQuery = SQLQuerry("UPDATE Users SET firstName = "",  lastName = "", phoneNo = "", HomeAddress ="", postcode ="",WHERE username=:who")
+                print("Please update the information:")
+                newfirstName = input("Please enter the new Firstname")
+                newlastName = input("Please enter the new Lastname")
+                newphoneNo = input("Please enter the new phone number")
+                newHomeAddress = input("Please enter the new home address")
+                newpostCode = input("Please enter the new postcode")
+                UpdateQuery = SQLQuerry("UPDATE Users SET firstName = 'newfirstName',  lastName = 'newlastName', phoneNo = 'newphoneNo', HomeAddress ='newHomeAddress', postcode ='newpostCode' WHERE username=:who")
                 UpdateQuery.executeCommit({"who": selectedUser})
                 print("Done.")
                 break
