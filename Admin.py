@@ -1,7 +1,8 @@
 import os
 from tabulate import tabulate
+
+from encryption import encryptionHelper, passwordHelper
 from parserHelp import parser
-from login import currentUser
 from databaseHelp import SQLQuerry
 import time
 import sys
@@ -44,6 +45,7 @@ class AdminNavigator():
 
             if currentPage == "D":
                 currentPage = AdminNavigator.delete_GP(user)
+                continue
 
 
 
@@ -53,25 +55,29 @@ class AdminNavigator():
         """
         # show all users that are deactivated for deletion
         allDeactivatedGPs = SQLQuerry("SELECT username FROM Users WHERE Deactivated = 'F' AND UserType= 'GP'")
-        allDeactivatedGPsResult = allDeactivatedGPs.executeFetchAll(decrypter=user.encryptionKey, parameters=("username"))
-        allDeactivatedGPsTable = []
+
+        allDeactivatedGPsResult = allDeactivatedGPs.executeFetchAll()
+        allDeactivatedGPsTable, onlyGPs = [], []
         for nameIndex in range(len(allDeactivatedGPsResult)):
+            onlyGPs.append(allDeactivatedGPsResult[nameIndex][0])
             allDeactivatedGPsTable.append([nameIndex+1, allDeactivatedGPsResult[nameIndex][0]])
 
-        print(tabulate(allDeactivatedGPsTable, headers="Username"))
+        print(tabulate(allDeactivatedGPsTable, headers=("ID", "Username")))
 
         # select a user from the table
         while True:
             print("Please match name exactly.")
             selectedGP = input("Write the name of GP to delete: ")
-            if selectedGP not in allDeactivatedGPsTable:
+            if selectedGP not in onlyGPs:
                 print("This name does not exist. Please try again.")
                 continue
             else:
                 # delete query, make sure to delete all presence of that user
-                deleteQuery = SQLQuerry("DELETE FROM Users WHERE username == ?")
-                newTable = deleteQuery.executeCommit()
-                print(newTable)
+                deleteQuery = SQLQuerry("DELETE FROM Users WHERE username=:who")
+                deleteQuery.executeCommit({"who": selectedGP})
+                print("Done.")
+                allDeactivatedGPs = SQLQuerry("SELECT username FROM Users WHERE Deactivated = 'F' AND UserType= 'GP'")
+                print(allDeactivatedGPs.executeFetchAll())
                 break
 
 
@@ -83,5 +89,52 @@ class AdminNavigator():
 
 
 if __name__ == "__main__":
-    user = currentUser(username="TestGP", encryptionKey="hkPN4iCVAG9_YIZ81pfzweqtwde6ea3jCdvUFTf6l_M=")
-    AdminNavigator.mainNavigator(user)
+    Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    EH = encryptionHelper()
+    result = Q.executeCommit(("GP1",
+                              "testGP1",
+                              passwordHelper.hashPW("testGPPW2"),
+                              EH.encryptToBits("1991-01-04"),
+                              EH.encryptToBits("testGP1FitstName"),
+                              EH.encryptToBits("testGP1LastName"),
+                              EH.encryptToBits("0123450243"),
+                              EH.encryptToBits("testGP1Home Address, test Road"),
+                              EH.encryptToBits("AB1 7RT"),
+                              "GP",
+                              "F"))
+    result = Q.executeCommit(("GP2",
+                              "testGP2",
+                              passwordHelper.hashPW("testGPPW3"),
+                              EH.encryptToBits("1991-01-04"),
+                              EH.encryptToBits("testGP2FitstName"),
+                              EH.encryptToBits("testGP2LastName"),
+                              EH.encryptToBits("0123450244"),
+                              EH.encryptToBits("testGP2Home Address, test Road"),
+                              EH.encryptToBits("AC1 7RT"),
+                              "GP",
+                              "F"))
+    result = Q.executeCommit(("GP3",
+                              "testGP3",
+                              passwordHelper.hashPW("testGPPW"),
+                              EH.encryptToBits("1991-01-04"),
+                              EH.encryptToBits("testGP3FitstName"),
+                              EH.encryptToBits("testGP3LastName"),
+                              EH.encryptToBits("0123450289"),
+                              EH.encryptToBits("testGP3Home Address, test Road"),
+                              EH.encryptToBits("AD1 7RT"),
+                              "GP",
+                              "F"))
+    # admin user
+    result = Q.executeCommit(("GP3",
+                              "testGP3",
+                              passwordHelper.hashPW("testGPPW"),
+                              EH.encryptToBits("1991-01-04"),
+                              EH.encryptToBits("testGP3FitstName"),
+                              EH.encryptToBits("testGP3LastName"),
+                              EH.encryptToBits("0123450289"),
+                              EH.encryptToBits("testGP3Home Address, test Road"),
+                              EH.encryptToBits("AD1 7RT"),
+                              "GP",
+                              "F"))
+    AdminNavigator.mainNavigator()
+    #AdminNavigator().delete_GP()
