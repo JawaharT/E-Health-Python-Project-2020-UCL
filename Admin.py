@@ -1,3 +1,4 @@
+
 import os
 from tabulate import tabulate
 
@@ -10,6 +11,7 @@ import sys
 
 
 class AdminNavigator():
+
     """Admin class and attributes."""
 
     def mainNavigator(user):
