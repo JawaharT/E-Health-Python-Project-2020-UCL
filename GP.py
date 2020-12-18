@@ -284,11 +284,9 @@ class GPNavigator():
     @staticmethod
     def viewAppointment(user):
         """
-        first step of branch C confirm booking
-        similar to branch A can also be reused in branch V
-        ask for date -> display the bookings from patients ->
-        ask for which entry the user wish to modifly
-        -> return to previous function | pass to teansactions
+        step 1 in branch v ask which date the user wish to manipulte ->
+        Display confirmed appointment of the date ->
+
         """
         stage = 0
         selectedDate = None
@@ -338,23 +336,15 @@ class GPNavigator():
     @staticmethod
     def chooseAppointment(selectedBookingNo, user):
             """
-            transaction of the booking confirmation
-            ask the user whether they wish to confirm or reject it
-            for confirm it will automatically reject all bookings in the same time slot
-            for reject no other step required
+            step 2 in branch v
+            show details of selected patient  ->
+            ask the user whether they wish to change it ->
+            for D and N they can change diagnosis or notes ->
+            for P they can add or remove prescription
             """
-            # stage = 1
-            # selectedDate = None
+
             while True:
-                # while stage == 0:
-                #     os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                #     dateInput = parser.dateParser(question="Select a Date:")
-                #     if dateInput == "--back":
-                #         return "main"
-                #     else:
-                #         selectedDate = dateInput
-                #         stage = 1
-                # while stage == 1:
+
                 os.system('cls' if os.name == 'nt' else "printf '\033c'")
                 Qtext = "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, users.lastName, visit.Confirmed, users.birthday, users.phoneNo, users.HomeAddress, users.postcode, visit.diagnosis, visit.notes "
                 Qtext += "FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
@@ -393,9 +383,9 @@ class GPNavigator():
                     print("----------")
                     print(Qbookedresult[0][10])
                     QuerryDiagnosis = SQLQuerry(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ")
-                    #diagnosisInput = input("Please enter your diagnosis:\n")
+
                     diagnosisInput = parser.stringParser("Please enter your diagnosis:")
-                    #print(diagnosisInput)
+
                     exeQuerryDiagnosis = QuerryDiagnosis.executeCommit((diagnosisInput, Qbookedresult[0][0]))
                     print("Your diagnosis has been given, you are going back to the patient info page...")
 
@@ -407,7 +397,8 @@ class GPNavigator():
                     print("----------")
                     print(Qbookedresult[0][11])
                     QuerryDiagnosis = SQLQuerry(" UPDATE Visit SET notes = ? WHERE NHSNo = ? ")
-                    notesInput = input("Please enter your notes:\n")
+                    #notesInput = input("Please enter your notes:\n")
+                    notesInput = parser.stringParser("Please enter your notes:")
                     # print(notesInput)
                     exeQuerryNotes = QuerryDiagnosis.executeCommit((notesInput, Qbookedresult[0][0]))
                     print("Your notes has been given,you are going back to the patient info page...")
@@ -428,9 +419,12 @@ class GPNavigator():
                         Querryprescription = SQLQuerry(" INSERT INTO prescription (BookingNo, drugName, quantity, instructions) VALUES (?, ?, ?, ?)  ")
                         #BookingNo = input("Please enter your BookingNo:\n")
                         # print(notesInput)
-                        drugName = input("Please enter your drugName:\n")
-                        quantity = input("Please enter your quantity:\n")
-                        instructions = input("Please enter your instructions:\n")
+                        #drugName = input("Please enter your drugName:\n")
+                        drugName = parser.stringParser("Please enter your drugname:")
+                        #quantity = input("Please enter your quantity:\n")
+                        quantity = parser.stringParser("Please enter your quantity:")
+                        #instructions = input("Please enter your instructions:\n")
+                        instructions = parser.stringParser("Please enter your instructions:")
 
                         exeQuerryprescription = Querryprescription.executeCommit((Qbookedresult[0][0], drugName, quantity, instructions))
                         print("Your prescription has been given,you are going back to the patient info page...")
