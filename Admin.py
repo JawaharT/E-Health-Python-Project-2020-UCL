@@ -69,22 +69,25 @@ class AdminNavigator():
                                   " HomeAddress, postCode FROM USERS WHERE UserType = 'Patient'")
                 headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
-                startOfDecryption = 3
+                startOfDecryption, decrypt = 3, True
             elif recordViewer == "B":
                 query = SQLQuerry("SELECT ID, Username, Deactivated, birthday, firstName, lastName, phoneNo,"
                                   " HomeAddress, postCode FROM USERS WHERE UserType = 'GP'")
                 headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
-                startOfDecryption = 3
+                startOfDecryption, decrypt = 3, True
             elif recordViewer == "C":
                 query = SQLQuerry("SELECT * FROM available_time")
                 headers = ("StaffID", "Timeslot")
+                startOfDecryption, decrypt = len(headers), False
             elif recordViewer == "D":
                 query = SQLQuerry("SELECT * FROM Visit")
                 headers = ("BookingNo", "NHSNo", "StaffID", "Timeslot", "Confirmed", "Attended", "Diagnosis", "Notes")
+                startOfDecryption, decrypt = len(headers), False
             elif recordViewer == "E":
                 query = SQLQuerry("SELECT * FROM prescription")
                 headers = ("BookingNo", "DrugName", "Quantity", "Instructions")
+                startOfDecryption, decrypt = len(headers), False
             else:
                 print("Not a valid selection.\n")
                 continue
@@ -105,8 +108,9 @@ class AdminNavigator():
                     for notCryptedColumnNumber in range(0, startOfDecryption):
                         currentRecord.append(allData[recordNumber][notCryptedColumnNumber])
                 # decrypting the encrypted data
-                for columnNumber in range(startOfDecryption, len(headers)):
-                    currentRecord.append(EH.decryptMessage(allData[recordNumber][columnNumber]))
+                if decrypt:
+                    for columnNumber in range(startOfDecryption, len(headers)):
+                        currentRecord.append(EH.decryptMessage(allData[recordNumber][columnNumber]))
                 decryptedData.append(currentRecord)
 
             print(tabulate(decryptedData, headers))
