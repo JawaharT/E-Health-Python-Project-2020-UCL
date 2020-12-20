@@ -50,6 +50,7 @@ CREATE TABLE Visit(
 );
 
 DROP TABLE IF EXISTS prescription;
+
 CREATE TABLE prescription (
   BookingNo INT,
   drugName BLOB,

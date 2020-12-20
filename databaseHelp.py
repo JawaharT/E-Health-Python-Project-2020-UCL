@@ -184,7 +184,7 @@ class SQLQuerry(database):
         """
         database.__init__(self, db_file)
         self.querry = querry
-    def executeFetchAll(self, decrypter=None,parameters={}, ):
+    def executeFetchAll(self, decrypter=None,parameters={}):
         """
         :param parameters: dictionary of parameters for the querry
         :param decrypter: if an encryption object is avaliable due to successful login it will use it to decrypt the result
@@ -226,57 +226,141 @@ class SQLQuerry(database):
         return result   
 
 if __name__ == '__main__':
-    #refresh and create new DB
-    #if you have anything that you want to stay permenantly edit and insert using sql script
-    DB = database("GPDB.db")
-    DB.executeSQLScript("GPDB.sql")
+        #refresh and create new DB
+        #if you have anything that you want to stay permenantly edit and insert using sql script
+        DB = database("GPDB.db")
+        DB.executeSQLScript("GPDB.sql")
 
-    #testing for querry type
-    # Q2 = SQLQuerry("DELETE FROM UserGroup WHERE UserType = (:type)")
-    # result = Q2.executeCommit({"test": "testing", "type": "changd"})
-    # Q = SQLQuerry("SELECT * FROM UserGroup")
-    # result = Q.executeFetchAll()
-    # print(result)
+        #testing for querry type
+        # Q2 = SQLQuerry("DELETE FROM UserGroup WHERE UserType = (:type)")
+        # result = Q2.executeCommit({"test": "testing", "type": "changd"})
+        # Q = SQLQuerry("SELECT * FROM UserGroup")
+        # result = Q.executeFetchAll()
+        # print(result)
 
-    # # testng for storing encrypted value and decrypting it
-    Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    EH = encryptionHelper()
-    result = Q.executeCommit(("G01", 
-                            "testGP", 
-                            passwordHelper.hashPW("testGPPW"), 
-                            EH.encryptToBits("1991-01-04"),
-                            EH.encryptToBits("testGPFitstName"),
-                            EH.encryptToBits("testGPLastName"),
-                            EH.encryptToBits("0123450233"),
-                            EH.encryptToBits("testGPHome Address, test Road"),
-                            EH.encryptToBits("A1 7RT"),
-                            "GP",
-                            "F"))
-    result = Q.executeCommit(("1929282829", 
-                            "testPatient", 
-                            passwordHelper.hashPW("tPPW"), 
-                            EH.encryptToBits("1982-02-03"),
-                            EH.encryptToBits("testPatientFitstName"),
-                            EH.encryptToBits("testPatientLastName"),
-                            EH.encryptToBits("2929192821"),
-                            EH.encryptToBits("testPatientHome Address, test Road"),
-                            EH.encryptToBits("A0 5QS"),
-                            "Patient",
-                            "F"))
-    result = Q.executeCommit(("2929282822", 
-                            "testPatient2", 
-                            passwordHelper.hashPW("tPPW2"), 
-                            EH.encryptToBits("1984-02-03"),
-                            EH.encryptToBits("testPatient2FitstName"),
-                            EH.encryptToBits("testPatient2LastName"),
-                            EH.encryptToBits("1929292823"),
-                            EH.encryptToBits("testPatient2Home Address, test Road"),
-                            EH.encryptToBits("B0 5QK"),
-                            "Patient",
-                            "F"))
+        # # testng for storing encrypted value and decrypting it
+        Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        EH = encryptionHelper()
+        result = Q.executeCommit(("G01",
+                                "testGP",
+                                passwordHelper.hashPW("testGPPW"),
+                                EH.encryptToBits("1991-01-04"),
+                                EH.encryptToBits("testGPFitstName"),
+                                EH.encryptToBits("testGPLastName"),
+                                EH.encryptToBits("0123450233"),
+                                EH.encryptToBits("testGPHome Address, test Road"),
+                                EH.encryptToBits("A1 7RT"),
+                                "GP",
+                                "F"))
+        result = Q.executeCommit(("G02",
+                                "testGP2",
+                                passwordHelper.hashPW("testGPPW2"),
+                                EH.encryptToBits("1991-01-04"),
+                                EH.encryptToBits("testGPFitstName"),
+                                EH.encryptToBits("testGPLastName"),
+                                EH.encryptToBits("0123450233"),
+                                EH.encryptToBits("testGPHome Address, test Road"),
+                                EH.encryptToBits("A1 7RT"),
+                                "GP",
+                                "F"))
+        result = Q.executeCommit(("G03",
+                                   "testGP3",
+                                   passwordHelper.hashPW("testGPPW3"),
+                                   EH.encryptToBits("1991-01-04"),
+                                   EH.encryptToBits("testGP3FitstName"),
+                                   EH.encryptToBits("testGP3LastName"),
+                                   EH.encryptToBits("0123450289"),
+                                   EH.encryptToBits("testGP3Home Address, test Road"),
+                                   EH.encryptToBits("AD1 7RT"),
+                                   "GP",
+                                   "T"))
+        result = Q.executeCommit(("1929282829",
+                                "testPatient",
+                                passwordHelper.hashPW("tPPW"),
+                                EH.encryptToBits("1982-02-03"),
+                                EH.encryptToBits("testPatientFitstName"),
+                                EH.encryptToBits("testPatientLastName"),
+                                EH.encryptToBits("2929192821"),
+                                EH.encryptToBits("testPatientHome Address, test Road"),
+                                EH.encryptToBits("A0 5QS"),
+                                "Patient",
+                                "F"))
+        result = Q.executeCommit(("2929282822",
+                                "testPatient2",
+                                passwordHelper.hashPW("tPPW2"),
+                                EH.encryptToBits("1984-02-03"),
+                                EH.encryptToBits("testPatient2FitstName"),
+                                EH.encryptToBits("testPatient2LastName"),
+                                EH.encryptToBits("1929292823"),
+                                EH.encryptToBits("testPatient2Home Address, test Road"),
+                                EH.encryptToBits("B0 5QK"),
+                                "Patient",
+                                "F"))
+        result = Q.executeCommit(("333",
+                                  "testPatient3",
+                                  passwordHelper.hashPW("tPPW3"),
+                                  EH.encryptToBits("1984-02-03"),
+                                  EH.encryptToBits("testPatient2FitstName"),
+                                  EH.encryptToBits("testPatient2LastName"),
+                                  EH.encryptToBits("1929292823"),
+                                  EH.encryptToBits("testPatient2Home Address, test Road"),
+                                  EH.encryptToBits("B0 5QK"),
+                                  "Patient",
+                                  "F"))
+        #EH = encryptionHelper()
+        # example admin user
+        result = Q.executeCommit(("Admin12",
+                                   "testAdmin124",
+                                   passwordHelper.hashPW("testAdmin"),
+                                   EH.encryptToBits("1991-01-04"),
+                                   EH.encryptToBits("testAdminFitstName"),
+                                   EH.encryptToBits("testAdminLastName"),
+                                   EH.encryptToBits("0123450281"),
+                                   EH.encryptToBits("test Admin Home Address, test Road"),
+                                   EH.encryptToBits("AD4 7RT"),
+                                   "Admin",
+                                   "F"))
+
+        Q2 = SQLQuerry("INSERT INTO visit VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+        EH = encryptionHelper()
+        result = Q2.executeCommit(("111",
+                                  "333",
+                                  "G01",
+                                  "2020-12-25 14:00:00",
+                                  "T",
+                                  "F",
+                                  "",
+                                  "Headache"
+                                  ))
+
+        #Q3 = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+
+        pass
+    # result = Q2.executeCommit(("1929282829",
+    #                           "testPatient",
+    #                           passwordHelper.hashPW("tPPW"),
+    #                           EH.encryptToBits("1982-02-03"),
+    #                           EH.encryptToBits("testPatientFitstName"),
+    #                           EH.encryptToBits("testPatientLastName"),
+    #                           EH.encryptToBits("2929192821"),
+    #                           EH.encryptToBits("testPatientHome Address, test Road"),
+    #                           EH.encryptToBits("A0 5QS"),
+    #                           "Patient",
+    #                           "F"))
+    # result = Q2.executeCommit(("2929282822",
+    #                           "testPatient2",
+    #                           passwordHelper.hashPW("tPPW2"),
+    #                           EH.encryptToBits("1984-02-03"),
+    #                           EH.encryptToBits("testPatient2FitstName"),
+    #                           EH.encryptToBits("testPatient2LastName"),
+    #                           EH.encryptToBits("1929292823"),
+    #                           EH.encryptToBits("testPatient2Home Address, test Road"),
+    #                           EH.encryptToBits("B0 5QK"),
+    #                           "Patient",
+    #                           "F"))
     # Q2 = SQLQuerry("SELECT * FROM Users")
     # result = Q2.executeFetchAll()
     # print(result)
     # for i in range(3,8):
     #     print(EH.decryptMessage(result[0][i]))
-    pass
+

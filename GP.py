@@ -7,6 +7,10 @@ import time
 import sys
 import datetime
 
+
+
+
+
 class GPNavigator():
     """
     GP option for navigation
@@ -19,15 +23,15 @@ class GPNavigator():
         """
         while True:
             os.system('cls' if os.name == 'nt' else "printf '\033c'")
-            print(f"Login Successsful. Hello {user.firstName}")
-            userInfoTable = [("User Type:", user.UserType),
-                        ("First Name: ", user.firstName),
-                        ("Last Name: ", user.lastName),
-                        ("Birthday: ", user.birthday),
-                        ("Phone No: ", user.phoneNo),
-                        ("Home Address: ", user.HomeAddress),
-                        ("Post Code: ", user.postCode)
-                        ]
+            print(f"Login Successful. Hello {user.firstName}")
+            userInfoTable = [["User Type:", user.UserType],
+                            ["First Name: ", user.firstName],
+                            ["Last Name: ", user.lastName],
+                            ["Birthday: ", user.birthday],
+                            ["Phone No: ", user.phoneNo],
+                            ["Home Address: ", user.HomeAddress],
+                            ["Post Code: ", user.postCode]
+                            ]
             print(tabulate(userInfoTable))
             userInput = parser.selectionParser(options={"A": "add/View availability","C": "Confirm/view bookings","V": "View/Start appointment","--logout": "logout"})
             if userInput == "--logout":
@@ -45,6 +49,7 @@ class GPNavigator():
                 currentPage = GPNavigator.confirmBooking(user)
             if currentPage == "V":
                 #add your function to here
+                currentPage = GPNavigator.viewAppointment(user)
                 pass
 
     @staticmethod
@@ -236,6 +241,7 @@ class GPNavigator():
                 print(f"You are viewing your bookings of: {selectedDate.strftime('%Y-%m-%d')}")
                 print(tabulate(QbookedTable, headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name", "Confirmed"]))
                 selectEntryNo = parser.integerParser(question="Select Entry using number")
+
                 print(selectEntryNo)
                 if selectEntryNo == "--back":
                     stage = 0
@@ -275,10 +281,173 @@ class GPNavigator():
                         exeQuerryReject = QuerryReject.executeCommit((selectedRowRaw[1],))
                         return
 
-        
-            
+    @staticmethod
+    def viewAppointment(user):
+        """
+        step 1 in branch v ask which date the user wish to manipulte ->
+        Display confirmed appointment of the date ->
 
-                
+        """
+        stage = 0
+        selectedDate = None
+        while True:
+            while stage == 0:
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                dateInput = parser.dateParser(question="Select a Date:")
+                if dateInput == "--back":
+                    return "main"
+                else:
+                    selectedDate = dateInput
+                    stage = 1
+            while stage == 1:
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                Qtext = "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, users.lastName, visit.Confirmed "
+                Qtext += "FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
+                Qtext += "WHERE visit.StaffID = ? AND visit.Timeslot >= ? AND visit.Timeslot <= ? AND visit.Confirmed = 'T' "
+                #print(Qtext)
+                Qbooked = SQLQuerry(Qtext)
+
+                selectedDatePlus1 = selectedDate + datetime.timedelta(days=1)
+                Qbookedresult = Qbooked.executeFetchAll(decrypter=user.encryptionKey, parameters = (user.ID, selectedDate, selectedDatePlus1))
+                QbookedTableRaw = []
+                QbookedTable = []
+                translation = {"T":"Accepted", "F": "Rejected", "P": "Pending Response"}
+                for i in range(len(Qbookedresult)):
+                    QbookedTable.append([i+1, Qbookedresult[i][0],str(Qbookedresult[i][1]), Qbookedresult[i][2], Qbookedresult[i][3],Qbookedresult[i][4], translation[Qbookedresult[i][5]]])
+                    QbookedTableRaw.append([i+1, Qbookedresult[i][0], Qbookedresult[i][2]])
+                print(f"You are viewing all of your confirmed bookings of: {selectedDate.strftime('%Y-%m-%d')}")
+                print(tabulate(QbookedTable, headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name", "Confirmed"]))
+                # print(tabulate(QbookedTableRaw, headers=["Pointer", "BookingNo", "Patient NHSNo"]))
+                selectEntryNo = parser.integerParser(question="Select Entry using number or input '--back' for back")
+                print(selectEntryNo)
+                if selectEntryNo == "--back":
+                    stage = 0
+                    break
+                #selectedRow = QbookedTable[selectEntryNo-1]
+                #print(selectedRow)
+                # selectedNhsNo = QbookedTableRaw[selectEntryNo-1][2]
+                # print(selectedNhsNo)
+
+                selectedBookingNo=QbookedTableRaw[selectEntryNo-1][1]
+                print(selectedBookingNo)
+
+                GPNavigator.chooseAppointment(selectedBookingNo, user)
+    
+    @staticmethod
+    def chooseAppointment(selectedBookingNo, user):
+            """
+            step 2 in branch v
+            show details of selected patient  ->
+            ask the user whether they wish to change it ->
+            for D and N they can change diagnosis or notes ->
+            for P they can add or remove prescription
+            """
+
+            while True:
+
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                Qtext = "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, users.lastName, visit.Confirmed, users.birthday, users.phoneNo, users.HomeAddress, users.postcode, visit.diagnosis, visit.notes "
+                Qtext += "FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
+                Qtext += "WHERE visit.BookingNo = ? "
+                Qbooked = SQLQuerry(Qtext)
+                Qbookedresult = Qbooked.executeFetchAll(decrypter=user.encryptionKey, parameters = (selectedBookingNo,))
+                print(tabulate([Qbookedresult[0][:-3]], headers=["BookingNo", "timeslot", "Patient NHSNo",  "P. First Name", "P. Last Name", "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
+                print("----------")
+                print("Diagnosis:")
+                print("----------")
+                print(Qbookedresult[0][10])
+                print("----------")
+                print("Notes:")
+                print("----------")
+                print(Qbookedresult[0][11])
+                print("-------------")
+                print("Prescription:")
+                print("-------------")
+                Qtext = "SELECT drugName, quantity, instructions "
+                Qtext += "FROM prescription WHERE BookingNo = ? "
+                Qprescription = SQLQuerry(Qtext)
+                Qprescriptionresult = Qprescription.executeFetchAll(decrypter=user.encryptionKey,parameters=(selectedBookingNo,))
+                QprescriptionresultTable = []
+                for i in range(len(Qprescriptionresult)):
+                    QprescriptionresultTable.append([i+1, Qprescriptionresult[i][0], Qprescriptionresult[i][1],  Qprescriptionresult[i][2]])
+                print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
+                print("--------------")
+                userInput = parser.selectionParser(options={"D": "add diagnosis", "N": "add notes", "P": " edit prescription", "--back": "back to previous page"})
+                if userInput == "--back":
+                    return
+                elif userInput == "D":
+                    os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                    print(f"Here is your diagnosis for Booking Number {Qbookedresult[0][0]}")
+                    print("----------")
+                    print("Diagnosis:")
+                    print("----------")
+                    print(Qbookedresult[0][10])
+                    QuerryDiagnosis = SQLQuerry(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ")
+
+                    diagnosisInput = parser.stringParser("Please enter your diagnosis:")
+
+                    exeQuerryDiagnosis = QuerryDiagnosis.executeCommit((diagnosisInput, Qbookedresult[0][0]))
+                    print("Your diagnosis has been given, you are going back to the patient info page...")
+
+                elif userInput == "N":
+                    os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                    print(f"Here is your note for Booking Number {Qbookedresult[0][0]}")
+                    print("----------")
+                    print("Notes:")
+                    print("----------")
+                    print(Qbookedresult[0][11])
+                    QuerryDiagnosis = SQLQuerry(" UPDATE Visit SET notes = ? WHERE NHSNo = ? ")
+                    #notesInput = input("Please enter your notes:\n")
+                    notesInput = parser.stringParser("Please enter your notes:")
+                    # print(notesInput)
+                    exeQuerryNotes = QuerryDiagnosis.executeCommit((notesInput, Qbookedresult[0][0]))
+                    print("Your notes has been given,you are going back to the patient info page...")
+
+                elif userInput == "P":
+                    os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                    print(f"Here is your Prescription for Booking Number {Qbookedresult[0][0]}")
+                    print("-------------")
+                    print("Prescription:")
+                    print("-------------")
+                    print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
+
+                    userInput = parser.selectionParser(options={"A": "add prescription", "R": "remove prescription", "--back": "back to previous page"})
+                    if userInput == "--back":
+                        return
+                    elif userInput == "A":
+                        os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                        Querryprescription = SQLQuerry(" INSERT INTO prescription (BookingNo, drugName, quantity, instructions) VALUES (?, ?, ?, ?)  ")
+                        #BookingNo = input("Please enter your BookingNo:\n")
+                        # print(notesInput)
+                        #drugName = input("Please enter your drugName:\n")
+                        drugName = parser.stringParser("Please enter your drugname:")
+                        #quantity = input("Please enter your quantity:\n")
+                        quantity = parser.stringParser("Please enter your quantity:")
+                        #instructions = input("Please enter your instructions:\n")
+                        instructions = parser.stringParser("Please enter your instructions:")
+
+                        exeQuerryprescription = Querryprescription.executeCommit((Qbookedresult[0][0], drugName, quantity, instructions))
+                        print("Your prescription has been given,you are going back to the patient info page...")
+
+                    elif userInput == "R":
+                        GPNavigator.removePrescripion(Qbookedresult[0][0], QprescriptionresultTable)
+                        
+    @staticmethod
+    def removePrescripion(BookingNo, QprescriptionresultTable):
+        os.system('cls' if os.name == 'nt' else "printf '\033c'")
+        print(f"Here is your Prescription for Booking Number {BookingNo}")
+        print("-------------")
+        print("Prescription:")
+        print("-------------")
+        print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
+        Querryprescription = SQLQuerry(" DELETE FROM prescription WHERE BookingNo = ? AND drugName = ? ")
+        selectItemNo = parser.integerParser(question="Select Item using number")
+        if selectItemNo == "--back":
+            return
+        # print(notesInput)
+        exeQuerryprescription = Querryprescription.executeCommit((BookingNo, QprescriptionresultTable[selectItemNo-1][1]))
+        print("this prescription has been removed,you are going back to the patient info page...")
+        return
 
 if __name__ == "__main__":
     user = currentUser()

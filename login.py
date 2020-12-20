@@ -6,16 +6,21 @@ import time
 import sys
 import getpass
 import os
+
+
 class DBRecordError(Exception):
     '''
     error class created for datetime object
     '''
     pass
+
+
 class notMatchError(Exception):
     '''
     error class created for datetime object
     '''
     pass
+
 
 class userInterruption(Exception):
     '''
@@ -23,17 +28,19 @@ class userInterruption(Exception):
     '''
     pass
 
+
 class currentUser():
-    def __init__ (self, username, encryptionKey):
+    def __init__(self, username, encryptionKey):
         '''
         return a currentUser Object to remember the information of current user.
         '''
         self.username = username
         self.encryptionKey = encryptionKey
-        #retrieving the full information from DATAbase instead of just the password for authentication
-        fullUQuerry = SQLQuerry("SELECT ID, passCode, firstName, lastName, phoneNo, HomeAddress, postCode, birthday, UserType FROM Users WHERE username == ?")
+        # retrieving the full information from DATAbase instead of just the password for authentication
+        fullUQuerry = SQLQuerry(
+            "SELECT ID, passCode, firstName, lastName, phoneNo, HomeAddress, postCode, birthday, UserType FROM Users WHERE username == ?")
         fullUserArray = fullUQuerry.executeFetchAll(decrypter=self.encryptionKey, parameters=(self.username,))
-        #loading the user info into a state
+        # loading the user info into a state
         self.ID = fullUserArray[0][0]
         self.passCode = fullUserArray[0][1]
         self.firstName = fullUserArray[0][2]
@@ -44,7 +51,7 @@ class currentUser():
         self.birthday = fullUserArray[0][7]
         self.UserType = fullUserArray[0][8]
 
-        
+
 class loginHelp():
     def Login():
         """
@@ -57,7 +64,7 @@ class loginHelp():
             loginUsername = None
             if stage == 0:
                 loginUsername = loginHelp.checkUserName()
-                #print(loginUsername)
+                # print(loginUsername)
                 if loginUsername == False:
                     return False
                 else:
@@ -65,7 +72,7 @@ class loginHelp():
             if stage == 1:
                 checkPW = loginHelp.checkPW(loginUsername)
                 print(checkPW)
-                #print(checkPW)
+                # print(checkPW)
                 if checkPW == True:
                     stage = 2
                 else:
@@ -73,11 +80,10 @@ class loginHelp():
             if stage == 2:
                 checkDeactivated = loginHelp.checkDeactivated(loginUsername)
                 if checkDeactivated == False:
-                    #return the username and loading the encryption key for use
+                    # return the username and loading the encryption key for use
                     print("not Deactivated")
                     key = encryptionHelper()
-                    return (loginUsername, key) 
-
+                    return (loginUsername, key)
 
     @staticmethod
     def checkUserName():
@@ -87,9 +93,9 @@ class loginHelp():
         """
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
         while True:
-            #trying to get username
+            # trying to get username
             tryUsername = parser.stringParser("Please enter your username OR '--back' to go back")
-            #retrieving the user if exist to compare to PW
+            # retrieving the user if exist to compare to PW
             usernameQuerry = SQLQuerry("SELECT username FROM Users WHERE username == ?")
             qResult = usernameQuerry.executeFetchAll(parameters=(tryUsername,))
             if tryUsername == '--back':
@@ -100,7 +106,8 @@ class loginHelp():
             else:
                 os.system('cls' if os.name == 'nt' else "printf '\033c'")
                 print("Incorrect UserName!!!")
-    @staticmethod        
+
+    @staticmethod
     def checkPW(username):
         """
         :param (username): username to check the password
@@ -110,14 +117,14 @@ class loginHelp():
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
         for i in range(4, -1, -1):
             try:
-                #the PW is saved in hash so need to convert to hash to compare special parsing function becasue it will hide the needed 
+                # the PW is saved in hash so need to convert to hash to compare special parsing function becasue it will hide the needed
                 PWQuerry = SQLQuerry("SELECT passCode FROM Users WHERE username == ?")
                 qResult = PWQuerry.executeFetchAll(parameters=(username,))
                 tryPW = passwordHelper.hashPW(getpass.getpass("Enter your password: "))
                 if tryPW == '--back':
                     return False
                 if tryPW == qResult[0][0]:
-                    #load encryption key if PW is correct
+                    # load encryption key if PW is correct
                     print("Password Correct")
                     return True
                 else:
@@ -129,6 +136,7 @@ class loginHelp():
             print("Too many wrong PW attempt. terminating ...")
             time.sleep(3)
             sys.exit(1)
+
     @staticmethod
     def checkDeactivated(username):
         """
@@ -145,10 +153,11 @@ class loginHelp():
             time.sleep(3)
             sys.exit(1)
 
+
 if __name__ == "__main__":
     # tryQuerry = SQLQuerry("SELECT ID, username, passCode, firstName, lastName, phoneNo, HomeAddress, postCode, UserType, deactivated  FROM Users WHERE username == ?")
     # EH = encryptionHelper()
     # result = tryQuerry.executeFetchAll(decrypter=EH, parameters=('testGP',))
     # print(result)
-    #print(user.ID, user.username, user.passCode, user.firstName, user.lastName, user.phoneNo, user.HomeAddress, user.postCode, user.UserType, user.deactivated)
-    pass
+    # print(user.ID, user.username, user.passCode, user.firstName, user.lastName, user.phoneNo, user.HomeAddress, user.postCode, user.UserType, user.deactivated)
+    pas
