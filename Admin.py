@@ -138,19 +138,27 @@ class AdminNavigator():
 
         # select a deactivated GP account to delete
         while True:
-            print("Please match name exactly. Press Enter to go back.\n")
-            selectedGP = input("Write the name of GP to delete: ")
-            if selectedGP == "":
-                break
-            if selectedGP not in onlyGPs:
-                print("This name does not exist. Please try again.\n")
-                continue
-            else:
-                # delete query, make sure to delete all presence of that user
-                deleteQuery = SQLQuerry("DELETE FROM Users WHERE username=:who")
-                deleteQuery.executeCommit({"who": selectedGP})
-                print("GP {0} deleted from Users table.\n".format(selectedGP))
+            menu = parser.selectionParser(
+                options={"A": "Delete GP", "--back": "back"})
+
+            if menu == "--back":
                 return
+            elif menu == "A":
+                selectedGP = input("Write the name of GP to delete: ")
+                if selectedGP == "":
+                    break
+                if selectedGP not in onlyGPs:
+                    print("This name does not exist. Please try again.\n")
+                    continue
+                else:
+                # delete query, make sure to delete all presence of that user
+                    deleteQuery = SQLQuerry("DELETE FROM Users WHERE username=:who")
+                    deleteQuery.executeCommit({"who": selectedGP})
+                    print("GP {0} deleted from Users table.\n".format(selectedGP))
+                    return
+            else:
+                print("Not a valid selection.\n")
+                continue
 
     def getCheckUserInput(self, parameterName, userGroup):
         """
@@ -280,43 +288,47 @@ class AdminNavigator():
 
         # select a user from the table
         while True:
-            print("Please match username exactly. Press Enter to go back.\n")
-            selectedUser = input("Enter the username to edit the profile: ")
-            if selectedUser == "":
-                break
-            if selectedUser not in GPandPatient:
-                print("This username does not exist. Please enter a valid username.\n")
-                continue
-            else:
-                recordEditor = parser.selectionParser(
-                    options={"A": "Update Password", "B": "Update Birthday",
+            editmenu = parser.selectionParser(
+                options={"A": "Edit GP or Patient", "--back": "back"})
+            if editmenu == "--back":
+                return
+            elif editmenu == "A"
+                selectedUser = input("Enter the username to edit the profile: ")
+                if selectedUser == "":
+                    break
+                if selectedUser not in GPandPatient:
+                    print("This username does not exist. Please enter a valid username.\n")
+                    continue
+                else:
+                    recordEditor = parser.selectionParser(
+                        options={"A": "Update Password", "B": "Update Birthday",
                              "C": "Update Firstname", "D": "Update Lastname",
                              "E": "Update Phone Number","F":"Update Home Address","G":"Update Postcode",
                              "--back": "back"})
 
-                if recordEditor == "--back":
-                    return
-                elif recordEditor == "A":
-                    newpassword = AdminNavigator.registerNewPassword(user)
-                elif recordEditor == "B":
-                    newbirthday = parser().dateParser("Please enter birthday: ", allowback=False)
-                elif recordEditor == "C":
-                    newfirstName = input("Please enter new first name: ")
-                elif recordEditor == "D":
-                    newlastName = input("Please enter new last name: ")
-                elif recordEditor == "E":
-                    newtelephone = AdminNavigator.validLocalPhoneNumber(user)
-                elif recordEditor == "F":
-                    newaddress = input("Please enter primary home address (one line): ")
-                elif recordEditor == "G":
-                    newpostcode = AdminNavigator.validPostcode(user)
-                else:
-                    print("Please enter a valid selection.\n")
+                    if recordEditor == "--back":
+                        return
+                    elif recordEditor == "A":
+                        newpassword = AdminNavigator.registerNewPassword(user)
+                    elif recordEditor == "B":
+                        newbirthday = parser().dateParser("Please enter birthday: ", allowback=False)
+                    elif recordEditor == "C":
+                        newfirstName = input("Please enter new first name: ")
+                    elif recordEditor == "D":
+                        newlastName = input("Please enter new last name: ")
+                    elif recordEditor == "E":
+                        newtelephone = AdminNavigator.validLocalPhoneNumber(user)
+                    elif recordEditor == "F":
+                        newaddress = input("Please enter primary home address (one line): ")
+                    elif recordEditor == "G":
+                        newpostcode = AdminNavigator.validPostcode(user)
+                    else:
+                        print("Not a valid selection.\n")
 
-                editQ = SQLQuerry("UPDATE Users SET passCode = ?, birthday = ?, firstName = ?, lastName = ?,"
+                    editQ = SQLQuerry("UPDATE Users SET passCode = ?, birthday = ?, firstName = ?, lastName = ?,"
                                   "phoneNo = ?, HomeAddress = ?, postCode = ? WHERE username= ?")
-                EH = encryptionHelper()
-                editQ.executeCommit((passwordHelper.hashPW(newpassword),
+                    EH = encryptionHelper()
+                    editQ.executeCommit((passwordHelper.hashPW(newpassword),
                                      EH.encryptToBits(str(newbirthday.date())),
                                      EH.encryptToBits(newfirstName),
                                      EH.encryptToBits(newlastName),
@@ -324,8 +336,10 @@ class AdminNavigator():
                                      EH.encryptToBits(newaddress),
                                      EH.encryptToBits(newpostcode),
                                      selectedUser))
-                print("Successfully Update to Database. Going back to home page.\n")
-                return
+                    print("Successfully Update to Database. Going back to home page.\n")
+                    return
+            else:
+                print("Not a valid selection.\n")
 
 
                 print("Done.\n")
