@@ -270,7 +270,7 @@ class AdminNavigator():
         :return: Edit existing GP or Patient Record
         """
         #show all GPs and Patients
-        viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' or 'Patient'")
+        viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' or UserType= 'Patient'")
 
         viewallGPsandPatientsResult = viewallGPsandPatients.executeFetchAll()
 
@@ -278,12 +278,12 @@ class AdminNavigator():
             print("No Patients or GPs registered. Please add before coming back.\n")
             return
 
-        viewallGPsandPatientsTable, GPandPatient,usertype = [], [], []
+        viewallGPsandPatientsTable, GPandPatient= [], []
         for nameIndex in range(len(viewallGPsandPatientsResult)):
             GPandPatient.append(viewallGPsandPatientsResult[nameIndex][0])
             viewallGPsandPatientsTable.append([nameIndex + 1, viewallGPsandPatientsResult[nameIndex][0]])
 
-        print(tabulate(viewallGPsandPatientsTable, headers=("ID", "Username", "Usertype")))
+        print(tabulate(viewallGPsandPatientsTable, headers=("ID", "Username")))
 
         # select a user from the table
         while True:
@@ -304,7 +304,7 @@ class AdminNavigator():
                         options={"A": "Update Password", "B": "Update Birthday",
                              "C": "Update Firstname", "D": "Update Lastname",
                              "E": "Update Phone Number","F":"Update Home Address","G":"Update Postcode",
-                             "--back": "back"})
+                             "H": "Update the status","--back": "back"})
 
                     if recordEditor == "--back":
                         return
@@ -328,6 +328,9 @@ class AdminNavigator():
                     elif recordEditor == "F":
                         newParameterValue = encryptionHelper().encryptToBits(input("Please enter primary home address (one line): "))
                         parameter = "HomeAddress"
+                    elif recordEditor == "H":
+                        newParameterValue = encryptionHelper().encryptToBits(input("Please enter the current status of the user(Deactivated T or F):"))
+                        parameter = "Deactivated"
                     else:
                         newParameterValue = AdminNavigator.validPostcode(user)
                         parameter = "postCode"
