@@ -263,7 +263,7 @@ class AdminNavigator():
         :return: Edit existing GP or Patient Record
         """
         #show all GPs and Patients
-        viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' and 'Patient'")
+        viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' or 'Patient'")
 
         viewallGPsandPatientsResult = viewallGPsandPatients.executeFetchAll()
 
