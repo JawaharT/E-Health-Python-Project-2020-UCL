@@ -112,7 +112,11 @@ class AdminNavigator():
                 # decrypting the encrypted data
                 if decrypt:
                     for columnNumber in range(startOfDecryption, len(headers)):
-                        currentRecord.append(EH.decryptMessage(allData[recordNumber][columnNumber]))
+                        try:
+                            currentRecord.append(EH.decryptMessage(allData[recordNumber][columnNumber]))
+                        except TypeError:
+                            print("Some data is not encrypted. Cannot be shown.")
+                            break
                 decryptedData.append(currentRecord)
 
             print(tabulate(decryptedData, headers))
@@ -127,6 +131,11 @@ class AdminNavigator():
         allDeactivatedGPs = SQLQuerry("SELECT username FROM Users WHERE Deactivated = 'T' AND UserType= 'GP'")
 
         allDeactivatedGPsResult = allDeactivatedGPs.executeFetchAll()
+
+        if len(allDeactivatedGPsResult) == 0:
+            print("No deactivated GPs available to delete.\n")
+            return
+
         allDeactivatedGPsTable, onlyGPs = [], []
         for nameIndex in range(len(allDeactivatedGPsResult)):
             onlyGPs.append(allDeactivatedGPsResult[nameIndex][0])
@@ -134,15 +143,11 @@ class AdminNavigator():
 
         print(tabulate(allDeactivatedGPsTable, headers=("ID", "Username")))
 
-        if len(allDeactivatedGPsTable) == 0:
-            print("No deactivated GPs available to delete.\n")
-            return
-
         # select a deactivated GP account to delete
         while True:
-            print("Please match name exactly. Press Enter to go back.\n")
+            print("Please match name exactly. Enter --back to go back.\n")
             selectedGP = input("Write the name of GP to delete: ")
-            if selectedGP == "":
+            if selectedGP == "--back":
                 break
             if selectedGP not in onlyGPs:
                 print("This name does not exist. Please try again.\n")
@@ -216,8 +221,11 @@ class AdminNavigator():
         :return: updated table with new GP or patient record
         """
         while True:
+            print("Press --back to go back.")
             userGroup = input("Please enter type of user (GP or Patient): ").lower().strip()
-            if userGroup == "gp":
+            if userGroup == "--back":
+                return
+            elif userGroup == "gp":
                 newID = parser().GPStaffNoParser()
                 userGroup = userGroup.upper()
                 break
@@ -265,8 +273,7 @@ class AdminNavigator():
         :return: Edit existing GP or Patient Record
         """
         # show all GPs and Patients
-        viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' and 'Patient'")
-
+        viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' or 'Patient'")
         viewallGPsandPatientsResult = viewallGPsandPatients.executeFetchAll()
 
         if len(viewallGPsandPatientsResult) == 0:
@@ -282,9 +289,9 @@ class AdminNavigator():
 
         # select a user from the table
         while True:
-            print("Please match name exactly. Press Enter to go back.")
+            print("Please match name exactly. Press --back to go back.")
             selectedUser = input("Write the name of GP or Patient to Update the information: ")
-            if selectedUser == "":
+            if selectedUser == "--back":
                 break
             if selectedUser not in GPandPatient:
                 print("This name does not exist. Please try again.\n")
@@ -292,66 +299,22 @@ class AdminNavigator():
             else:
                 # Update query
                 print("Please update the information:")
-                newfirstName = str(input("Please enter the new Firstname:"))
-                newlastName = str(input("Please enter the new Lastname:"))
-                newphoneNo = int(input("Please enter the new phone number:"))
-                newHomeAddress = str(input("Please enter the new home address:"))
-                newpostCode = str(input("Please enter the new postcode:"))
-                UpdateQuery = SQLQuerry("UPDATE Users SET firstName = 'newfirstName',  lastName = 'newlastName', phoneNo = 'newphoneNo', HomeAddress ='newHomeAddress', postcode ='newpostCode' WHERE username=:who")
-                UpdateQuery.executeCommit({"who": selectedUser})
+                EH = encryptionHelper()
+                newFirstName = EH.encryptToBits(input("Please enter first name: "))
+                newLastName = EH.encryptToBits(input("Please enter last name: "))
+                newPhoneNo = EH.encryptToBits(AdminNavigator.validLocalPhoneNumber(user))
+                newHomeAddress = EH.encryptToBits(input("Please enter primary home address (one line): "))
+                newPostCode = EH.encryptToBits(AdminNavigator.validPostcode(user))
+                UpdateQuery = SQLQuerry("UPDATE Users SET firstName =:first,  lastName =:last, "
+                                        "phoneNo =:phone, HomeAddress =:home, postcode =:code "
+                                        "WHERE username=:who")
+                UpdateQuery.executeCommit({"first": newFirstName, "last": newLastName, "phone": newPhoneNo,
+                                           "home": newHomeAddress, "code": newPostCode, "who": selectedUser})
                 print("Done.\n")
                 break
 
 
 if __name__ == "__main__":
-    """Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    EH = encryptionHelper()
-    result = Q.executeCommit(("GP1",
-                              "testGP1",
-                              passwordHelper.hashPW("testGPPW2"),
-                              EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testGP1FitstName"),
-                              EH.encryptToBits("testGP1LastName"),
-                              EH.encryptToBits("0123450243"),
-                              EH.encryptToBits("testGP1Home Address, test Road"),
-                              EH.encryptToBits("AB1 7RT"),
-                              "GP",
-                              "T"))
-    result = Q.executeCommit(("GP2",
-                              "testGP2",
-                              passwordHelper.hashPW("testGPPW3"),
-                              EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testGP2FitstName"),
-                              EH.encryptToBits("testGP2LastName"),
-                              EH.encryptToBits("0123450244"),
-                              EH.encryptToBits("testGP2Home Address, test Road"),
-                              EH.encryptToBits("AC1 7RT"),
-                              "GP",
-                              "T"))
-    result = Q.executeCommit(("GP3",
-                              "testGP3",
-                              passwordHelper.hashPW("testGPPW"),
-                              EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testGP3FitstName"),
-                              EH.encryptToBits("testGP3LastName"),
-                              EH.encryptToBits("0123450289"),
-                              EH.encryptToBits("testGP3Home Address, test Road"),
-                              EH.encryptToBits("AD1 7RT"),
-                              "GP",
-                              "T"))
-
-    # example admin user
-    result = Q.executeCommit(("Admin12",
-                              "testAdmin124",
-                              passwordHelper.hashPW("testAdmin"),
-                              EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testAdminFitstName"),
-                              EH.encryptToBits("testAdminLastName"),
-                              EH.encryptToBits("0123450281"),
-                              EH.encryptToBits("test Admin Home Address, test Road"),
-                              EH.encryptToBits("AD4 7RT"),
-                              "Admin",
-                              "F"))"""
     loginParam = loginHelp.Login()
     user = currentUser(loginParam[0], loginParam[1])
     AdminNavigator.mainNavigator(user)
