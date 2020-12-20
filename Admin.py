@@ -292,7 +292,7 @@ class AdminNavigator():
                 options={"A": "Edit GP or Patient", "--back": "back"})
             if editmenu == "--back":
                 return
-            elif editmenu == "A"
+            elif editmenu == "A":
                 selectedUser = input("Enter the username to edit the profile: ")
                 if selectedUser == "":
                     break
