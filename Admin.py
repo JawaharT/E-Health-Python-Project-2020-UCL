@@ -3,6 +3,7 @@ from tabulate import tabulate
 
 from encryption import encryptionHelper, passwordHelper
 from login import currentUser, loginHelp
+import getpass
 from parserHelp import parser
 from databaseHelp import SQLQuerry
 import time
@@ -65,15 +66,15 @@ class AdminNavigator():
             if recordViewer == "--back":
                 return
             elif recordViewer == "A":
-                query = SQLQuerry("SELECT ID, Username, Deactivated, birthday, firstName, lastName, phoneNo,"
+                query = SQLQuerry("SELECT Deactivated, ID, Username, birthday, firstName, lastName, phoneNo,"
                                   " HomeAddress, postCode FROM USERS WHERE UserType = 'Patient'")
-                headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
+                headers = ("Deactivated", "ID", "Username", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
                 startOfDecryption, decrypt = 3, True
             elif recordViewer == "B":
-                query = SQLQuerry("SELECT ID, Username, Deactivated, birthday, firstName, lastName, phoneNo,"
+                query = SQLQuerry("SELECT Deactivated, ID, Username, birthday, firstName, lastName, phoneNo,"
                                   " HomeAddress, postCode FROM USERS WHERE UserType = 'GP'")
-                headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
+                headers = ("Deactivated", "ID", "Username", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
                 startOfDecryption, decrypt = 3, True
             elif recordViewer == "C":
@@ -144,6 +145,7 @@ class AdminNavigator():
             if menu == "--back":
                 return
             elif menu == "A":
+                print("Press Enter to delete.")
                 selectedGP = input("Write the name of GP to delete: ")
                 if selectedGP == "":
                     break
@@ -184,13 +186,16 @@ class AdminNavigator():
         :return: check for valid new password that will match
         """
         while True:
-            password = input("Please enter Password: ")
-            passwordConfirm = input("Password confirmation: ")
+            #password = input("Please enter Password: ")
+            #passwordConfirm = input("Password confirmation: ")
+
+            password = getpass.getpass("Enter new password: ")
+            passwordConfirm = getpass.getpass("Enter new password again: ")
             if password != passwordConfirm:
                 print("Passwords do not match. Please try again.\n")
             else:
                 print("Passwords Match.\n")
-                return password
+                return passwordHelper.hashPW(password)
 
     def validLocalPhoneNumber(self):
         """
@@ -201,7 +206,7 @@ class AdminNavigator():
             if (len(phoneNumber.strip()) == 11) and \
                     (not any([char in phoneNumber for char in ["+", "-", "(", ")"]])):
                 print("Valid Phone Number.\n")
-                return phoneNumber
+                return encryptionHelper().encryptToBits(phoneNumber)
             else:
                 print("Invalid Phone Number.Please try again.\n")
 
@@ -215,7 +220,7 @@ class AdminNavigator():
                 print("Invalid Postcode. Please try again.\n")
             else:
                 print("Valid Postcode.\n")
-                return tempPostcode
+                return encryptionHelper().encryptToBits(tempPostcode)
 
     def addGPPatient(self):
         """
@@ -235,36 +240,30 @@ class AdminNavigator():
                 print("Incorrect input. Please Try again.\n")
                 continue
 
-        print(userGroup)
+        #print(userGroup)
         username = AdminNavigator.getCheckUserInput(user, "username", userGroup)
         password = AdminNavigator.registerNewPassword(user)
 
-        birthday = parser().dateParser("Please enter birthday: ", allowback=False)
-        firstName = input("Please enter first name: ")
-        lastName = input("Please enter last name: ")
+        birthday = encryptionHelper().encryptToBits(str(parser().dateParser("Please enter birthday: ", False).date()))
+        firstName = encryptionHelper().encryptToBits(input("Please enter first name: "))
+        lastName = encryptionHelper().encryptToBits(input("Please enter last name: "))
 
         # check for only local phone numbers and 11 digits only
         telephone = AdminNavigator.validLocalPhoneNumber(user)
-        address = input("Please enter primary home address (one line): ")
+        address = encryptionHelper().encryptToBits(input("Please enter primary home address (one line): "))
 
         # check for only 5 or 7 chars
         postcode = AdminNavigator.validPostcode(user)
 
         Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        EH = encryptionHelper()
-        Q.executeCommit((newID,
-                         username,
-                         passwordHelper.hashPW(password),
-                         EH.encryptToBits(str(birthday.date())),
-                         EH.encryptToBits(firstName),
-                         EH.encryptToBits(lastName),
-                         EH.encryptToBits(telephone),
-                         EH.encryptToBits(address),
-                         EH.encryptToBits(postcode),
-                         userGroup,
-                         "F"))
+        Q.executeCommit((newID, username, password, birthday, firstName, lastName, telephone, address, postcode,
+                         userGroup, "F"))
         print("Successfully Added to Database. Going back to home page.\n")
         return
+
+    def updateParameterRecord(self, selectedUser, parameter, newParameterValue):
+        editQ = SQLQuerry("UPDATE Users SET {0} = ? WHERE username= ?".format(parameter))
+        editQ.executeCommit((newParameterValue, selectedUser))
 
     def editGPPatient(self):
         """
@@ -293,6 +292,7 @@ class AdminNavigator():
             if editmenu == "--back":
                 return
             elif editmenu == "A":
+                print("Press enter to go back.")
                 selectedUser = input("Enter the username to edit the profile: ")
                 if selectedUser == "":
                     break
@@ -309,41 +309,32 @@ class AdminNavigator():
                     if recordEditor == "--back":
                         return
                     elif recordEditor == "A":
-                        newpassword = AdminNavigator.registerNewPassword(user)
+                        newParameterValue = AdminNavigator.registerNewPassword(user)
+                        parameter = "passCode"
                     elif recordEditor == "B":
-                        newbirthday = parser().dateParser("Please enter birthday: ", allowback=False)
+                        # newbirthday = parser().dateParser("Please enter birthday: ", allowback=False)
+                        newParameterValue = encryptionHelper().encryptToBits(
+                            str(parser().dateParser("Please enter birthday: ", False).date()))
+                        parameter = "birthday"
                     elif recordEditor == "C":
-                        newfirstName = input("Please enter new first name: ")
+                        newParameterValue = encryptionHelper().encryptToBits(input("Please enter new first name: "))
+                        parameter = "firstName"
                     elif recordEditor == "D":
-                        newlastName = input("Please enter new last name: ")
+                        newParameterValue = encryptionHelper().encryptToBits(input("Please enter new last name: "))
+                        parameter = "lastName"
                     elif recordEditor == "E":
-                        newtelephone = AdminNavigator.validLocalPhoneNumber(user)
+                        newParameterValue = AdminNavigator.validLocalPhoneNumber(user)
+                        parameter = "phoneNo"
                     elif recordEditor == "F":
-                        newaddress = input("Please enter primary home address (one line): ")
-                    elif recordEditor == "G":
-                        newpostcode = AdminNavigator.validPostcode(user)
+                        newParameterValue = encryptionHelper().encryptToBits(input("Please enter primary home address (one line): "))
+                        parameter = "HomeAddress"
                     else:
-                        print("Not a valid selection.\n")
+                        newParameterValue = AdminNavigator.validPostcode(user)
+                        parameter = "postCode"
 
-                    editQ = SQLQuerry("UPDATE Users SET passCode = ?, birthday = ?, firstName = ?, lastName = ?,"
-                                  "phoneNo = ?, HomeAddress = ?, postCode = ? WHERE username= ?")
-                    EH = encryptionHelper()
-                    editQ.executeCommit((passwordHelper.hashPW(newpassword),
-                                     EH.encryptToBits(str(newbirthday.date())),
-                                     EH.encryptToBits(newfirstName),
-                                     EH.encryptToBits(newlastName),
-                                     EH.encryptToBits(newtelephone),
-                                     EH.encryptToBits(newaddress),
-                                     EH.encryptToBits(newpostcode),
-                                     selectedUser))
+                    AdminNavigator.updateParameterRecord(user, selectedUser, parameter, newParameterValue)
                     print("Successfully Update to Database. Going back to home page.\n")
                     return
-            else:
-                print("Not a valid selection.\n")
-
-
-                print("Done.\n")
-                break
 
 
 if __name__ == "__main__":
