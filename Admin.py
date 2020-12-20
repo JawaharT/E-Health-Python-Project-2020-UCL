@@ -262,7 +262,7 @@ class AdminNavigator():
         """
         :return: Edit existing GP or Patient Record
         """
-        # show all GPs and Patients
+        #show all GPs and Patients
         viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' and 'Patient'")
 
         viewallGPsandPatientsResult = viewallGPsandPatients.executeFetchAll()
@@ -280,23 +280,54 @@ class AdminNavigator():
 
         # select a user from the table
         while True:
-            print("Please match name exactly. Press Enter to go back.")
-            selectedUser = input("Write the name of GP or Patient to Update the information: ")
+            print("Please match username exactly. Press Enter to go back.\n")
+            selectedUser = input("Enter the username to edit the profile: ")
             if selectedUser == "":
                 break
             if selectedUser not in GPandPatient:
-                print("This name does not exist. Please try again.\n")
+                print("This username does not exist. Please enter a valid username.\n")
                 continue
             else:
-                # Update query
-                print("Please update the information:")
-                newfirstName = str(input("Please enter the new Firstname:"))
-                newlastName = str(input("Please enter the new Lastname:"))
-                newphoneNo = int(input("Please enter the new phone number:"))
-                newHomeAddress = str(input("Please enter the new home address:"))
-                newpostCode = str(input("Please enter the new postcode:"))
-                UpdateQuery = SQLQuerry("UPDATE Users SET firstName = 'newfirstName',  lastName = 'newlastName', phoneNo = 'newphoneNo', HomeAddress ='newHomeAddress', postcode ='newpostCode' WHERE username=:who")
-                UpdateQuery.executeCommit({"who": selectedUser})
+                recordEditor = parser.selectionParser(
+                    options={"A": "Update Password", "B": "Update Birthday",
+                             "C": "Update Firstname", "D": "Update Lastname",
+                             "E": "Update Phone Number","F":"Update Home Address","G":"Update Postcode",
+                             "--back": "back"})
+
+                if recordEditor == "--back":
+                    return
+                elif recordEditor == "A":
+                    newpassword = AdminNavigator.registerNewPassword(user)
+                elif recordEditor == "B":
+                    newbirthday = parser().dateParser("Please enter birthday: ", allowback=False)
+                elif recordEditor == "C":
+                    newfirstName = input("Please enter new first name: ")
+                elif recordEditor == "D":
+                    newlastName = input("Please enter new last name: ")
+                elif recordEditor == "E":
+                    newtelephone = AdminNavigator.validLocalPhoneNumber(user)
+                elif recordEditor == "F":
+                    newaddress = input("Please enter primary home address (one line): ")
+                elif recordEditor == "G":
+                    newpostcode = AdminNavigator.validPostcode(user)
+                else:
+                    print("Please enter a valid selection.\n")
+
+                editQ = SQLQuerry("UPDATE Users SET passCode = ?, birthday = ?, firstName = ?, lastName = ?,"
+                                  "phoneNo = ?, HomeAddress = ?, postCode = ? WHERE username= ?")
+                EH = encryptionHelper()
+                editQ.executeCommit((passwordHelper.hashPW(newpassword),
+                                     EH.encryptToBits(str(newbirthday.date())),
+                                     EH.encryptToBits(newfirstName),
+                                     EH.encryptToBits(newlastName),
+                                     EH.encryptToBits(newtelephone),
+                                     EH.encryptToBits(newaddress),
+                                     EH.encryptToBits(newpostcode),
+                                     selectedUser))
+                print("Successfully Update to Database. Going back to home page.\n")
+                return
+
+
                 print("Done.\n")
                 break
 
@@ -337,8 +368,7 @@ if __name__ == "__main__":
                               EH.encryptToBits("AD1 7RT"),
                               "GP",
                               "T"))
-
-    # example admin user
+ #example Admin
     result = Q.executeCommit(("Admin12",
                               "testAdmin124",
                               passwordHelper.hashPW("testAdmin"),
