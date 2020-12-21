@@ -1,9 +1,9 @@
 import os
 from tabulate import tabulate
 
+import getpass
 from encryption import encryptionHelper, passwordHelper
 from login import currentUser, loginHelp
-import getpass
 from parserHelp import parser
 from databaseHelp import SQLQuerry
 import time
@@ -66,15 +66,15 @@ class AdminNavigator():
             if recordViewer == "--back":
                 return
             elif recordViewer == "A":
-                query = SQLQuerry("SELECT Deactivated, ID, Username, birthday, firstName, lastName, phoneNo,"
+                query = SQLQuerry("SELECT ID, Username, Deactivated, birthday, firstName, lastName, phoneNo,"
                                   " HomeAddress, postCode FROM USERS WHERE UserType = 'Patient'")
-                headers = ("Deactivated", "ID", "Username", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
+                headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
                 startOfDecryption, decrypt = 3, True
             elif recordViewer == "B":
-                query = SQLQuerry("SELECT Deactivated, ID, Username, birthday, firstName, lastName, phoneNo,"
+                query = SQLQuerry("SELECT ID, Username, Deactivated, birthday, firstName, lastName, phoneNo,"
                                   " HomeAddress, postCode FROM USERS WHERE UserType = 'GP'")
-                headers = ("Deactivated", "ID", "Username", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
+                headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
                 startOfDecryption, decrypt = 3, True
             elif recordViewer == "C":
@@ -118,14 +118,140 @@ class AdminNavigator():
             print("Completed operation.\n")
             continue
 
+    def addGPPatient(self):
+        """
+        :return: updated table with new GP or patient record
+        """
+        while True:
+            userGroup = input("Please enter type of user (GP or Patient): ").lower().strip()
+            if userGroup == "gp":
+                newID = parser().GPStaffNoParser()
+                userGroup = userGroup.upper()
+                break
+            elif userGroup == "patient":
+                newID = parser().nhsNoParser()
+                userGroup = userGroup[0].upper()+userGroup[1:]
+                break
+            else:
+                print("Incorrect input. Please Try again.\n")
+                continue
+
+        #print(userGroup)
+        username = AdminNavigator.getCheckUserInput(user, "username", userGroup)
+        password = AdminNavigator.registerNewPassword(user)
+
+        birthday = encryptionHelper().encryptToBits(str(parser().dateParser("Please enter birthday: ", False).date()))
+        firstName = encryptionHelper().encryptToBits(input("Please enter first name: "))
+        lastName = encryptionHelper().encryptToBits(input("Please enter last name: "))
+
+        # check for only local phone numbers and 11 digits only
+        telephone = AdminNavigator.validLocalPhoneNumber(user)
+        address = encryptionHelper().encryptToBits(input("Please enter primary home address (one line): "))
+
+        # check for only 5 or 7 chars
+        postcode = AdminNavigator.validPostcode(user)
+
+        Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        Q.executeCommit((newID, username, password, birthday, firstName, lastName, telephone, address, postcode,
+                         userGroup, "F"))
+        print("Successfully Added to Database. Going back to home page.\n")
+        return
+
+    def editGPPatient(self):
+        """
+        :return: Edit existing GP or Patient Record
+        """
+        # show all GPs and Patients
+        viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType = 'GP' or UserType = 'Patient'")
+        viewallGPsandPatientsResult = viewallGPsandPatients.executeFetchAll()
+
+        if len(viewallGPsandPatientsResult) == 0:
+            print("No Patients or GPs registered. Please add before coming back.\n")
+            return
+
+        viewallGPsandPatientsTable, GPandPatient = [], []
+        for nameIndex in range(len(viewallGPsandPatientsResult)):
+            GPandPatient.append(viewallGPsandPatientsResult[nameIndex][0])
+            viewallGPsandPatientsTable.append([nameIndex + 1, viewallGPsandPatientsResult[nameIndex][0]])
+
+        print(tabulate(viewallGPsandPatientsTable, headers=("ID", "Username")))
+
+        # select a user from the table
+        while True:
+            # editmenu = parser.selectionParser(
+            #     options={"A": "Edit GP or Patient", "--back": "back"})
+            # if editmenu == "--back":
+            #     return
+            # elif editmenu == "A":
+
+            print("Press --back to go back.")
+            selectedUser = input("Enter the username to edit the profile: ")
+            if selectedUser == "--back":
+                break
+            if selectedUser not in GPandPatient:
+                print("This username does not exist. Please enter a valid username.\n")
+                continue
+            else:
+                recordEditor = parser.selectionParser(
+                    options={"A": "Update Password", "B": "Update Birthday",
+                             "C": "Update Firstname", "D": "Update Lastname",
+                             "E": "Update Phone Number", "F": "Update Home Address",
+                             "G": "Update Postcode", "H": "Switch Activation Status",
+                             "--back": "back"})
+
+                if recordEditor == "--back":
+                    return
+                elif recordEditor == "A":
+                    newParameterValue = AdminNavigator.registerNewPassword(user)
+                    parameter = "passCode"
+                elif recordEditor == "B":
+                    # newbirthday = parser().dateParser("Please enter birthday: ", allowback=False)
+                    newParameterValue = encryptionHelper().encryptToBits(
+                        str(parser().dateParser("Please enter birthday: ", False).date()))
+                    parameter = "birthday"
+                elif recordEditor == "C":
+                    newParameterValue = encryptionHelper().encryptToBits(input("Please enter new first name: "))
+                    parameter = "firstName"
+                elif recordEditor == "D":
+                    newParameterValue = encryptionHelper().encryptToBits(input("Please enter new last name: "))
+                    parameter = "lastName"
+                elif recordEditor == "E":
+                    newParameterValue = AdminNavigator.validLocalPhoneNumber(user)
+                    parameter = "phoneNo"
+                elif recordEditor == "F":
+                    newParameterValue = encryptionHelper().encryptToBits(
+                        input("Please enter primary home address (one line): "))
+                    parameter = "HomeAddress"
+                elif recordEditor == "G":
+                    newParameterValue = AdminNavigator.validPostcode(user)
+                    parameter = "postCode"
+                else:
+                    currentStatus = SQLQuerry("SELECT Deactivated FROM Users WHERE username = '{0}'"
+                                              .format(selectedUser)).executeFetchAll()[0][0]
+                    parameter = "Deactivated"
+                    if currentStatus == "F":
+                        newParameterValue = "T"
+                        print("User {0} will be deactivated.".format(selectedUser))
+                    else:
+                        newParameterValue = "F"
+                        print("User {0} will be activated.".format(selectedUser))
+
+                AdminNavigator.updateParameterRecord(user, selectedUser, parameter, newParameterValue)
+                print("Successfully Updated to Database. Going back to home page.\n")
+                return
+
     def deleteGP(self):
         """
         :return: updated table with the deleted GP record
         """
         # show all users that are deactivated for deletion
         allDeactivatedGPs = SQLQuerry("SELECT username FROM Users WHERE Deactivated = 'T' AND UserType= 'GP'")
-
         allDeactivatedGPsResult = allDeactivatedGPs.executeFetchAll()
+
+        if len(allDeactivatedGPsResult) == 0:
+            print("No deactivated GPs available to delete.\n")
+            return
+
         allDeactivatedGPsTable, onlyGPs = [], []
         for nameIndex in range(len(allDeactivatedGPsResult)):
             onlyGPs.append(allDeactivatedGPsResult[nameIndex][0])
@@ -133,14 +259,9 @@ class AdminNavigator():
 
         print(tabulate(allDeactivatedGPsTable, headers=("ID", "Username")))
 
-        if len(allDeactivatedGPsTable) == 0:
-            print("No deactivated GPs available to delete.\n")
-            return
-
         # select a deactivated GP account to delete
         while True:
-            menu = parser.selectionParser(
-                options={"A": "Delete GP", "--back": "back"})
+            menu = parser.selectionParser(options={"A": "Delete GP", "--back": "back"})
 
             if menu == "--back":
                 return
@@ -186,9 +307,6 @@ class AdminNavigator():
         :return: check for valid new password that will match
         """
         while True:
-            #password = input("Please enter Password: ")
-            #passwordConfirm = input("Password confirmation: ")
-
             password = getpass.getpass("Enter new password: ")
             passwordConfirm = getpass.getpass("Enter new password again: ")
             if password != passwordConfirm:
@@ -208,7 +326,7 @@ class AdminNavigator():
                 print("Valid Phone Number.\n")
                 return encryptionHelper().encryptToBits(phoneNumber)
             else:
-                print("Invalid Phone Number.Please try again.\n")
+                print("Invalid Phone Number. Please try again.\n")
 
     def validPostcode(self):
         """
@@ -222,172 +340,18 @@ class AdminNavigator():
                 print("Valid Postcode.\n")
                 return encryptionHelper().encryptToBits(tempPostcode)
 
-    def addGPPatient(self):
-        """
-        :return: updated table with new GP or patient record
-        """
-        while True:
-            userGroup = input("Please enter type of user (GP or Patient): ").lower().strip()
-            if userGroup == "gp":
-                newID = parser().GPStaffNoParser()
-                userGroup = userGroup.upper()
-                break
-            elif userGroup == "patient":
-                newID = parser().nhsNoParser()
-                userGroup = userGroup[0].upper()+userGroup[1:]
-                break
-            else:
-                print("Incorrect input. Please Try again.\n")
-                continue
-
-        #print(userGroup)
-        username = AdminNavigator.getCheckUserInput(user, "username", userGroup)
-        password = AdminNavigator.registerNewPassword(user)
-
-        birthday = encryptionHelper().encryptToBits(str(parser().dateParser("Please enter birthday: ", False).date()))
-        firstName = encryptionHelper().encryptToBits(input("Please enter first name: "))
-        lastName = encryptionHelper().encryptToBits(input("Please enter last name: "))
-
-        # check for only local phone numbers and 11 digits only
-        telephone = AdminNavigator.validLocalPhoneNumber(user)
-        address = encryptionHelper().encryptToBits(input("Please enter primary home address (one line): "))
-
-        # check for only 5 or 7 chars
-        postcode = AdminNavigator.validPostcode(user)
-
-        Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        Q.executeCommit((newID, username, password, birthday, firstName, lastName, telephone, address, postcode,
-                         userGroup, "F"))
-        print("Successfully Added to Database. Going back to home page.\n")
-        return
-
     def updateParameterRecord(self, selectedUser, parameter, newParameterValue):
-        editQ = SQLQuerry("UPDATE Users SET {0} = ? WHERE username= ?".format(parameter))
-        editQ.executeCommit((newParameterValue, selectedUser))
-
-    def editGPPatient(self):
         """
-        :return: Edit existing GP or Patient Record
+        :param selectedUser: Current user, admin is changing
+        :param parameter: Current table column admin is changing
+        :param newParameterValue: New value to change within the table column of the currently selected user
+        :return: Updated Users table
         """
-        #show all GPs and Patients
-        viewallGPsandPatients = SQLQuerry("SELECT username FROM Users WHERE UserType= 'GP' or UserType= 'Patient'")
-
-        viewallGPsandPatientsResult = viewallGPsandPatients.executeFetchAll()
-
-        if len(viewallGPsandPatientsResult) == 0:
-            print("No Patients or GPs registered. Please add before coming back.\n")
-            return
-
-        viewallGPsandPatientsTable, GPandPatient= [], []
-        for nameIndex in range(len(viewallGPsandPatientsResult)):
-            GPandPatient.append(viewallGPsandPatientsResult[nameIndex][0])
-            viewallGPsandPatientsTable.append([nameIndex + 1, viewallGPsandPatientsResult[nameIndex][0]])
-
-        print(tabulate(viewallGPsandPatientsTable, headers=("ID", "Username")))
-
-        # select a user from the table
-        while True:
-            editmenu = parser.selectionParser(
-                options={"A": "Edit GP or Patient", "--back": "back"})
-            if editmenu == "--back":
-                return
-            elif editmenu == "A":
-                print("Press enter to go back.")
-                selectedUser = input("Enter the username to edit the profile: ")
-                if selectedUser == "":
-                    break
-                if selectedUser not in GPandPatient:
-                    print("This username does not exist. Please enter a valid username.\n")
-                    continue
-                else:
-                    recordEditor = parser.selectionParser(
-                        options={"A": "Update Password", "B": "Update Birthday",
-                             "C": "Update Firstname", "D": "Update Lastname",
-                             "E": "Update Phone Number","F":"Update Home Address","G":"Update Postcode",
-                             "H": "Update the status","--back": "back"})
-
-                    if recordEditor == "--back":
-                        return
-                    elif recordEditor == "A":
-                        newParameterValue = AdminNavigator.registerNewPassword(user)
-                        parameter = "passCode"
-                    elif recordEditor == "B":
-                        # newbirthday = parser().dateParser("Please enter birthday: ", allowback=False)
-                        newParameterValue = encryptionHelper().encryptToBits(
-                            str(parser().dateParser("Please enter birthday: ", False).date()))
-                        parameter = "birthday"
-                    elif recordEditor == "C":
-                        newParameterValue = encryptionHelper().encryptToBits(input("Please enter new first name: "))
-                        parameter = "firstName"
-                    elif recordEditor == "D":
-                        newParameterValue = encryptionHelper().encryptToBits(input("Please enter new last name: "))
-                        parameter = "lastName"
-                    elif recordEditor == "E":
-                        newParameterValue = AdminNavigator.validLocalPhoneNumber(user)
-                        parameter = "phoneNo"
-                    elif recordEditor == "F":
-                        newParameterValue = encryptionHelper().encryptToBits(input("Please enter primary home address (one line): "))
-                        parameter = "HomeAddress"
-                    elif recordEditor == "H":
-                        newParameterValue = encryptionHelper().encryptToBits(input("Please enter the current status of the user(Deactivated T or F):"))
-                        parameter = "Deactivated"
-                    else:
-                        newParameterValue = AdminNavigator.validPostcode(user)
-                        parameter = "postCode"
-
-                    AdminNavigator.updateParameterRecord(user, selectedUser, parameter, newParameterValue)
-                    print("Successfully Update to Database. Going back to home page.\n")
-                    return
+        SQLQuerry("UPDATE Users SET {0} = ? WHERE username = ?".format(parameter))\
+            .executeCommit((newParameterValue, selectedUser))
 
 
 if __name__ == "__main__":
-    """Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    EH = encryptionHelper()
-    result = Q.executeCommit(("GP1",
-                              "testGP1",
-                              passwordHelper.hashPW("testGPPW2"),
-                              EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testGP1FitstName"),
-                              EH.encryptToBits("testGP1LastName"),
-                              EH.encryptToBits("0123450243"),
-                              EH.encryptToBits("testGP1Home Address, test Road"),
-                              EH.encryptToBits("AB1 7RT"),
-                              "GP",
-                              "T"))
-    result = Q.executeCommit(("GP2",
-                              "testGP2",
-                              passwordHelper.hashPW("testGPPW3"),
-                              EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testGP2FitstName"),
-                              EH.encryptToBits("testGP2LastName"),
-                              EH.encryptToBits("0123450244"),
-                              EH.encryptToBits("testGP2Home Address, test Road"),
-                              EH.encryptToBits("AC1 7RT"),
-                              "GP",
-                              "T"))
-    result = Q.executeCommit(("GP3",
-                              "testGP3",
-                              passwordHelper.hashPW("testGPPW"),
-                              EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testGP3FitstName"),
-                              EH.encryptToBits("testGP3LastName"),
-                              EH.encryptToBits("0123450289"),
-                              EH.encryptToBits("testGP3Home Address, test Road"),
-                              EH.encryptToBits("AD1 7RT"),
-                              "GP",
-                              "T"))
- #example Admin
-    result = Q.executeCommit(("Admin12",
-                              "testAdmin124",
-                              passwordHelper.hashPW("testAdmin"),
-                              EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testAdminFitstName"),
-                              EH.encryptToBits("testAdminLastName"),
-                              EH.encryptToBits("0123450281"),
-                              EH.encryptToBits("test Admin Home Address, test Road"),
-                              EH.encryptToBits("AD4 7RT"),
-                              "Admin",
-                              "F"))"""
     loginParam = loginHelp.Login()
     user = currentUser(loginParam[0], loginParam[1])
     AdminNavigator.mainNavigator(user)
