@@ -11,10 +11,9 @@ import sys
 
 
 class AdminNavigator:
-    """Admin class and attributes."""
+    """Navigate through Admin features and functionality once logged in as one."""
 
-    @staticmethod
-    def mainNavigator(admin_user):
+    def mainNavigator(self, admin_user):
         """
         :return: divert user into the main admin functionalities
         """
@@ -44,13 +43,14 @@ class AdminNavigator:
                 current_page = user_input
 
             if current_page == "A":
-                AdminNavigator().viewRecords()
+                # AdminNavigator().viewRecords()
+                self.viewRecords()
             elif current_page == "B":
-                AdminNavigator().addGPPatient()
+                self.addGPPatient()
             elif current_page == "C":
-                AdminNavigator().editGPPatient()
-            elif current_page == "D":
-                AdminNavigator().deleteGPPatient()
+                self.editGPPatient()
+            else:
+                self.deleteGPPatient()
 
     @staticmethod
     def viewRecords():
@@ -116,8 +116,7 @@ class AdminNavigator:
             print("Completed operation.\n")
             continue
 
-    @staticmethod
-    def addGPPatient():
+    def addGPPatient(self):
         """
         :return: updated table with new GP or patient record
         """
@@ -125,19 +124,20 @@ class AdminNavigator:
         if (new_id == "") or (user_group == ""):
             return
 
-        username = AdminNavigator().getCheckUserInput("username", user_group)
-        password = AdminNavigator().registerNewPassword()
+        username = self.getCheckUserInput("username", user_group)
+        password = self.registerNewPassword()
 
-        birthday = encryptionHelper().encryptToBits(str(parser().dateParser("Please enter birthday: ", False).date()))
-        first_name = encryptionHelper().encryptToBits(input("Please enter first name: "))
-        last_name = encryptionHelper().encryptToBits(input("Please enter last name: "))
+        encryption_helper = encryptionHelper()
+        birthday = encryption_helper.encryptToBits(str(parser().dateParser("Please enter birthday: ", False).date()))
+        first_name = encryption_helper.encryptToBits(input("Please enter first name: "))
+        last_name = encryption_helper.encryptToBits(input("Please enter last name: "))
 
         # check for only local phone numbers and 11 digits only
-        telephone = AdminNavigator().validLocalPhoneNumber()
-        address = encryptionHelper().encryptToBits(input("Please enter primary home address (one line): "))
+        telephone = self.validLocalPhoneNumber(encryption_helper)
+        address = encryption_helper.encryptToBits(input("Please enter primary home address (one line): "))
 
         # check for only 5 or 7 chars
-        postcode = AdminNavigator().validPostcode()
+        postcode = self.validPostcode(encryption_helper)
 
         insert_query = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         insert_query.executeCommit((new_id, username, password, birthday, first_name, last_name,
@@ -145,8 +145,7 @@ class AdminNavigator:
         print("Successfully Added to Database. Going back to home page.\n")
         return
 
-    @staticmethod
-    def editGPPatient():
+    def editGPPatient(self):
         """
         :return: Edit existing GP or Patient Record
         """
@@ -159,8 +158,7 @@ class AdminNavigator:
             print("No Patients or GPs registered. Please add before coming back.\n")
             return
 
-        all_gps_and_patients_table, gps_and_patients = AdminNavigator().\
-            viewAllPatientsAndGPs(view_all_gps_and_patients_result)
+        all_gps_and_patients_table, gps_and_patients = self.viewAllPatientsAndGPs(view_all_gps_and_patients_result)
         print(tabulate(all_gps_and_patients_table, headers=("ID", "Username")))
 
         # select a user from the table
@@ -182,31 +180,32 @@ class AdminNavigator:
                              "G": "Update Postcode", "H": "Switch Activation Status",
                              "--back": "back"})
 
+                encryption_helper = encryptionHelper()
                 if record_editor == "--back":
                     print()
                     return
                 elif record_editor == "A":
-                    new_parameter_value = AdminNavigator().registerNewPassword()
+                    new_parameter_value = self.registerNewPassword()
                     parameter = "passCode"
                 elif record_editor == "B":
-                    new_parameter_value = encryptionHelper().encryptToBits(
+                    new_parameter_value = encryption_helper.encryptToBits(
                         str(parser().dateParser("Please enter birthday: ", False).date()))
                     parameter = "birthday"
                 elif record_editor == "C":
-                    new_parameter_value = encryptionHelper().encryptToBits(input("Please enter new first name: "))
+                    new_parameter_value = encryption_helper.encryptToBits(input("Please enter new first name: "))
                     parameter = "firstName"
                 elif record_editor == "D":
-                    new_parameter_value = encryptionHelper().encryptToBits(input("Please enter new last name: "))
+                    new_parameter_value = encryption_helper.encryptToBits(input("Please enter new last name: "))
                     parameter = "lastName"
                 elif record_editor == "E":
-                    new_parameter_value = AdminNavigator().validLocalPhoneNumber()
+                    new_parameter_value = self.validLocalPhoneNumber(encryption_helper)
                     parameter = "phoneNo"
                 elif record_editor == "F":
-                    new_parameter_value = encryptionHelper().encryptToBits(
+                    new_parameter_value = encryption_helper.encryptToBits(
                         input("Please enter primary home address (one line): "))
                     parameter = "HomeAddress"
                 elif record_editor == "G":
-                    new_parameter_value = AdminNavigator().validPostcode()
+                    new_parameter_value = self.validPostcode(encryption_helper)
                     parameter = "postCode"
                 else:
                     current_status = SQLQuerry("SELECT Deactivated FROM Users WHERE username = '{0}'".
@@ -219,12 +218,11 @@ class AdminNavigator:
 
                     print("User {0} will be {1}.".format(selected_user, status))
 
-                AdminNavigator().updateParameterRecord(selected_user, parameter, new_parameter_value)
+                self.updateParameterRecord(selected_user, parameter, new_parameter_value)
                 print("Successfully Updated to Database. Going back to home page.\n")
                 return
 
-    @staticmethod
-    def deleteGPPatient():
+    def deleteGPPatient(self):
         """
         :return: updated table with the deleted GP record
         """
@@ -237,7 +235,7 @@ class AdminNavigator:
             print("No deactivated GPs available to delete.\n")
             return
 
-        all_deactivated_gps_table, gps_and_patients = AdminNavigator().viewAllPatientsAndGPs(all_deactivated_gps_result)
+        all_deactivated_gps_table, gps_and_patients = self.viewAllPatientsAndGPs(all_deactivated_gps_result)
         print(tabulate(all_deactivated_gps_table, headers=("ID", "Username")))
 
         # select a deactivated GP account to delete
@@ -320,7 +318,7 @@ class AdminNavigator:
                 return passwordHelper.hashPW(password)
 
     @staticmethod
-    def validLocalPhoneNumber():
+    def validLocalPhoneNumber(encryption_helper):
         """
         :return: return a valid UK phone number
         """
@@ -329,12 +327,12 @@ class AdminNavigator:
             if (len(phone_number.strip()) == 11) and \
                     (not any([char in phone_number for char in ["+", "-", "(", ")"]])):
                 print("Valid Phone Number.\n")
-                return encryptionHelper().encryptToBits(phone_number)
+                return encryption_helper.encryptToBits(phone_number)
             else:
                 print("Invalid Phone Number. Please try again.\n")
 
     @staticmethod
-    def validPostcode():
+    def validPostcode(encryption_helper):
         """
         :return: return a valid UK postcode
         """
@@ -344,7 +342,7 @@ class AdminNavigator:
                 print("Invalid Postcode. Please try again.\n")
             else:
                 print("Valid Postcode.\n")
-                return encryptionHelper().encryptToBits(temp_postcode)
+                return encryption_helper.encryptToBits(temp_postcode)
 
     @staticmethod
     def updateParameterRecord(selected_user, parameter, new_parameter_value):
@@ -361,4 +359,5 @@ class AdminNavigator:
 if __name__ == "__main__":
     loginParam = loginHelp.Login()
     user = currentUser(loginParam[0], loginParam[1])
-    AdminNavigator().mainNavigator(user)
+    current_admin = AdminNavigator()
+    current_admin.mainNavigator(user)
