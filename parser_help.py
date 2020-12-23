@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, time
+import time
 import sys
 from typing import Union
 
@@ -69,25 +70,30 @@ class Parser:
                 input("Press Enter to continue...")
 
     @staticmethod
-    def date_parser(question, allowback=True) -> object:
+    def date_parser(question, allow_back=True, allow_past=False) -> object:
         """
         Method to collect valid date input from user.
 
+        :param bool allow_past: Specify whether a date in the past is allowed
         :param str question: Prompt for the user
-        :param bool allowback: Specific whether '--back' is an allowed input
+        :param bool allow_back: Specific whether '--back' is an allowed input
         """
         while True:
             try:
                 Parser.print_clean(question + " Please input date in the following format 'YYYY-MM-DD'")
-                if allowback:
+                if allow_back:
                     print("Or enter '--back' to go back to previous page")
                 user_input = input()
-                if allowback and user_input == '--back':
+                if allow_back and user_input == '--back':
                     return user_input
                 else:
                     date = datetime.strptime(user_input, '%Y-%m-%d').date()
-                    if date < datetime.now().date() or date > datetime.now().date() + timedelta(days=182):
-                        raise ValueError
+                    if not allow_past:
+                        if date < datetime.now().date() or date > datetime.now().date() + timedelta(days=182):
+                            raise ValueError
+                    else:
+                        if date > datetime.now().date():
+                            raise ValueError
                     return date
             except ValueError:
                 print("This is not a valid date! Either the format is incorrect, it is earlier than "

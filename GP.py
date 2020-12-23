@@ -1,13 +1,14 @@
 import os
 from tabulate import tabulate
 
-from encryption import encryptionHelper
+from encryption import EncryptionHelper
 from parser_help import Parser
 from database_help import SQLQuery
 import time
 # import sys
 import datetime
 from main import User
+from exceptions import DBRecordError
 
 print_clean = Parser.print_clean
 delta = datetime.timedelta
@@ -46,8 +47,8 @@ class GP(User):
         while True:
             print_clean()
             option_selection = Parser.selection_parser(
-                options={"A": "View all your current availability", "D": "Edit availability by date", "--back":
-                    "to go back"})
+                options={"A": "View all your current availability", "D": "Edit availability by date",
+                         "--back": "to go back"})
             if option_selection == "--back":
                 return
             elif option_selection == "A":
@@ -124,7 +125,8 @@ class GP(User):
                     print("Slots removed successfully.")
                     input("Press Enter to continue...")
                     return True
-                except:
+                # temporary exception
+                except DBRecordError:
                     print("Error encountered")
                     slots_to_remove = []
                     input("Press Enter to continue...")
@@ -177,7 +179,8 @@ class GP(User):
                         print("Your slots have been successfully added!")
                         input("Press Enter to continue...")
                         return True
-                    except:
+                    # temporary exception
+                    except DBRecordError:
                         print("Invalid selection. Some of the entries may already be in the database. Please Retry")
                         stage = 0
                         slots_to_add = []
@@ -205,7 +208,7 @@ class GP(User):
                     bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                                "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                                                "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Confirmed = "
-                                               "'P'").executeFetchAll(encryptionHelper(), parameters=(self.ID,))
+                                               "'P'").executeFetchAll(EncryptionHelper(), parameters=(self.ID,))
                     message = "with status 'pending'."
                     stage = 1
                 elif option_selection == "D":
@@ -219,7 +222,7 @@ class GP(User):
                             "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                             "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ?"
                             " AND visit.Timeslot <= ?"
-                        ).executeFetchAll(encryptionHelper(), (self.ID, selected_date,
+                        ).executeFetchAll(EncryptionHelper(), (self.ID, selected_date,
                                                                selected_date + delta(
                                                                    days=1)))
                         message = f"for: {selected_date.strftime('%Y-%m-%d')}"
@@ -321,7 +324,7 @@ class GP(User):
                                            "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                                            "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ? AND "
                                            "visit.Timeslot <= ? AND visit.Confirmed = 'T' ").executeFetchAll(
-                    decrypter=encryptionHelper(), parameters=(self.ID, selected_date, selected_date + delta(days=1)))
+                    decrypter=EncryptionHelper(), parameters=(self.ID, selected_date, selected_date + delta(days=1)))
                 message = f"for {selected_date.strftime('%Y-%m-%d')} (confirmed)."
                 booking_no = GP.print_select_bookings(bookings_result, message)[1][1]
                 if not booking_no:
@@ -343,7 +346,7 @@ class GP(User):
                                            "users.lastName, visit.Confirmed, users.birthday, users.phoneNo, "
                                            "users.HomeAddress, users.postcode, visit.diagnosis, visit.notes FROM visit "
                                            "INNER JOIN users ON visit.NHSNo = users.ID WHERE visit.BookingNo = ? "
-                                           ).executeFetchAll(decrypter=encryptionHelper(), parameters=(booking_no,))
+                                           ).executeFetchAll(decrypter=EncryptionHelper(), parameters=(booking_no,))
             print_clean(tabulate([booking_information[0][:-3]],
                                  headers=["BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name",
                                           "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
@@ -355,7 +358,7 @@ class GP(User):
             print("\n-------------")
             prescr_result = SQLQuery("SELECT PrescriptionNumber, drugName, quantity, instructions FROM prescription "
                                      "WHERE BookingNo = ? "
-                                     ).executeFetchAll(decrypter=encryptionHelper(), parameters=(booking_no,))
+                                     ).executeFetchAll(decrypter=EncryptionHelper(), parameters=(booking_no,))
             if prescr_result:
                 print(tabulate(prescr_result, headers=["Prescription No", "Drug Name", "Quantity",
                                                        "Dosage & Instructions"]))
@@ -390,7 +393,7 @@ class GP(User):
 
             elif user_input == "P":
                 print_clean(f"Current prescription for patient {booking_information[0][3]} {booking_information[0][4]} "
-                      f"under appointment number {booking_no}:")
+                            f"under appointment number {booking_no}:")
                 print("")
                 print(tabulate(prescr_result, headers=["Prescription No", "Drug Name", "Quantity", "Dosage & "
                                                                                                    "Instructions"]))

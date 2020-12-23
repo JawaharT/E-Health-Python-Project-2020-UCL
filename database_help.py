@@ -111,13 +111,13 @@
 
 import sqlite3
 from sqlite3 import Error
-from encryption import encryptionHelper
-from encryption import passwordHelper
+from encryption import EncryptionHelper
+from encryption import PasswordHelper
 
 
 class Database:
     """
-    class for data base connction
+    class for data base connection
     """
     def __init__(self, db_file="GPDB.db"):
         """
@@ -129,7 +129,7 @@ class Database:
     def create_connection(self):
         """
         create a database / test connection to a SQLite database 
-        :return conn: retrn connected db
+        :return conn: return connected db
         """
         conn = None
         try:
@@ -149,18 +149,18 @@ class Database:
         if conn:
             conn.close()
 
-    def executeSQLScript(self, SQLScriptPath):
-        '''
-        :param SQLScriptPath: path to SQL Script (str)
-        Execute sqlscript file 
-        '''
-        SQLfile = open(SQLScriptPath, mode='r')
-        SQLScript = SQLfile.read()
+    def executeSQLScript(self, sql_script_path):
+        """
+        :param sql_script_path: path to SQL Script (str)
+        Execute sql script file
+        """
+        sql_file = open(sql_script_path, mode='r')
+        sql_script = sql_file.read()
         # print(SQLScript)
         conn = self.create_connection()
         try:
             cur = conn.cursor()
-            cur.executescript(SQLScript)
+            cur.executescript(sql_script)
         except Error as e:
             print(e)
         Database.close_connection(conn)
@@ -168,11 +168,11 @@ class Database:
 
 class SQLQuery(Database):
     """
-    class for executing SQL querry as object
+    class for executing SQL query as object
     """
-    def __init__(self, querry, db_file="GPDB.db"):
+    def __init__(self, query, db_file="GPDB.db"):
         """
-        :param querry: querry to be executed (str)
+        :param query: query to be executed (str)
         :param db_file: path to sqlite DB file, default GPDB.db (str)
         :return:
         placeholder should be implemented using the Named Method
@@ -184,13 +184,14 @@ class SQLQuery(Database):
         par_ = (point_id, analyte, sampling_date)
         """
         Database.__init__(self, db_file)
-        self.querry = querry
-    def executeFetchAll(self, decrypter=None,parameters={}, ) -> object:
+        self.query = query
+
+    def executeFetchAll(self, decrypter=None, parameters={}, ) -> object:
         """
-        :param parameters: dictionary of parameters for the querry
-        :param decrypter: if an encryption object is avaliable due to successful login it will use it to decrypt the result
+        :param parameters: dictionary of parameters for the query
+        :param decrypter: if an encryption object is available due to successful login it will be used to decrypt result
         :return: a list of tuples for the result array 
-        execute the querry using the parameters and return the array
+        execute the query using the parameters and return the array
         references: https://blog.finxter.com/sqlite-python-placeholder-four-methods-for-sql-statements
         """
         conn = self.create_connection()
@@ -198,25 +199,25 @@ class SQLQuery(Database):
         cur.execute(self.querry, parameters)
         result = cur.fetchall()
         Database.close_connection(conn)
-        if isinstance(decrypter, encryptionHelper):
-            decryptedResult = list()
+        if isinstance(decrypter, EncryptionHelper):
+            decrypted_result = list()
             for row in result:
-                currentrow = list()
+                current_row = list()
                 for cell in row:
                     if isinstance(cell, bytes):
-                        currentrow.append(decrypter.decryptMessage(cell))
+                        current_row.append(decrypter.decryptMessage(cell))
                     else:
-                        currentrow.append(cell)
-                decryptedResult.append(currentrow)
-            return decryptedResult
+                        current_row.append(cell)
+                decrypted_result.append(current_row)
+            return decrypted_result
         
         return result
 
     def executeCommit(self, parameters={}):
         """
-        :param parameters: dictionary of parameters for the querry
+        :param parameters: dictionary of parameters for the query
         :return: a list of list for the result array 
-        execute and Commit Insert, Update and Delete querry using the parameters and return the last row updated ID
+        execute and Commit Insert, Update and Delete query using the parameters and return the last row updated ID
         references: https://www.sqlitetutorial.net/sqlite-python/insert/ 
         """
         conn = self.create_connection()
@@ -227,26 +228,27 @@ class SQLQuery(Database):
         Database.close_connection(conn)
         return result   
 
+
 if __name__ == '__main__':
     #refresh and create new DB
-    #if you have anything that you want to stay permenantly edit and insert using sql script
+    #if you have anything that you want to stay permanently edit and insert using sql script
     DB = Database("GPDB.db")
     DB.executeSQLScript("GPDB.sql")
 
-    #testing for querry type
+    #testing for query type
     # Q2 = SQLQuery("DELETE FROM UserGroup WHERE UserType = (:type)")
-    # result = Q2.executeCommit({"test": "testing", "type": "changd"})
+    # result = Q2.executeCommit({"test": "testing", "type": "changed"})
     # Q = SQLQuery("SELECT * FROM UserGroup")
     # result = Q.executeFetchAll()
     # print(result)
 
     # # testng for storing encrypted value and decrypting it
     Q = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    EH = encryptionHelper()
+    EH = EncryptionHelper()
     # noinspection PyTypeChecker
     result = Q.executeCommit(("G01",
                             "testGP", 
-                            passwordHelper.hashPW("testGPPW"), 
+                            PasswordHelper.hashPW("testGPPW"),
                             EH.encryptToBits("1991-01-04"),
                             EH.encryptToBits("testGPFitstName"),
                             EH.encryptToBits("testGPLastName"),
@@ -258,7 +260,7 @@ if __name__ == '__main__':
     # noinspection PyTypeChecker
     result = Q.executeCommit(("1929282829",
                             "testPatient", 
-                            passwordHelper.hashPW("tPPW"), 
+                            PasswordHelper.hashPW("tPPW"),
                             EH.encryptToBits("1982-02-03"),
                             EH.encryptToBits("testPatientFitstName"),
                             EH.encryptToBits("testPatientLastName"),
@@ -270,7 +272,7 @@ if __name__ == '__main__':
     # noinspection PyTypeChecker
     result = Q.executeCommit(("2929282822",
                             "testPatient2", 
-                            passwordHelper.hashPW("tPPW2"), 
+                            PasswordHelper.hashPW("tPPW2"),
                             EH.encryptToBits("1984-02-03"),
                             EH.encryptToBits("testPatient2FitstName"),
                             EH.encryptToBits("testPatient2LastName"),

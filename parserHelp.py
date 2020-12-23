@@ -1,6 +1,4 @@
 import datetime
-from databaseHelp import database
-import time
 import os
 
 
@@ -202,7 +200,7 @@ class parser:
                 os.system('cls' if os.name == 'nt' else "printf '\033c'")
                 print("only 'P' (for pending), 'T' (for true) or 'F' (for false) are allowed !")
 
-    def RegisterOrLoginParser():
+    def RegisterOrLoginParser(self):
         """
         looping function until a valid true or false is inputted
         :prara question: qustion to ask user
