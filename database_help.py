@@ -196,7 +196,7 @@ class SQLQuery(Database):
         """
         conn = self.create_connection()
         cur = conn.cursor()
-        cur.execute(self.querry, parameters)
+        cur.execute(self.query, parameters)
         result = cur.fetchall()
         Database.close_connection(conn)
         if isinstance(decrypter, EncryptionHelper):
@@ -222,7 +222,7 @@ class SQLQuery(Database):
         """
         conn = self.create_connection()
         cur = conn.cursor()
-        cur.execute(self.querry, parameters)
+        cur.execute(self.query, parameters)
         conn.commit()
         result = cur.lastrowid
         Database.close_connection(conn)
