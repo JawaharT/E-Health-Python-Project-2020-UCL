@@ -225,32 +225,40 @@ class GP(User):
                         message = f"for: {selected_date.strftime('%Y-%m-%d')}"
                         stage = 1
             while stage == 1:
-                bookings_table_raw = []
-                bookings_table = []
-                translation = {"T": "Accepted", "F": "Rejected", "P": "Pending Response"}
-                i = 0
-                for booking in bookings_result:
-                    bookings_table.append([i + 1, booking[0], str(booking[1]), booking[2], booking[3],
-                                           booking[4], translation[booking[5]]])
-                    bookings_table_raw.append([i + 1, booking[0], booking[1]])
-                    i += 1
-                print_clean("You are viewing your bookings " + message )
-                if len(bookings_table) == 0:
-                    print("No bookings match current search criteria.")
+                rows = GP.print_select_bookings(bookings_result, message)
+                if not rows:
                     stage = 0
-                    input("Press Enter to continue.")
                 else:
-                    print(tabulate(bookings_table,
-                                   headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
-                                            "P. Last Name", "Confirmed"]))
-                    selected_entry = Parser.integer_parser(question="Select entry using number from Pointer column or "
-                                                                    "type '--back' to go back")
-                    if selected_entry == "--back":
-                        stage = 0
-                    else:
-                        selected_row = bookings_table[selected_entry - 1]
-                        selected_row_raw = bookings_table_raw[selected_entry - 1]
-                        self.booking_transaction(selected_row, selected_row_raw)
+                    self.booking_transaction(rows[0], rows[1])
+
+    @staticmethod
+    def print_select_bookings(bookings_result, message):
+        bookings_table_raw = []
+        bookings_table = []
+        translation = {"T": "Accepted", "F": "Rejected", "P": "Pending Response"}
+        i = 0
+        for booking in bookings_result:
+            bookings_table.append([i + 1, booking[0], str(booking[1]), booking[2], booking[3],
+                                   booking[4], translation[booking[5]]])
+            bookings_table_raw.append([i + 1, booking[0], booking[1]])
+            i += 1
+        print_clean("You are viewing your bookings " + message)
+        if len(bookings_table) == 0:
+            print("No bookings match current search criteria.")
+            stage = 0
+            input("Press Enter to continue.")
+        else:
+            print(tabulate(bookings_table,
+                           headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
+                                    "P. Last Name", "Confirmed"]))
+            selected_entry = Parser.integer_parser(question="Select entry using number from Pointer column or "
+                                                            "type '--back' to go back")
+            if selected_entry == "--back":
+                return False
+            else:
+                selected_row = bookings_table[selected_entry - 1]
+                selected_row_raw = bookings_table_raw[selected_entry - 1]
+                return selected_row, selected_row_raw
 
     def booking_transaction(self, selected_row, selected_row_raw) -> bool:
         """
@@ -291,57 +299,38 @@ class GP(User):
 
         """
         stage = 0
-        selectedDate = None
         while True:
             while stage == 0:
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                dateInput = Parser.date_parser(question="Select a Date:")
-                if dateInput == "--back":
-                    return "main"
-                else:
-                    selectedDate = dateInput
+                print_clean(f"Viewing confirmed appointments for GP {self.username}.")
+                user_input = Parser.selection_parser(options={"T": "View today's appointments", "D": "Select by Date",
+                                                              "--back": "to go back"})
+                if user_input == "T":
+                    selected_date = datetime.datetime.today().date()
+                    print(selected_date)
                     stage = 1
+                elif user_input == "--back":
+                    return
+                else:
+                    selected_date = Parser.date_parser(question="Select a Date:")
+                    if selected_date == "--back":
+                        return
+                    else:
+                        stage = 1
             while stage == 1:
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                Qtext = "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, users.lastName, visit.Confirmed "
-                Qtext += "FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
-                Qtext += "WHERE visit.StaffID = ? AND visit.Timeslot >= ? AND visit.Timeslot <= ? AND visit.Confirmed = 'T' "
-                # print(Qtext)
-                Qbooked = SQLQuery(Qtext)
-
-                selectedDatePlus1 = selectedDate + datetime.timedelta(days=1)
-                Qbookedresult = Qbooked.executeFetchAll(decrypter=user.encryptionKey,
-                                                        parameters=(user.ID, selectedDate, selectedDatePlus1))
-                QbookedTableRaw = []
-                QbookedTable = []
-                translation = {"T": "Accepted", "F": "Rejected", "P": "Pending Response"}
-                for i in range(len(Qbookedresult)):
-                    QbookedTable.append(
-                        [i + 1, Qbookedresult[i][0], str(Qbookedresult[i][1]), Qbookedresult[i][2], Qbookedresult[i][3],
-                         Qbookedresult[i][4], translation[Qbookedresult[i][5]]])
-                    QbookedTableRaw.append([i + 1, Qbookedresult[i][0], Qbookedresult[i][2]])
-                print(f"You are viewing all of your confirmed bookings of: {selectedDate.strftime('%Y-%m-%d')}")
-                print(tabulate(QbookedTable,
-                               headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
-                                        "P. Last Name", "Confirmed"]))
-                # print(tabulate(QbookedTableRaw, headers=["Pointer", "BookingNo", "Patient NHSNo"]))
-                selectEntryNo = Parser.integer_parser(question="Select Entry using number or input '--back' for back")
-                print(selectEntryNo)
-                if selectEntryNo == "--back":
+                bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
+                                           "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
+                                           "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ? AND "
+                                           "visit.Timeslot <= ? AND visit.Confirmed = 'T' ").executeFetchAll(
+                    decrypter=encryptionHelper(), parameters=(self.ID, selected_date, selected_date + delta(days=1)))
+                message = f"for {selected_date.strftime('%Y-%m-%d')} (confirmed)."
+                booking_no = GP.print_select_bookings(bookings_result, message)[1][1]
+                if not booking_no:
                     stage = 0
-                    break
-                # selectedRow = QbookedTable[selectEntryNo-1]
-                # print(selectedRow)
-                # selectedNhsNo = QbookedTableRaw[selectEntryNo-1][2]
-                # print(selectedNhsNo)
-
-                selectedBookingNo = QbookedTableRaw[selectEntryNo - 1][1]
-                print(selectedBookingNo)
-
-                GP.chooseAppointment(selectedBookingNo, user)
+                else:
+                    GP.start_appointment(booking_no)
 
     @staticmethod
-    def chooseAppointment(selectedBookingNo, user):
+    def start_appointment(booking_no):
         """
         step 2 in branch v
         show details of selected patient  ->
@@ -349,119 +338,85 @@ class GP(User):
         for D and N they can change diagnosis or notes ->
         for P they can add or remove prescription
         """
-
         while True:
-
-            os.system('cls' if os.name == 'nt' else "printf '\033c'")
-            Qtext = "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, users.lastName, visit.Confirmed, users.birthday, users.phoneNo, users.HomeAddress, users.postcode, visit.diagnosis, visit.notes "
-            Qtext += "FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
-            Qtext += "WHERE visit.BookingNo = ? "
-            Qbooked = SQLQuery(Qtext)
-            Qbookedresult = Qbooked.executeFetchAll(decrypter=user.encryptionKey, parameters=(selectedBookingNo,))
-            print(tabulate([Qbookedresult[0][:-3]],
-                           headers=["BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name",
-                                    "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
-            print("----------")
-            print("Diagnosis:")
-            print("----------")
-            print(Qbookedresult[0][10])
-            print("----------")
+            booking_information = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
+                                           "users.lastName, visit.Confirmed, users.birthday, users.phoneNo, "
+                                           "users.HomeAddress, users.postcode, visit.diagnosis, visit.notes FROM visit "
+                                           "INNER JOIN users ON visit.NHSNo = users.ID WHERE visit.BookingNo = ? "
+                                           ).executeFetchAll(decrypter=encryptionHelper(), parameters=(booking_no,))
+            print_clean(tabulate([booking_information[0][:-3]],
+                                 headers=["BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name",
+                                          "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
+            print("\nDiagnosis:")
+            print(booking_information[0][10])
+            print("\n----------")
             print("Notes:")
-            print("----------")
-            print(Qbookedresult[0][11])
-            print("-------------")
-            print("Prescription:")
-            print("-------------")
-            Qtext = "SELECT drugName, quantity, instructions "
-            Qtext += "FROM prescription WHERE BookingNo = ? "
-            Qprescription = SQLQuery(Qtext)
-            Qprescriptionresult = Qprescription.executeFetchAll(decrypter=user.encryptionKey,
-                                                                parameters=(selectedBookingNo,))
-            QprescriptionresultTable = []
-            for i in range(len(Qprescriptionresult)):
-                QprescriptionresultTable.append(
-                    [i + 1, Qprescriptionresult[i][0], Qprescriptionresult[i][1], Qprescriptionresult[i][2]])
-            print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
-            print("--------------")
-            userInput = Parser.selectionParser(
-                options={"D": "add diagnosis", "N": "add notes", "P": " edit prescription",
-                         "--back": "back to previous page"})
-            if userInput == "--back":
+            print(booking_information[0][11])
+            print("\n-------------")
+            prescr_result = SQLQuery("SELECT PrescriptionNumber, drugName, quantity, instructions FROM prescription "
+                                     "WHERE BookingNo = ? "
+                                     ).executeFetchAll(decrypter=encryptionHelper(), parameters=(booking_no,))
+            if prescr_result:
+                print(tabulate(prescr_result, headers=["Prescription No", "Drug Name", "Quantity",
+                                                       "Dosage & Instructions"]))
+            else:
+                print("Prescriptions:\nNone")
+            print("")
+            user_input = Parser.selection_parser(
+                options={"D": "Edit diagnosis", "N": "Add notes", "P": "Edit prescriptions",
+                         "--back": "go back to previous page"})
+            if user_input == "--back":
                 return
-            elif userInput == "D":
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                print(f"Here is your diagnosis for Booking Number {Qbookedresult[0][0]}")
-                print("----------")
-                print("Diagnosis:")
-                print("----------")
-                print(Qbookedresult[0][10])
-                QuerryDiagnosis = SQLQuery(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ")
+            elif user_input == "D":
+                print_clean(
+                    f"The current diagnosis for patient {booking_information[0][3]} {booking_information[0][4]}, "
+                    f"appointment number {booking_no}:")
+                print(booking_information[0][10])
+                print("")
+                diagnosis = Parser.string_parser("Please enter your diagnosis: ")
+                SQLQuery(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ").executeCommit((diagnosis, booking_no))
+                print("The diagnosis has been recorded successfully!")
+                input("Press Enter to continue...")
 
-                diagnosisInput = Parser.stringParser("Please enter your diagnosis:")
+            elif user_input == "N":
+                print_clean(f"Your notes for appointment number {booking_no}")
+                print("")
+                print(booking_information[0][11])
+                notes_input = Parser.string_parser("Please enter your notes: ")
+                SQLQuery(" UPDATE Visit SET notes = ? WHERE BookingNo = ? ").executeCommit((notes_input,
+                                                                                            booking_no))
+                print("Your notes have been recorded successfully!")
+                input("Press Enter to continue...")
 
-                exeQuerryDiagnosis = QuerryDiagnosis.executeCommit((diagnosisInput, Qbookedresult[0][0]))
-                print("Your diagnosis has been given, you are going back to the patient info page...")
-
-            elif userInput == "N":
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                print(f"Here is your note for Booking Number {Qbookedresult[0][0]}")
-                print("----------")
-                print("Notes:")
-                print("----------")
-                print(Qbookedresult[0][11])
-                QuerryDiagnosis = SQLQuery(" UPDATE Visit SET notes = ? WHERE NHSNo = ? ")
-                # notesInput = input("Please enter your notes:\n")
-                notesInput = Parser.stringParser("Please enter your notes:")
-                # print(notesInput)
-                exeQuerryNotes = QuerryDiagnosis.executeCommit((notesInput, Qbookedresult[0][0]))
-                print("Your notes has been given,you are going back to the patient info page...")
-
-            elif userInput == "P":
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                print(f"Here is your Prescription for Booking Number {Qbookedresult[0][0]}")
-                print("-------------")
-                print("Prescription:")
-                print("-------------")
-                print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
-
-                userInput = Parser.selectionParser(
+            elif user_input == "P":
+                print_clean(f"Current prescription for patient {booking_information[0][3]} {booking_information[0][4]} "
+                      f"under appointment number {booking_no}:")
+                print("")
+                print(tabulate(prescr_result, headers=["Prescription No", "Drug Name", "Quantity", "Dosage & "
+                                                                                                   "Instructions"]))
+                print("")
+                user_input = Parser.selection_parser(
                     options={"A": "add prescription", "R": "remove prescription", "--back": "back to previous page"})
-                if userInput == "--back":
-                    return
-                elif userInput == "A":
-                    os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                    Querryprescription = SQLQuery(
-                        " INSERT INTO prescription (BookingNo, drugName, quantity, instructions) VALUES (?, ?, ?, ?)  ")
-                    # BookingNo = input("Please enter your BookingNo:\n")
-                    # print(notesInput)
-                    # drugName = input("Please enter your drugName:\n")
-                    drugName = Parser.stringParser("Please enter your drugname:")
-                    # quantity = input("Please enter your quantity:\n")
-                    quantity = Parser.stringParser("Please enter your quantity:")
-                    # instructions = input("Please enter your instructions:\n")
-                    instructions = Parser.stringParser("Please enter your instructions:")
-
-                    exeQuerryprescription = Querryprescription.executeCommit(
-                        (Qbookedresult[0][0], drugName, quantity, instructions))
-                    print("Your prescription has been given,you are going back to the patient info page...")
-
-                elif userInput == "R":
-                    GP.removePrescripion(Qbookedresult[0][0], QprescriptionresultTable)
-
-    @staticmethod
-    def removePrescripion(BookingNo, QprescriptionresultTable):
-        os.system('cls' if os.name == 'nt' else "printf '\033c'")
-        print(f"Here is your Prescription for Booking Number {BookingNo}")
-        print("-------------")
-        print("Prescription:")
-        print("-------------")
-        print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
-        Querryprescription = SQLQuery(" DELETE FROM prescription WHERE BookingNo = ? AND drugName = ? ")
-        selectItemNo = Parser.integer_parser(question="Select Item using number")
-        if selectItemNo == "--back":
-            return
-        # print(notesInput)
-        exeQuerryprescription = Querryprescription.executeCommit(
-            (BookingNo, QprescriptionresultTable[selectItemNo - 1][1]))
-        print("this prescription has been removed,you are going back to the patient info page...")
-        return
+                if user_input == "--back":
+                    continue
+                elif user_input == "A":
+                    drug_name = Parser.string_parser("Please enter the drug name: ")
+                    quantity = Parser.integer_parser("Please enter the quantity: ")
+                    instructions = Parser.string_parser("Please enter the instructions and dosage: ")
+                    SQLQuery("INSERT INTO prescription (BookingNo, drugName, quantity, instructions) VALUES (?, ?, ?, "
+                             "?)").executeCommit((booking_no, drug_name, quantity, instructions))
+                    print("Your prescription has been recorded successfully!")
+                    input("Press Enter to continue...")
+                    continue
+                elif user_input == "R":
+                    while True:
+                        allowed_numbers = [prescription[0] for prescription in prescr_result]
+                        prescription_number = str(Parser.integer_parser("Please enter the Prescription No to delete: "))
+                        if prescription_number not in allowed_numbers:
+                            print("Incorrect prescription number!")
+                            continue
+                        SQLQuery(" DELETE FROM prescription WHERE PrescriptionNumber = ? "
+                                 ).executeCommit((prescription_number,))
+                        print("Prescription removed correctly!")
+                        input("Press Enter to continue...")
+                        break
