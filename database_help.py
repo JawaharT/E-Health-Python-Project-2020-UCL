@@ -115,7 +115,7 @@ from encryption import encryptionHelper
 from encryption import passwordHelper
 
 
-class database:
+class Database:
     """
     class for data base connction
     """
@@ -134,7 +134,7 @@ class database:
         conn = None
         try:
             conn = sqlite3.connect(self.db_file)
-            print(sqlite3.version)
+            # print(sqlite3.version)
         except Error as e:
             print(e)
 
@@ -156,16 +156,17 @@ class database:
         '''
         SQLfile = open(SQLScriptPath, mode='r')
         SQLScript = SQLfile.read()
-        print(SQLScript)
+        # print(SQLScript)
         conn = self.create_connection()
         try:
             cur = conn.cursor()
             cur.executescript(SQLScript)
         except Error as e:
             print(e)
-        database.close_connection(conn)
+        Database.close_connection(conn)
 
-class SQLQuerry(database):
+
+class SQLQuery(Database):
     """
     class for executing SQL querry as object
     """
@@ -182,9 +183,9 @@ class SQLQuerry(database):
         sql_ = "SELECT * FROM gw_assay WHERE point_id = ? AND analyte = ? AND sampling_date = ?"
         par_ = (point_id, analyte, sampling_date)
         """
-        database.__init__(self, db_file)
+        Database.__init__(self, db_file)
         self.querry = querry
-    def executeFetchAll(self, decrypter=None,parameters={}):
+    def executeFetchAll(self, decrypter=None,parameters={}, ) -> object:
         """
         :param parameters: dictionary of parameters for the querry
         :param decrypter: if an encryption object is avaliable due to successful login it will use it to decrypt the result
@@ -196,7 +197,7 @@ class SQLQuerry(database):
         cur = conn.cursor()
         cur.execute(self.querry, parameters)
         result = cur.fetchall()
-        database.close_connection(conn)
+        Database.close_connection(conn)
         if isinstance(decrypter, encryptionHelper):
             decryptedResult = list()
             for row in result:
@@ -210,6 +211,7 @@ class SQLQuerry(database):
             return decryptedResult
         
         return result
+
     def executeCommit(self, parameters={}):
         """
         :param parameters: dictionary of parameters for the querry
@@ -222,26 +224,27 @@ class SQLQuerry(database):
         cur.execute(self.querry, parameters)
         conn.commit()
         result = cur.lastrowid
-        database.close_connection(conn)
+        Database.close_connection(conn)
         return result   
 
 if __name__ == '__main__':
     #refresh and create new DB
     #if you have anything that you want to stay permenantly edit and insert using sql script
-    DB = database("GPDB.db")
+    DB = Database("GPDB.db")
     DB.executeSQLScript("GPDB.sql")
 
     #testing for querry type
-    # Q2 = SQLQuerry("DELETE FROM UserGroup WHERE UserType = (:type)")
+    # Q2 = SQLQuery("DELETE FROM UserGroup WHERE UserType = (:type)")
     # result = Q2.executeCommit({"test": "testing", "type": "changd"})
-    # Q = SQLQuerry("SELECT * FROM UserGroup")
+    # Q = SQLQuery("SELECT * FROM UserGroup")
     # result = Q.executeFetchAll()
     # print(result)
 
     # # testng for storing encrypted value and decrypting it
-    Q = SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    Q = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
     EH = encryptionHelper()
-    result = Q.executeCommit(("G01", 
+    # noinspection PyTypeChecker
+    result = Q.executeCommit(("G01",
                             "testGP", 
                             passwordHelper.hashPW("testGPPW"), 
                             EH.encryptToBits("1991-01-04"),
@@ -252,18 +255,8 @@ if __name__ == '__main__':
                             EH.encryptToBits("A1 7RT"),
                             "GP",
                             "F"))
-    result = Q.executeCommit(("G02",
-                            "testGP2",
-                            passwordHelper.hashPW("testGPPW2"),
-                            EH.encryptToBits("1991-01-04"),
-                            EH.encryptToBits("testGPFitstName"),
-                            EH.encryptToBits("testGPLastName"),
-                            EH.encryptToBits("0123450233"),
-                            EH.encryptToBits("testGPHome Address, test Road"),
-                            EH.encryptToBits("A1 7RT"),
-                            "GP",
-                            "F"))
-    result = Q.executeCommit(("1929282829", 
+    # noinspection PyTypeChecker
+    result = Q.executeCommit(("1929282829",
                             "testPatient", 
                             passwordHelper.hashPW("tPPW"), 
                             EH.encryptToBits("1982-02-03"),
@@ -274,6 +267,7 @@ if __name__ == '__main__':
                             EH.encryptToBits("A0 5QS"),
                             "Patient",
                             "F"))
+    # noinspection PyTypeChecker
     result = Q.executeCommit(("2929282822",
                             "testPatient2", 
                             passwordHelper.hashPW("tPPW2"), 
@@ -285,52 +279,7 @@ if __name__ == '__main__':
                             EH.encryptToBits("B0 5QK"),
                             "Patient",
                             "F"))
-    result = Q.executeCommit(("333",
-                              "testPatient3",
-                              passwordHelper.hashPW("tPPW3"),
-                              EH.encryptToBits("1984-02-03"),
-                              EH.encryptToBits("testPatient2FitstName"),
-                              EH.encryptToBits("testPatient2LastName"),
-                              EH.encryptToBits("1929292823"),
-                              EH.encryptToBits("testPatient2Home Address, test Road"),
-                              EH.encryptToBits("B0 5QK"),
-                              "Patient",
-                              "F"))
-
-    Q2 = SQLQuerry("INSERT INTO visit VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-    EH = encryptionHelper()
-    result = Q2.executeCommit(("111",
-                              "333",
-                              "G01",
-                              "2020-12-25 14:00:00",
-                              "T",
-                              "F",
-                              "",
-                              "Headache"
-                              ))
-    # result = Q2.executeCommit(("1929282829",
-    #                           "testPatient",
-    #                           passwordHelper.hashPW("tPPW"),
-    #                           EH.encryptToBits("1982-02-03"),
-    #                           EH.encryptToBits("testPatientFitstName"),
-    #                           EH.encryptToBits("testPatientLastName"),
-    #                           EH.encryptToBits("2929192821"),
-    #                           EH.encryptToBits("testPatientHome Address, test Road"),
-    #                           EH.encryptToBits("A0 5QS"),
-    #                           "Patient",
-    #                           "F"))
-    # result = Q2.executeCommit(("2929282822",
-    #                           "testPatient2",
-    #                           passwordHelper.hashPW("tPPW2"),
-    #                           EH.encryptToBits("1984-02-03"),
-    #                           EH.encryptToBits("testPatient2FitstName"),
-    #                           EH.encryptToBits("testPatient2LastName"),
-    #                           EH.encryptToBits("1929292823"),
-    #                           EH.encryptToBits("testPatient2Home Address, test Road"),
-    #                           EH.encryptToBits("B0 5QK"),
-    #                           "Patient",
-    #                           "F"))
-    # Q2 = SQLQuerry("SELECT * FROM Users")
+    # Q2 = SQLQuery("SELECT * FROM Users")
     # result = Q2.executeFetchAll()
     # print(result)
     # for i in range(3,8):

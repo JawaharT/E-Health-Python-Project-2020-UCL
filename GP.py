@@ -1,288 +1,290 @@
 import os
 from tabulate import tabulate
-from parserHelp import parser
-from login import currentUser
-from databaseHelp import SQLQuerry
+
+from encryption import encryptionHelper
+from parser_help import Parser
+from database_help import SQLQuery
 import time
-import sys
+# import sys
 import datetime
+from main import User
+
+print_clean = Parser.print_clean
+delta = datetime.timedelta
 
 
-
-
-
-class GPNavigator():
+class GP(User):
     """
-    GP option for navigation
+    GP Class with navigation options and various functionalities.
     """
-    @staticmethod
-    def mainNavigator(user):
+
+    def main_menu(self) -> None:
         """
-        it will print the user information !!you might want to reuse it
-        then divert the user int the 3 main function ofGP Add/view avaliability, confirm/view bookings, start the process of viewing patient
+        Main Menu for GP-type users.
         """
         while True:
-            os.system('cls' if os.name == 'nt' else "printf '\033c'")
-            print(f"Login Successful. Hello {user.firstName}")
-            userInfoTable = [["User Type:", user.UserType],
-                            ["First Name: ", user.firstName],
-                            ["Last Name: ", user.lastName],
-                            ["Birthday: ", user.birthday],
-                            ["Phone No: ", user.phoneNo],
-                            ["Home Address: ", user.HomeAddress],
-                            ["Post Code: ", user.postCode]
-                            ]
-            print(tabulate(userInfoTable))
-            userInput = parser.selectionParser(options={"A": "add/View availability","C": "Confirm/view bookings","V": "View/Start appointment","--logout": "logout"})
-            if userInput == "--logout":
-                #reason for quitting is that it dumps the login info so the logout is complete and the key is not accessible to futureuser.
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                print("Logging you out ...")
-                time.sleep(3)
-                sys.exit(0)
-            else:
-                currentPage = userInput
-        
-            if currentPage == "A":
-                currentPage = GPNavigator.avaliabilityAorRM(user)
-            if currentPage == "C":
-                currentPage = GPNavigator.confirmBooking(user)
-            if currentPage == "V":
-                #add your function to here
-                currentPage = GPNavigator.viewAppointment(user)
-                pass
+            print("You're currently viewing main menu options for GP {}.".format(self.username))
+            option_selection = Parser.selection_parser(
+                options={"A": "View/Edit availability", "M": "Manage bookings", "V": "View/Start appointment",
+                         "--logout": "Logout"})
+            if option_selection == "--logout":
+                # Quitting is required for logout to ensure all personal data is cleared from session
+                print_clean("Logging you out...")
+                Parser.user_quit()
 
-    @staticmethod
-    def avaliabilityAorRM(user):
+            elif option_selection == "A":
+                self.edit_availability()
+            elif option_selection == "M":
+                self.manage_bookings()
+            elif option_selection == "V":
+                self.view_appointment()
+
+    def edit_availability(self) -> None:
         """
-        step 2 in beanch A ask which date the user wish to manipulte ->
-        Display the schedule of avaliability of the date ->
-        ask to add or remove avaliability -> divert to subfunction adding or removing
+        Method to view, add or remove availability for the logged in GP.
         """
-        stage = 0
-        selectedDate = None
         while True:
-            while stage == 0:
-                #rander the prompt to ask for the date
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                dateInput = parser.dateParser(question="Select a Date:")
-                
-                if dateInput == "--back":
-                    #if --back is inputted, it will return to the main window of GP
-                    return "main"
+            print_clean()
+            option_selection = Parser.selection_parser(
+                options={"A": "View all your current availability", "D": "Edit availability by date", "--back":
+                    "to go back"})
+            if option_selection == "--back":
+                return
+            elif option_selection == "A":
+                availability_result = SQLQuery("SELECT Timeslot FROM available_time WHERE StaffId = ?"
+                                               ).executeFetchAll(parameters=(self.ID,))
+                print_clean(f"Viewing current availability for GP {self.username}")
+                if len(availability_result) == 0:
+                    print("You have no current availability recorded in the system.")
                 else:
-                    selectedDate = dateInput
-                    stage = 1
-            while stage == 1:
-                #randering the table of available schedule
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                #retrieving info from DB
-                Qaval = SQLQuerry("SELECT StaffID, Timeslot FROM available_time WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ?",)
-                selectedDatePlus1 = selectedDate + datetime.timedelta(days=1)
-                Qavalresult = Qaval.executeFetchAll(parameters = (user.ID, selectedDate, selectedDatePlus1))
-                #storing a raw version of the important data as it is easier for the sqlite package to handle it 
-                QavalTableRaw = []
-                #for display purposes it is better to minupulate it
-                QavalTable = []
-                for i in range(len(Qavalresult)):
-                    QavalTable.append([i+1, str(Qavalresult[i][1])])
-                    QavalTableRaw.append([i+1, Qavalresult[i][1]])
-                print(f"You are viewing your schedule of: {selectedDate.strftime('%Y-%m-%d')}")
-                print(tabulate(QavalTable, headers=["Pointer", "timeslot"]))
-                userInput = parser.selectionParser(options={"A": "add availability","R": "remove availability","--back": "back to previous page"})
-                if userInput == "--back":
-                    #breaking into the previous stage of date selection
-                    stage = 0
-                    break
-                elif userInput == "A":
-                    #divert to adding availability
-                    stage = 1
-                    GPNavigator.addAvailability(selectedDate, user)
-                    break
-                elif userInput == "R":
-                    #divert to removing availability
-                    GPNavigator.rmAvailability(QavalTableRaw, user)
-                    stage = 1
-    def rmAvailability(QavalTableRaw, user):
+                    for slot in availability_result:
+                        print(slot[0])
+                input("Press Enter to continue...")
+                continue
+            selected_date = Parser.date_parser(f"Editing availability for GP {self.username}.\n"
+                                               "Select a Date:")
+            if selected_date == "--back":
+                # --back returns the user to the main GP menu.
+                print_clean()
+                return
+            print_clean()
+            # Retrieving availability from the database
+            availability_result = SQLQuery(
+                "SELECT StaffID, Timeslot FROM available_time WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ?",
+            ).executeFetchAll(parameters=(self.ID, selected_date, selected_date + delta(days=1)))
+            # Creating two corresponding tables for the fetched data - one for SQL manipulation, one for display
+            availability_table_raw = []
+            availability_table = []
+            for i in range(len(availability_result)):
+                availability_table.append([i + 1, str(availability_result[i][1])])
+                availability_table_raw.append([i + 1, availability_result[i][1]])
+            print(f"You are viewing your schedule for: {selected_date}")
+            if len(availability_table) == 0:
+                print(f"You have no availability for this day yet.")
+            else:
+                print(tabulate(availability_table, headers=["Pointer", "Timeslot"]))
+            option_selection = Parser.selection_parser(
+                options={"A": "add availability", "R": "remove availability", "--back": "back to previous page"})
+            if option_selection == "A":
+                # selected_date is passed as argument rather than an instance variable for safety
+                # (selected_date is used as a variable name across many methods)
+                self.add_availability(selected_date)
+            elif option_selection == "R":
+                # the same applies to the availability table
+                self.remove_availability(availability_table_raw)
+
+    def remove_availability(self, availability_table) -> bool:
         """
-        function to prompt the user f which entry to remove -> parsing the input
-        returning the info of the one they want to remove -> executing eansection
+        Method to remove available timeslots for a given day
+        !IMPORTANT Should only be called from within GP.edit_availability
+        
+        :param: list availability_table: availability table for the selected day
         """
-        slotToRm = []
+        slots_to_remove = []
         while True:
-            selectedEntry = parser.listNumberParser("Select the entry to remove", (1,len(QavalTableRaw)+1))
-            if selectedEntry == '--back':
-                return "main"
-            for row in QavalTableRaw:
-                if row[0] in selectedEntry:
-                    slotToRm.append(row[1])
-            print("These time slot will be removed and made unavailable")
-            print(tabulate(map(str, slotToRm)))
-            confirm = parser.selectionParser(options={"Y": "confirm", "N":"go back and select again"})
+            # Selecting the entries to remove
+            selected_entry = Parser.list_number_parser("Select the entry to remove using their corresponding IDs"
+                                                       "from the 'Pointer' column.",
+                                                       (1, len(availability_table) + 1))
+            if selected_entry == '--back':
+                return False
+            for row in availability_table:
+                if row[0] in selected_entry:
+                    slots_to_remove.append(row[1])
+            print("These time slot will be removed and made unavailable for future bookings:")
+            for slot in slots_to_remove:
+                print(slot)
+            confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
+            # Confirm if user wants to delete slots
             if confirm == "Y":
-                insertAvalQuerry = SQLQuerry("DELETE FROM available_time WHERE StaffID = ? AND Timeslot = ?")
                 try:
-                    for slot in slotToRm:
-                        insertAvalQuerry.executeCommit((user.ID, slot))
-                    print("removed")
-                    time.sleep(3)
-                    return
+                    for slot in slots_to_remove:
+                        SQLQuery("DELETE FROM available_time WHERE StaffID = ? AND Timeslot = ?"
+                                 ).executeCommit((self.ID, slot))
+                    print("Slots removed successfully.")
+                    input("Press Enter to continue...")
+                    return True
                 except:
                     print("Error encountered")
-                    slotToRm = []
-                    time.sleep(3)
-                    print("restarting")
+                    slots_to_remove = []
+                    input("Press Enter to continue...")
             if confirm == "N":
-                print("action canceled returning...")
-                time.sleep(3)
-                break            
+                print("Removal cancelled.")
+                slots_to_remove = []
+                input("Press Enter to continue...")
 
-    def addAvailability(selectedDate, user):
+    def add_availability(self, selected_date) -> bool:
         """
-        function to prompt user to enter te start of their availability after that te ending time, 
-            for GP they usually know their shift in advance so they will add their avaliable time into the table.
-        executing the INSERT transaction
-        """
+        Method to add availability for a given day
+        !IMPORTANT Should only be called from within GP.edit_availability
 
+        :param: datetime selected_date: Date for which availability is edited
+        """
         stage = 0
-        selectedStart = None
-        selectedEnd = None
-        slotToAdd = []
+        slots_to_add = []
         while True:
             while stage == 0:
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                print("Each timeslot will be 15min long")
-                startTime = parser.timeParser("Enter the hour you wish to start taking appiontmets:")
-                selectedDate
-                if startTime == "--back":
-                    return None
+                start_time = Parser.time_parser(f"GP {self.username}: you're adding availability for "
+                                                f"{selected_date}. Each timeslot is 15 minutes long. \nEnter "
+                                                f"the hour you wish to start taking appointments:")
+                if start_time == "--back":
+                    return False
                 else:
-                    selectedStart = datetime.datetime.combine(selectedDate.date(), startTime.time())
+                    selected_start = datetime.datetime.combine(selected_date, start_time)
                     stage = 1
             while stage == 1:
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                print("Each timeslot will be 15 min long")
-                print(f"you wish to start from {str(selectedStart)}")
-                endTime = parser.timeParser("Enter the hour you wish to start taking appiontmets:")
-                selectedDate
-                if endTime == "--back":
+                end_time = Parser.time_parser(f"GP {self.username}: Each timeslot is  15 minutes long. You have "
+                                              f"chosen to start from {str(selected_start)}. \nEnter the end"
+                                              " of your last available appointment:")
+                if end_time == "--back":
                     stage = 0
-                    break
                 else:
-                    selectedEnd = datetime.datetime.combine(selectedDate.date(), endTime.time())
+                    selected_end = datetime.datetime.combine(selected_date, end_time)
                     stage = 2
-                    break
             while stage == 2:
-                currentTime = selectedStart
-                while currentTime < selectedEnd:
-                    slotToAdd.append(currentTime)
-                    currentTime = currentTime + datetime.timedelta(minutes=15)
-                print("These are the slot that you wish to add:")
-                print(tabulate(map(str, slotToAdd)))
-                confirm = parser.selectionParser(options={"Y": "confirm", "N":"go back and select again"})
+                temporary_time = selected_start
+                while temporary_time < selected_end:
+                    slots_to_add.append(temporary_time)
+                    temporary_time = temporary_time + delta(minutes=15)
+                print("You have chosen to add the following slots: ")
+                for slot in slots_to_add:
+                    print(slot)
+                confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
                 if confirm == "Y":
-                    insertAvalQuerry = SQLQuerry("INSERT INTO available_time VALUES (?, ?)")
                     try:
-                        for slot in slotToAdd:
-                            insertAvalQuerry.executeCommit((user.ID, slot))
-                        print("adding")
-                        return
+                        for slot in slots_to_add:
+                            SQLQuery("INSERT INTO available_time VALUES (?, ?)").executeCommit((self.ID, slot))
+                        print("Your slots have been successfully added!")
+                        input("Press Enter to continue...")
+                        return True
                     except:
-                        print("invalid timeslot. some of the timeslot is already in the table Please Retry")
+                        print("Invalid selection. Some of the entries may already be in the database. Please Retry")
                         stage = 0
-                        selectedStart = None
-                        selectedEnd = None
-                        slotToAdd = []
-                        time.sleep(3)
-                        print("restarting")
-                        break
+                        slots_to_add = []
+                        input("Press Enter to continue...")
                 if confirm == "N":
                     stage = 0
-                    selectedStart = None
-                    selectedEnd = None
-                    slotToAdd = []
-                    print("restarting")
-                    break
-    @staticmethod
-    def confirmBooking(user):
+                    slots_to_add = []
+                    print("Starting over...")
+                    time.sleep(2)
+
+    def manage_bookings(self) -> None:
         """
-        first step of branch C confirm booking
-        similar to branch A can also be reused in branch V
-        ask for date -> display the bookings from patients ->
-        ask for which entry the user wish to modifly
-        -> return to previous function | pass to teansactions
+        Method to manage bookings for a GP.
         """
         stage = 0
-        selectedDate = None
         while True:
             while stage == 0:
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                dateInput = parser.dateParser(question="Select a Date:")
-                if dateInput == "--back":
-                    return "main"
-                else:
-                    selectedDate = dateInput
-                    stage = 1
-            while stage == 1:
-                os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                Qtext = "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, users.lastName, visit.Confirmed "
-                Qtext += "FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
-                Qtext += "WHERE visit.StaffID = ? AND visit.Timeslot >= ? AND visit.Timeslot <= ?"
-                print(Qtext)
-                Qbooked = SQLQuerry(Qtext)
-                selectedDatePlus1 = selectedDate + datetime.timedelta(days=1)
-                Qbookedresult = Qbooked.executeFetchAll(decrypter=user.encryptionKey, parameters = (user.ID, selectedDate, selectedDatePlus1))
-                QbookedTableRaw = []
-                QbookedTable = []
-                translation = {"T":"Accepted", "F": "Rejected", "P": "Pendig Response"}
-                for i in range(len(Qbookedresult)):
-                    QbookedTable.append([i+1, Qbookedresult[i][0],str(Qbookedresult[i][1]), Qbookedresult[i][2], Qbookedresult[i][3],Qbookedresult[i][4], translation[Qbookedresult[i][5]]])
-                    QbookedTableRaw.append([i+1, Qbookedresult[i][0], Qbookedresult[i][1]])
-                print(f"You are viewing your bookings of: {selectedDate.strftime('%Y-%m-%d')}")
-                print(tabulate(QbookedTable, headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name", "Confirmed"]))
-                selectEntryNo = parser.integerParser(question="Select Entry using number")
-
-                print(selectEntryNo)
-                if selectEntryNo == "--back":
-                    stage = 0
-                    break
-                selectedRow = QbookedTable[selectEntryNo-1]
-                #print(selectedRow)
-                selectedRowRaw = QbookedTableRaw[selectEntryNo-1]
-                GPNavigator.bookingTransaction(selectedRow, selectedRowRaw, user)
-
-    def bookingTransaction(selectedRow, selectedRowRaw, user):
-            """
-            transaction of the booking confirmation
-            ask the user whether they wish to confirm or reject it
-            for confirm it will automatically reject all bookings in the same time slot
-            for reject no other step required 
-            """
-            while True:
-                print("You selected this row")
-                print(tabulate([selectedRow], headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name", "Confirmed"]))
-                userInput = parser.selectionParser(options={"C": "Confirm","R": "Reject","--back": "back to previous page"})
-                if userInput == "--back":
+                print_clean(f"Managing bookings for GP {self.username}.")
+                option_selection = Parser.selection_parser(
+                    options={"P": "View and edit your pending bookings", "D": "View and edit bookings by date",
+                             "--back": "to go back"})
+                if option_selection == "--back":
                     return
-                elif userInput == "C":
+                elif option_selection == "P":
+                    bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
+                                               "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
+                                               "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Confirmed = "
+                                               "'P'").executeFetchAll(encryptionHelper(), parameters=(self.ID,))
+                    message = "with status 'pending'."
                     stage = 1
-                    print("Warning! this will reject all other bookings in the same timeslot")
-                    userInputYN = parser.selectionParser(options={"Y": "Confirm","N": "Rollback"})
-                    if userInputYN == 'N':
-                        break
-                    else:
-                        QuerryReject = SQLQuerry("UPDATE Visit SET Confirmed = 'F' WHERE StaffID = ? AND Timeslot = ?")
-                        exeQuerryReject = QuerryReject.executeCommit((user.ID, selectedRowRaw[2]))
-                        QuerryAccept = SQLQuerry("UPDATE Visit SET Confirmed = 'T' WHERE BookingNo = ?")
-                        exeQuerryAccept = QuerryAccept.executeCommit((selectedRowRaw[1],))
-                    break
-                elif userInput == "R":
-                        QuerryReject = SQLQuerry("UPDATE Visit SET Confirmed = 'F' WHERE BookingNo = ?")
-                        exeQuerryReject = QuerryReject.executeCommit((selectedRowRaw[1],))
+                elif option_selection == "D":
+                    selected_date = Parser.date_parser(question=f"Accessing bookings for GP {self.username}\n"
+                                                                f"Select a Date:")
+                    if selected_date == "--back":
                         return
+                    else:
+                        bookings_result = SQLQuery(
+                            "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
+                            "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
+                            "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ?"
+                            " AND visit.Timeslot <= ?"
+                        ).executeFetchAll(encryptionHelper(), (self.ID, selected_date,
+                                                               selected_date + delta(
+                                                                   days=1)))
+                        message = f"for: {selected_date.strftime('%Y-%m-%d')}"
+                        stage = 1
+            while stage == 1:
+                bookings_table_raw = []
+                bookings_table = []
+                translation = {"T": "Accepted", "F": "Rejected", "P": "Pending Response"}
+                i = 0
+                for booking in bookings_result:
+                    bookings_table.append([i + 1, booking[0], str(booking[1]), booking[2], booking[3],
+                                           booking[4], translation[booking[5]]])
+                    bookings_table_raw.append([i + 1, booking[0], booking[1]])
+                    i += 1
+                print_clean("You are viewing your bookings " + message )
+                if len(bookings_table) == 0:
+                    print("No bookings match current search criteria.")
+                    stage = 0
+                    input("Press Enter to continue.")
+                else:
+                    print(tabulate(bookings_table,
+                                   headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
+                                            "P. Last Name", "Confirmed"]))
+                    selected_entry = Parser.integer_parser(question="Select entry using number from Pointer column or "
+                                                                    "type '--back' to go back")
+                    if selected_entry == "--back":
+                        stage = 0
+                    else:
+                        selected_row = bookings_table[selected_entry - 1]
+                        selected_row_raw = bookings_table_raw[selected_entry - 1]
+                        self.booking_transaction(selected_row, selected_row_raw)
 
-    @staticmethod
-    def viewAppointment(user):
+    def booking_transaction(self, selected_row, selected_row_raw) -> bool:
+        """
+        Method to change the status of a given booking for a GP.
+        !IMPORTANT Should only be called from within GP.manage_bookings
+
+        :param: list selected_row: Row from database representing a given booking
+        :param: list selected_row_raw: As above but in raw format (see GP.manage_bookings)
+        """
+        while True:
+            print("You selected the following booking:")
+            print(
+                tabulate([selected_row], headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
+                                                  "P. Last Name", "Confirmed"]))
+            user_input = Parser.selection_parser(
+                options={"C": "Confirm", "R": "Reject", "--back": "Back to previous page"})
+            if user_input == "--back":
+                return False
+            elif user_input == "C":
+                print("Warning! This will reject all other pending bookings for this timeslot. ")
+                confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Rollback"})
+                if confirm == 'N':
+                    pass
+                else:
+                    SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE StaffID = ? AND Timeslot = ? AND BookingNo != ?"
+                             ).executeCommit((self.ID, selected_row_raw[2], selected_row_raw[1]))
+                    SQLQuery("UPDATE Visit SET Confirmed = 'T' WHERE BookingNo = ?"
+                             ).executeCommit((selected_row_raw[1],))
+                    return True
+            elif user_input == "R":
+                SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE BookingNo = ?").executeCommit((selected_row_raw[1],))
+                return True
+
+    def view_appointment(self):
         """
         step 1 in branch v ask which date the user wish to manipulte ->
         Display confirmed appointment of the date ->
@@ -293,7 +295,7 @@ class GPNavigator():
         while True:
             while stage == 0:
                 os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                dateInput = parser.dateParser(question="Select a Date:")
+                dateInput = Parser.date_parser(question="Select a Date:")
                 if dateInput == "--back":
                     return "main"
                 else:
@@ -304,134 +306,148 @@ class GPNavigator():
                 Qtext = "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, users.lastName, visit.Confirmed "
                 Qtext += "FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
                 Qtext += "WHERE visit.StaffID = ? AND visit.Timeslot >= ? AND visit.Timeslot <= ? AND visit.Confirmed = 'T' "
-                #print(Qtext)
-                Qbooked = SQLQuerry(Qtext)
+                # print(Qtext)
+                Qbooked = SQLQuery(Qtext)
 
                 selectedDatePlus1 = selectedDate + datetime.timedelta(days=1)
-                Qbookedresult = Qbooked.executeFetchAll(decrypter=user.encryptionKey, parameters = (user.ID, selectedDate, selectedDatePlus1))
+                Qbookedresult = Qbooked.executeFetchAll(decrypter=self.encryptionKey,
+                                                        parameters=(self.ID, selectedDate, selectedDatePlus1))
                 QbookedTableRaw = []
                 QbookedTable = []
-                translation = {"T":"Accepted", "F": "Rejected", "P": "Pending Response"}
+                translation = {"T": "Accepted", "F": "Rejected", "P": "Pending Response"}
                 for i in range(len(Qbookedresult)):
-                    QbookedTable.append([i+1, Qbookedresult[i][0],str(Qbookedresult[i][1]), Qbookedresult[i][2], Qbookedresult[i][3],Qbookedresult[i][4], translation[Qbookedresult[i][5]]])
-                    QbookedTableRaw.append([i+1, Qbookedresult[i][0], Qbookedresult[i][2]])
+                    QbookedTable.append(
+                        [i + 1, Qbookedresult[i][0], str(Qbookedresult[i][1]), Qbookedresult[i][2], Qbookedresult[i][3],
+                         Qbookedresult[i][4], translation[Qbookedresult[i][5]]])
+                    QbookedTableRaw.append([i + 1, Qbookedresult[i][0], Qbookedresult[i][2]])
                 print(f"You are viewing all of your confirmed bookings of: {selectedDate.strftime('%Y-%m-%d')}")
-                print(tabulate(QbookedTable, headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name", "Confirmed"]))
+                print(tabulate(QbookedTable,
+                               headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
+                                        "P. Last Name", "Confirmed"]))
                 # print(tabulate(QbookedTableRaw, headers=["Pointer", "BookingNo", "Patient NHSNo"]))
-                selectEntryNo = parser.integerParser(question="Select Entry using number or input '--back' for back")
+                selectEntryNo = Parser.integer_parser(question="Select Entry using number or input '--back' for back")
                 print(selectEntryNo)
                 if selectEntryNo == "--back":
                     stage = 0
                     break
-                #selectedRow = QbookedTable[selectEntryNo-1]
-                #print(selectedRow)
+                # selectedRow = QbookedTable[selectEntryNo-1]
+                # print(selectedRow)
                 # selectedNhsNo = QbookedTableRaw[selectEntryNo-1][2]
                 # print(selectedNhsNo)
 
-                selectedBookingNo=QbookedTableRaw[selectEntryNo-1][1]
+                selectedBookingNo = QbookedTableRaw[selectEntryNo - 1][1]
                 print(selectedBookingNo)
 
-                GPNavigator.chooseAppointment(selectedBookingNo, user)
-    
+                GP.chooseAppointment(selectedBookingNo, self)
+
     @staticmethod
     def chooseAppointment(selectedBookingNo, user):
-            """
-            step 2 in branch v
-            show details of selected patient  ->
-            ask the user whether they wish to change it ->
-            for D and N they can change diagnosis or notes ->
-            for P they can add or remove prescription
-            """
+        """
+        step 2 in branch v
+        show details of selected patient  ->
+        ask the user whether they wish to change it ->
+        for D and N they can change diagnosis or notes ->
+        for P they can add or remove prescription
+        """
 
-            while True:
+        while True:
 
+            os.system('cls' if os.name == 'nt' else "printf '\033c'")
+            Qtext = "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, users.lastName, visit.Confirmed, users.birthday, users.phoneNo, users.HomeAddress, users.postcode, visit.diagnosis, visit.notes "
+            Qtext += "FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
+            Qtext += "WHERE visit.BookingNo = ? "
+            Qbooked = SQLQuery(Qtext)
+            Qbookedresult = Qbooked.executeFetchAll(decrypter=user.encryptionKey, parameters=(selectedBookingNo,))
+            print(tabulate([Qbookedresult[0][:-3]],
+                           headers=["BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name",
+                                    "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
+            print("----------")
+            print("Diagnosis:")
+            print("----------")
+            print(Qbookedresult[0][10])
+            print("----------")
+            print("Notes:")
+            print("----------")
+            print(Qbookedresult[0][11])
+            print("-------------")
+            print("Prescription:")
+            print("-------------")
+            Qtext = "SELECT drugName, quantity, instructions "
+            Qtext += "FROM prescription WHERE BookingNo = ? "
+            Qprescription = SQLQuery(Qtext)
+            Qprescriptionresult = Qprescription.executeFetchAll(decrypter=user.encryptionKey,
+                                                                parameters=(selectedBookingNo,))
+            QprescriptionresultTable = []
+            for i in range(len(Qprescriptionresult)):
+                QprescriptionresultTable.append(
+                    [i + 1, Qprescriptionresult[i][0], Qprescriptionresult[i][1], Qprescriptionresult[i][2]])
+            print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
+            print("--------------")
+            userInput = Parser.selectionParser(
+                options={"D": "add diagnosis", "N": "add notes", "P": " edit prescription",
+                         "--back": "back to previous page"})
+            if userInput == "--back":
+                return
+            elif userInput == "D":
                 os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                Qtext = "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, users.lastName, visit.Confirmed, users.birthday, users.phoneNo, users.HomeAddress, users.postcode, visit.diagnosis, visit.notes "
-                Qtext += "FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
-                Qtext += "WHERE visit.BookingNo = ? "
-                Qbooked = SQLQuerry(Qtext)
-                Qbookedresult = Qbooked.executeFetchAll(decrypter=user.encryptionKey, parameters = (selectedBookingNo,))
-                print(tabulate([Qbookedresult[0][:-3]], headers=["BookingNo", "timeslot", "Patient NHSNo",  "P. First Name", "P. Last Name", "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
+                print(f"Here is your diagnosis for Booking Number {Qbookedresult[0][0]}")
                 print("----------")
                 print("Diagnosis:")
                 print("----------")
                 print(Qbookedresult[0][10])
+                QuerryDiagnosis = SQLQuery(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ")
+
+                diagnosisInput = Parser.stringParser("Please enter your diagnosis:")
+
+                exeQuerryDiagnosis = QuerryDiagnosis.executeCommit((diagnosisInput, Qbookedresult[0][0]))
+                print("Your diagnosis has been given, you are going back to the patient info page...")
+
+            elif userInput == "N":
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print(f"Here is your note for Booking Number {Qbookedresult[0][0]}")
                 print("----------")
                 print("Notes:")
                 print("----------")
                 print(Qbookedresult[0][11])
+                QuerryDiagnosis = SQLQuery(" UPDATE Visit SET notes = ? WHERE NHSNo = ? ")
+                # notesInput = input("Please enter your notes:\n")
+                notesInput = Parser.stringParser("Please enter your notes:")
+                # print(notesInput)
+                exeQuerryNotes = QuerryDiagnosis.executeCommit((notesInput, Qbookedresult[0][0]))
+                print("Your notes has been given,you are going back to the patient info page...")
+
+            elif userInput == "P":
+                os.system('cls' if os.name == 'nt' else "printf '\033c'")
+                print(f"Here is your Prescription for Booking Number {Qbookedresult[0][0]}")
                 print("-------------")
                 print("Prescription:")
                 print("-------------")
-                Qtext = "SELECT drugName, quantity, instructions "
-                Qtext += "FROM prescription WHERE BookingNo = ? "
-                Qprescription = SQLQuerry(Qtext)
-                Qprescriptionresult = Qprescription.executeFetchAll(decrypter=user.encryptionKey,parameters=(selectedBookingNo,))
-                QprescriptionresultTable = []
-                for i in range(len(Qprescriptionresult)):
-                    QprescriptionresultTable.append([i+1, Qprescriptionresult[i][0], Qprescriptionresult[i][1],  Qprescriptionresult[i][2]])
                 print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
-                print("--------------")
-                userInput = parser.selectionParser(options={"D": "add diagnosis", "N": "add notes", "P": " edit prescription", "--back": "back to previous page"})
+
+                userInput = Parser.selectionParser(
+                    options={"A": "add prescription", "R": "remove prescription", "--back": "back to previous page"})
                 if userInput == "--back":
                     return
-                elif userInput == "D":
+                elif userInput == "A":
                     os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                    print(f"Here is your diagnosis for Booking Number {Qbookedresult[0][0]}")
-                    print("----------")
-                    print("Diagnosis:")
-                    print("----------")
-                    print(Qbookedresult[0][10])
-                    QuerryDiagnosis = SQLQuerry(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ")
-
-                    diagnosisInput = parser.stringParser("Please enter your diagnosis:")
-
-                    exeQuerryDiagnosis = QuerryDiagnosis.executeCommit((diagnosisInput, Qbookedresult[0][0]))
-                    print("Your diagnosis has been given, you are going back to the patient info page...")
-
-                elif userInput == "N":
-                    os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                    print(f"Here is your note for Booking Number {Qbookedresult[0][0]}")
-                    print("----------")
-                    print("Notes:")
-                    print("----------")
-                    print(Qbookedresult[0][11])
-                    QuerryDiagnosis = SQLQuerry(" UPDATE Visit SET notes = ? WHERE NHSNo = ? ")
-                    #notesInput = input("Please enter your notes:\n")
-                    notesInput = parser.stringParser("Please enter your notes:")
+                    Querryprescription = SQLQuery(
+                        " INSERT INTO prescription (BookingNo, drugName, quantity, instructions) VALUES (?, ?, ?, ?)  ")
+                    # BookingNo = input("Please enter your BookingNo:\n")
                     # print(notesInput)
-                    exeQuerryNotes = QuerryDiagnosis.executeCommit((notesInput, Qbookedresult[0][0]))
-                    print("Your notes has been given,you are going back to the patient info page...")
+                    # drugName = input("Please enter your drugName:\n")
+                    drugName = Parser.stringParser("Please enter your drugname:")
+                    # quantity = input("Please enter your quantity:\n")
+                    quantity = Parser.stringParser("Please enter your quantity:")
+                    # instructions = input("Please enter your instructions:\n")
+                    instructions = Parser.stringParser("Please enter your instructions:")
 
-                elif userInput == "P":
-                    os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                    print(f"Here is your Prescription for Booking Number {Qbookedresult[0][0]}")
-                    print("-------------")
-                    print("Prescription:")
-                    print("-------------")
-                    print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
+                    exeQuerryprescription = Querryprescription.executeCommit(
+                        (Qbookedresult[0][0], drugName, quantity, instructions))
+                    print("Your prescription has been given,you are going back to the patient info page...")
 
-                    userInput = parser.selectionParser(options={"A": "add prescription", "R": "remove prescription", "--back": "back to previous page"})
-                    if userInput == "--back":
-                        return
-                    elif userInput == "A":
-                        os.system('cls' if os.name == 'nt' else "printf '\033c'")
-                        Querryprescription = SQLQuerry(" INSERT INTO prescription (BookingNo, drugName, quantity, instructions) VALUES (?, ?, ?, ?)  ")
-                        #BookingNo = input("Please enter your BookingNo:\n")
-                        # print(notesInput)
-                        #drugName = input("Please enter your drugName:\n")
-                        drugName = parser.stringParser("Please enter your drugname:")
-                        #quantity = input("Please enter your quantity:\n")
-                        quantity = parser.stringParser("Please enter your quantity:")
-                        #instructions = input("Please enter your instructions:\n")
-                        instructions = parser.stringParser("Please enter your instructions:")
+                elif userInput == "R":
+                    GP.removePrescripion(Qbookedresult[0][0], QprescriptionresultTable)
 
-                        exeQuerryprescription = Querryprescription.executeCommit((Qbookedresult[0][0], drugName, quantity, instructions))
-                        print("Your prescription has been given,you are going back to the patient info page...")
-
-                    elif userInput == "R":
-                        GPNavigator.removePrescripion(Qbookedresult[0][0], QprescriptionresultTable)
-                        
     @staticmethod
     def removePrescripion(BookingNo, QprescriptionresultTable):
         os.system('cls' if os.name == 'nt' else "printf '\033c'")
@@ -440,15 +456,12 @@ class GPNavigator():
         print("Prescription:")
         print("-------------")
         print(tabulate(QprescriptionresultTable, headers=["ItemNo", "Drug Name", "Qanntity", "Instrctions"]))
-        Querryprescription = SQLQuerry(" DELETE FROM prescription WHERE BookingNo = ? AND drugName = ? ")
-        selectItemNo = parser.integerParser(question="Select Item using number")
+        Querryprescription = SQLQuery(" DELETE FROM prescription WHERE BookingNo = ? AND drugName = ? ")
+        selectItemNo = Parser.integer_parser(question="Select Item using number")
         if selectItemNo == "--back":
             return
         # print(notesInput)
-        exeQuerryprescription = Querryprescription.executeCommit((BookingNo, QprescriptionresultTable[selectItemNo-1][1]))
+        exeQuerryprescription = Querryprescription.executeCommit(
+            (BookingNo, QprescriptionresultTable[selectItemNo - 1][1]))
         print("this prescription has been removed,you are going back to the patient info page...")
         return
-
-if __name__ == "__main__":
-    user = currentUser()
-    GPNavigator.mainNavigator(user)           
