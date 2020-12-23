@@ -1,17 +1,17 @@
-import databaseHelp
+import database_help
 
 
 def insertIntoDB():
     """"""
-    insertNewPatient = databaseHelp.SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    encryptionHelper = databaseHelp.encryptionHelper()
+    insertNewPatient = database_help.SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    encryptionHelper = database_help.encryptionHelper()
     insertNewPatient.executeCommit(("G01", "testPatient",
-                                             databaseHelp.passwordHelper.hashPW("testPatientPW"),
-                                             encryptionHelper.encryptToBits("testPatientFirstName"),
-                                             encryptionHelper.encryptToBits("testPatientLastName"),
-                                             encryptionHelper.encryptToBits("0123456789"),
-                                             encryptionHelper.encryptToBits("testPatientHome Address, testing street"),
-                                             encryptionHelper.encryptToBits("TW 8FGT"),
+                                    database_help.passwordHelper.hashPW("testPatientPW"),
+                                    encryptionHelper.encryptToBits("testPatientFirstName"),
+                                    encryptionHelper.encryptToBits("testPatientLastName"),
+                                    encryptionHelper.encryptToBits("0123456789"),
+                                    encryptionHelper.encryptToBits("testPatientHome Address, testing street"),
+                                    encryptionHelper.encryptToBits("TW 8FGT"),
                                              "Patient",
                                              "M"))
 
