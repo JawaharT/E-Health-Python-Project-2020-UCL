@@ -63,4 +63,3 @@ class PatientNavigator:
 
     def editApmt(self):
         pass
-        
