@@ -111,8 +111,8 @@
 
 import sqlite3
 from sqlite3 import Error
-from encryption import EncryptionHelper
-from encryption import PasswordHelper
+from Encryption import EncryptionHelper
+from Encryption import PasswordHelper
 
 
 class Database:

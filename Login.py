@@ -1,7 +1,7 @@
-from databaseHelp import SQLQuerry
+from DatabaseHelp import SQLQuery
 from parserHelp import parser
-from encryption import encryptionHelper
-from encryption import passwordHelper
+from Encryption import EncryptionHelper
+from Encryption import PasswordHelper
 import time
 import sys
 import getpass
@@ -37,7 +37,7 @@ class currentUser():
         self.username = username
         self.encryptionKey = encryptionKey
         # retrieving the full information from DATAbase instead of just the password for authentication
-        fullUQuerry = SQLQuerry(
+        fullUQuerry = SQLQuery(
             "SELECT ID, passCode, firstName, lastName, phoneNo, HomeAddress, postCode, birthday, UserType FROM Users WHERE username == ?")
         fullUserArray = fullUQuerry.executeFetchAll(decrypter=self.encryptionKey, parameters=(self.username,))
         # loading the user info into a state

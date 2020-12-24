@@ -1,12 +1,12 @@
-import getpass
+from getpass import getpass
 from tabulate import tabulate
-from encryption import EncryptionHelper, PasswordHelper
+from Encryption import EncryptionHelper, PasswordHelper
 from parser_help import Parser
-from database_help import SQLQuery
-from main import User, MenuHelper
+from DatabaseHelp import SQLQuery
+from Main import User, MenuHelper
 
 
-class AdminNavigator(User):
+class Admin(User):
     """Navigate through Admin features and functionality once logged in."""
 
     def main_menu(self):
@@ -40,6 +40,7 @@ class AdminNavigator(User):
                          "E": "View Patient Prescriptions", "--back": "back"})
 
             if record_viewer == "--back":
+                Parser.print_clean("\n")
                 return
             elif record_viewer == "C":
                 query_string = "SELECT * FROM available_time"
@@ -107,20 +108,20 @@ class AdminNavigator(User):
             return
 
         all_gps_and_patients_table, gps_and_patients = self.viewAllPatientsAndGPs(view_all_gps_and_patients_result)
-        Parser.print_clean(tabulate(all_gps_and_patients_table, headers=("ID", "Username")))
+        Parser.print_clean(tabulate(all_gps_and_patients_table, headers=("Record No", "Username")))
 
         # select a user from the table
         while True:
             Parser.print_clean("Press --back to go back.")
             selected_user = Parser.string_parser("Enter the username to edit the profile: ")
             if selected_user == "--back":
-                Parser.print_clean()
+                Parser.print_clean("\n")
                 break
             if selected_user not in gps_and_patients:
                 Parser.print_clean("This username does not exist. Please enter a valid username.\n")
                 continue
             else:
-                Parser.print_clean()
+                Parser.print_clean("\n")
                 record_editor = Parser.selection_parser(
                     options={"A": "Update Password", "B": "Update Birthday",
                              "C": "Update First Name", "D": "Update Last Name",
@@ -129,7 +130,7 @@ class AdminNavigator(User):
                              "--back": "back"})
 
                 if record_editor == "--back":
-                    Parser.print_clean()
+                    Parser.print_clean("\n")
                     return
                 elif record_editor == "A":
                     new_parameter_value = self.registerNewPassword()
@@ -161,7 +162,7 @@ class AdminNavigator(User):
                     else:
                         new_parameter_value, status = "F", parameter[2].upper() + parameter[3:]
 
-                    Parser.print_clean("User {0} will be {1}.".format(selected_user, status))
+                    Parser.print_clean("User {0} will be {1}.\n".format(selected_user, status))
 
                 self.updateParameterRecord(selected_user, parameter, new_parameter_value)
                 Parser.print_clean("Successfully Updated to Database. Going back to home page.\n")
@@ -181,14 +182,14 @@ class AdminNavigator(User):
             return
 
         all_deactivated_gps_table, gps_and_patients = self.viewAllPatientsAndGPs(all_deactivated_gps_result)
-        Parser.print_clean(tabulate(all_deactivated_gps_table, headers=("ID", "Username")))
+        Parser.print_clean(tabulate(all_deactivated_gps_table, headers=("Record No", "Username")))
 
         # select a deactivated GP account to delete
         while True:
             Parser.print_clean("\nPress --back to go back.")
             selected_gp = Parser.string_parser("Write the name of GP to delete: ")
             if selected_gp == "--back":
-                Parser.print_clean()
+                Parser.print_clean("\n")
                 break
             if selected_gp not in gps_and_patients:
                 Parser.print_clean("\nThis name does not exist. Please try again.")
@@ -233,7 +234,7 @@ class AdminNavigator(User):
             Parser.print_clean("Press --back to go back.")
             user_group = Parser.string_parser("Please enter type of user (GP or Patient): ").lower().strip()
             if user_group == "--back":
-                Parser.print_clean()
+                Parser.print_clean("\n")
                 return "", ""
             if user_group == "gp":
                 new_id = Parser.gp_no_parser()
@@ -284,13 +285,13 @@ class AdminNavigator(User):
         :return: Check for valid new password
         """
         while True:
-            Parser.print_clean("Any empty spaces on either ends will be removed.")
-            password = getpass.getpass("Enter new password: ").strip()
-            password_confirm = getpass.getpass("Enter new password again: ").strip()
+            Parser.print_clean("Any leading or trailing empty spaces will be removed.")
+            password = getpass("Enter new password: ").strip()
+            password_confirm = getpass("Enter new password again: ").strip()
             if (password != password_confirm) and (password != ""):
                 Parser.print_clean("Passwords do not match. Please try again.\n")
             else:
-                Parser.print_clean("Passwords Match.")
+                Parser.print_clean("Passwords Match.\n")
                 return PasswordHelper.hashPW(password)
 
     @staticmethod
@@ -355,4 +356,4 @@ if __name__ == "__main__":
 
     current_user = MenuHelper.login()
     MenuHelper.dispatcher(current_user["username"], current_user["user_type"])
-    AdminNavigator(current_user).main_menu()
+    Admin(current_user).main_menu()

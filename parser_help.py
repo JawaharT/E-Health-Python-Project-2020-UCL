@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta, time
+# from datetime import datetime, timedelta, time
 import time
+import datetime
 import sys
 from typing import Union
 
-from exceptions import *
+from Exceptions import *
 import os
 
 
@@ -51,8 +52,8 @@ class Parser:
                 user_input = input()
                 if allowback and user_input == '--back':
                     return user_input
-                input_time = datetime.strptime(user_input, '%H:%M').time()
-                if time(8, 30, 0) > input_time or input_time > time(19, 0, 0):
+                input_time = datetime.datetime.strptime(user_input, '%H:%M').time()
+                if datetime.time(8, 30, 0) > input_time or input_time > datetime.time(19, 0, 0):
                     raise ValueError
                 elif not limit_quarter_intervals:
                     return input_time
@@ -87,12 +88,13 @@ class Parser:
                 if allow_back and user_input == '--back':
                     return user_input
                 else:
-                    date = datetime.strptime(user_input, '%Y-%m-%d').date()
+                    date = datetime.datetime.strptime(user_input, '%Y-%m-%d').date()
                     if not allow_past:
-                        if date < datetime.now().date() or date > datetime.now().date() + timedelta(days=182):
+                        if date < datetime.datetime.now().date() or \
+                                date > datetime.datetime.now().date() + datetime.timedelta(days=182):
                             raise ValueError
                     else:
-                        if date > datetime.now().date():
+                        if date > datetime.datetime.now().date():
                             raise ValueError
                     return date
             except ValueError:
@@ -169,14 +171,14 @@ class Parser:
                 print("Please select from the following options:")
                 for key in options:
                     print(f"Enter '{key}' to {options[key]}")
-                result = input()
+                result = input().strip()
                 if result == "--quit":
                     Parser.user_quit()
                 if result not in options:
                     raise ValueError
                 return result
             except ValueError:
-                Parser.print_clean("Invalid Input!")
+                Parser.print_clean("Invalid Input!\n")
 
     @staticmethod
     def list_number_parser(question, full_num_range, allowback=True) -> Union[list, str]:

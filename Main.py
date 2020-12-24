@@ -1,19 +1,15 @@
 """Main Program here."""
-import database_help
 from parser_help import Parser
 import time
-from database_help import SQLQuery
-from encryption import EncryptionHelper
-from encryption import PasswordHelper
+from DatabaseHelp import SQLQuery
+from Encryption import EncryptionHelper
+from Encryption import PasswordHelper
 import sys
 import os
 from getpass import getpass
 from tabulate import tabulate
 
-
-from exceptions import *
-
-print_clean = Parser.print_clean
+from Exceptions import *
 
 
 class MenuHelper:
@@ -68,11 +64,14 @@ class MenuHelper:
     @staticmethod
     def dispatcher(username, user_type):
         if user_type == "Admin":
-            from Admin import AdminNavigator
-            user = AdminNavigator(username)
+            from Admin import Admin
+            user = Admin(username)
         elif user_type == "GP":
             from GP import GP
             user = GP(username)
+        else:
+            from Patient import Patient
+            user = Patient(username)
 
         user.print_hello()
         user.print_information()
@@ -104,7 +103,7 @@ class User:
         self.birthday = self.user_data[9]
 
     def print_hello(self):
-        print_clean(f"Login Successful. Hello {self.first_name}")
+        Parser.print_clean(f"Login Successful. Hello {self.first_name}")
         return True
 
     def print_information(self):

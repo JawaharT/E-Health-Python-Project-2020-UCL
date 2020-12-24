@@ -1,11 +1,11 @@
-import databaseHelp
+import DatabaseHelp
 
 
 def insertIntoDB():
-    insertNewAdmin = databaseHelp.SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    encryptionHelper = databaseHelp.encryptionHelper()
+    insertNewAdmin = DatabaseHelp.SQLQuerry("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    encryptionHelper = DatabaseHelp.encryptionHelper()
     insertNewAdmin.executeCommit(("A01", "testAdmin",
-                                  databaseHelp.passwordHelper.hashPW("testAdminPW"),
+                                  DatabaseHelp.passwordHelper.hashPW("testAdminPW"),
                                   encryptionHelper.encryptToBits("testAdminFirstName"),
                                   encryptionHelper.encryptToBits("testAdminLastName"),
                                   encryptionHelper.encryptToBits("0123456789"),
