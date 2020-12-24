@@ -1,6 +1,5 @@
-from getpass import getpass
 from tabulate import tabulate
-from Encryption import EncryptionHelper, PasswordHelper
+from Encryption import EncryptionHelper
 from parser_help import Parser
 from DatabaseHelp import SQLQuery
 from Main import User, MenuHelper
@@ -72,27 +71,12 @@ class Admin(User):
             Parser.print_clean("Completed operation.\n")
             continue
 
-    def addGPPatient(self):
+    @staticmethod
+    def addGPPatient():
         """
         Updated table with new GP or patient record
         """
-        new_id, user_group = self.getId()
-        if (new_id == "") or (user_group == ""):
-            return
-
-        username = self.getCheckUserInput("username", user_group)
-        password = self.registerNewPassword()
-        birthday = self.getBirthday()
-        first_name = self.getName("first")
-        last_name = self.getName("last")
-        telephone = self.validLocalPhoneNumber()
-        address = self.getAddress()
-        postcode = self.validPostcode()
-
-        insert_query = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        insert_query.executeCommit((new_id, username, password, birthday, first_name, last_name,
-                                    telephone, address, postcode, user_group, "F"))
-        Parser.print_clean("Successfully Added to Database. Going back to home page.\n")
+        MenuHelper.register()
 
     def editGPPatient(self):
         """
@@ -129,29 +113,30 @@ class Admin(User):
                              "G": "Update Postcode", "H": "Switch Activation Status",
                              "--back": "back"})
 
+                menu = MenuHelper()
                 if record_editor == "--back":
                     Parser.print_clean("\n")
                     return
                 elif record_editor == "A":
-                    new_parameter_value = self.registerNewPassword()
+                    new_parameter_value = menu.registerNewPassword()
                     parameter = "passCode"
                 elif record_editor == "B":
-                    new_parameter_value = self.getBirthday()
+                    new_parameter_value = menu.getBirthday()
                     parameter = "birthday"
                 elif record_editor == "C":
-                    new_parameter_value = self.getName("first")
+                    new_parameter_value = menu.getName("first")
                     parameter = "firstName"
                 elif record_editor == "D":
-                    new_parameter_value = self.getName("last")
+                    new_parameter_value = menu.getName("last")
                     parameter = "lastName"
                 elif record_editor == "E":
-                    new_parameter_value = self.validLocalPhoneNumber()
+                    new_parameter_value = menu.validLocalPhoneNumber()
                     parameter = "phoneNo"
                 elif record_editor == "F":
-                    new_parameter_value = self.getAddress()
+                    new_parameter_value = menu.getAddress()
                     parameter = "HomeAddress"
                 elif record_editor == "G":
-                    new_parameter_value = self.validPostcode()
+                    new_parameter_value = menu.validPostcode()
                     parameter = "postCode"
                 else:
                     current_status = SQLQuery("SELECT Deactivated FROM Users WHERE username = '{0}'"
@@ -202,53 +187,6 @@ class Admin(User):
                 return
 
     @staticmethod
-    def getAddress():
-        """
-        :return: Encrypted First line of GP or Patient UK address
-        """
-        return EncryptionHelper().encryptToBits(Parser.string_parser("Please enter primary home address (one line): "))
-
-    @staticmethod
-    def getName(name_type):
-        """
-        :param str name_type: First/Last Name flag for user input
-        :return: Encrypted new first/last name of user
-        """
-        return EncryptionHelper().encryptToBits(Parser.string_parser(
-                        "Please enter new {0} name: ".format(name_type)))
-
-    @staticmethod
-    def getBirthday():
-        """
-        :return: Encrypted User birthday
-        """
-        return EncryptionHelper().encryptToBits(str(Parser.date_parser("Please enter birthday: ",
-                                                                       allow_back=False, allow_past=True)))
-
-    @staticmethod
-    def getId():
-        """
-        :return: Valid user ID and type of user
-        """
-        while True:
-            Parser.print_clean("Press --back to go back.")
-            user_group = Parser.string_parser("Please enter type of user (GP or Patient): ").lower().strip()
-            if user_group == "--back":
-                Parser.print_clean("\n")
-                return "", ""
-            if user_group == "gp":
-                new_id = Parser.gp_no_parser()
-                user_group = user_group.upper()
-                return new_id, user_group
-            elif user_group == "patient":
-                new_id = Parser.nhs_no_parser()
-                user_group = user_group[0].upper() + user_group[1:]
-                return new_id, user_group
-            else:
-                print("Incorrect input. Please Try again.\n")
-                continue
-
-    @staticmethod
     def viewAllPatientsAndGPs(all_results):
         """
         :param list all_results: All results from query
@@ -259,67 +197,6 @@ class Admin(User):
             gp_and_patient.append(all_results[nameIndex][0])
             all_gps_and_patients_table.append([nameIndex + 1, all_results[nameIndex][0]])
         return all_gps_and_patients_table, gp_and_patient
-
-    @staticmethod
-    def getCheckUserInput(parameter_name, user_group):
-        """
-        :param str parameter_name: The name of the parameter for Admin to enter
-        :param str user_group: Patient or GP
-        :return: New unique Username that is not currently being used
-        """
-        while True:
-            parameter = Parser.string_parser("Please enter {0} of {1}: ".format(parameter_name, user_group))
-            # check if it exists in table, if it does ask again
-            exists_query = SQLQuery("SELECT 1 FROM Users WHERE {0} =:who".format(parameter_name))\
-                .executeCommit({"who": parameter})
-            if exists_query > 0:
-                Parser.print_clean("{0} already exists. Please choose another.\n".format(parameter_name))
-                continue
-            else:
-                Parser.print_clean("{0} approved.\n".format(parameter_name[0].upper() + parameter_name[1:]))
-                return parameter
-
-    @staticmethod
-    def registerNewPassword():
-        """
-        :return: Check for valid new password
-        """
-        while True:
-            Parser.print_clean("Any leading or trailing empty spaces will be removed.")
-            password = getpass("Enter new password: ").strip()
-            password_confirm = getpass("Enter new password again: ").strip()
-            if (password != password_confirm) and (password != ""):
-                Parser.print_clean("Passwords do not match. Please try again.\n")
-            else:
-                Parser.print_clean("Passwords Match.\n")
-                return PasswordHelper.hashPW(password)
-
-    @staticmethod
-    def validLocalPhoneNumber():
-        """
-        :return: return a valid UK phone number
-        """
-        while True:
-            phone_number = Parser.string_parser("Please enter local UK phone number: ")
-            if (len(phone_number.strip()) == 11) and \
-                    (not any([char in phone_number for char in ["+", "-", "(", ")"]])):
-                Parser.print_clean("Valid Phone Number.\n")
-                return EncryptionHelper().encryptToBits(phone_number)
-            else:
-                Parser.print_clean("Invalid Phone Number. Please try again.")
-
-    @staticmethod
-    def validPostcode():
-        """
-        :return: return a valid UK postcode
-        """
-        while True:
-            temp_postcode = Parser.string_parser("Please enter primary home postcode: ").strip().replace(" ", "")
-            if (len(temp_postcode) != 5) and (len(temp_postcode) != 7):
-                Parser.print_clean("Invalid Postcode. Please try again.\n")
-            else:
-                Parser.print_clean("Valid Postcode.\n")
-                return EncryptionHelper().encryptToBits(temp_postcode)
 
     @staticmethod
     def updateParameterRecord(selected_user, parameter, new_parameter_value):
