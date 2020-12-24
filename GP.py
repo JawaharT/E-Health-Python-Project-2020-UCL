@@ -78,12 +78,14 @@ class GP(User):
                 availability_table.append([i + 1, str(availability_result[i][1])])
                 availability_table_raw.append([i + 1, availability_result[i][1]])
             Parser.print_clean(f"You are viewing your schedule for: {selected_date}")
-            options = {"A": "add availability", "--back": "back to previous page"}
+            options = {"A": "add availability"}
             if len(availability_table) == 0:
                 Parser.print_clean(f"You have no availability for this day yet.\n")
             else:
                 Parser.print_clean(tabulate(availability_table, headers=["Pointer", "Timeslot"]))
                 options["R"] = "remove availability"
+
+            options["--back"] = "back to previous page"
             option_selection = Parser.selection_parser(
                 options=options)
             if option_selection == "A":
