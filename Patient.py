@@ -3,12 +3,11 @@ from tabulate import tabulate
 from Main import User, MenuHelper
 
 from Encryption import EncryptionHelper, PasswordHelper
-from parserHelp import parser
 from DatabaseHelp import SQLQuery
 import time
 import sys
 
-from parser_help import Parser
+from ParserHelp import Parser
 
 
 class Patient(User):
@@ -19,7 +18,7 @@ class Patient(User):
         Main Menu for Patient-type users.
         """
         while True:
-            user_input = parser.selectionParser(
+            user_input = Parser.selectionParser(
                 options={"A": "Book Appointments", "B": "Cancel Appointments", "C": "Edit Appointments",
                          "D": "Review Appointments", "--logout": "logout"})
             if user_input == "--logout":

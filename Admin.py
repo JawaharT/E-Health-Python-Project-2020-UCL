@@ -1,6 +1,6 @@
 from tabulate import tabulate
 from Encryption import EncryptionHelper
-from parser_help import Parser
+from ParserHelp import Parser
 from DatabaseHelp import SQLQuery
 from Main import User, MenuHelper
 

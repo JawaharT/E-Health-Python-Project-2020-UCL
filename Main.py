@@ -1,4 +1,4 @@
-from parser_help import Parser
+from ParserHelp import Parser
 from DatabaseHelp import SQLQuery
 from Encryption import EncryptionHelper
 from Encryption import PasswordHelper
@@ -106,7 +106,7 @@ class MenuHelper:
         :return: Encrypted new first/last name of user
         """
         return EncryptionHelper().encryptToBits(Parser.string_parser(
-            "Please enter new {0} name: ".format(name_type)))
+            "Please enter {0} name: ".format(name_type)))
 
     @staticmethod
     def getBirthday():
