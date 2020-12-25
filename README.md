@@ -1,87 +1,31 @@
 # E-Health-Python-Project-2020-UCL
-<p>Note to Programming:</p>
-<ul>
-    <li>use tabulate package to print result from DB</li>
-    <li>Keep your venv folder out of the reop it takes up a lot of space. If you have any package use pip freeze and export to the reqirement.txt</li>
-    <li>check the ?Help.py script for useful function mainly input and SQL help</li>
-</ul>
-<p>ER Diagram:</p>
-<p>https://dbdiagram.io/d/5fca43c99a6c525a03b9cfdb</p>
+<p>Some important points about the code improvements:</p>
 
-<p>Feature List:</p>
-<p>General</p>
-<ul>
-    <li>Create SQL DB (Done)</li>
-    <li>login system</li>
-    <li>save password as encrypted (wrote the hash function)</li>
-    <li>encryption of all data stored(wrote the encrypt/decrypt function)<ul>
-        <li style="margin-left: 20px;">beware that the use of LIKE, ORDER BY etc. will not work for encrypted attributes</li>
-    </ul>
-</ul>
-<p>admin</p>
-<ul>
-    <li>&nbsp; view all record<ul>
-            <li style="margin-left: 20px;">&nbsp; allow different filters<ul>
-                    <li style="margin-left: 40px;">&nbsp; e.g. date, patients, GP</li>
-                </ul>
-            </li>
-        </ul>
-    </li>
-    <li>deactivate GP (hold in a table?)</li>
-    <li>delete GP (Cascade Delete)</li>
-    <li>add / edit patient recrd (Cascade Delete)<ul>
-            <li style="margin-left: 20px;">edit patiet detail<ul>
-                    <li style="margin-left: 40px;">name, phone, email, address, NHS number</li>
-                </ul>
-            </li>
-        </ul>
-    </li>
-    <li>add / edit doctor detail<ul>
-            <li style="margin-left: 20px;">name, phone, staffID</li>
-        </ul>
-    </li>
-</ul>
-<p>GP (Working on this - Donald)</p>
-<ul>
-    <li>login</li>
-    <li>add availabiity<ul>
-            <li style="margin-left: 20px;">store available time slot in half an hour interval</li>
-            <li style="margin-left: 20px;">default option to add normal hours for multiple days, week, month etc.</li>
-            <li style="margin-left: 20px;">delete avalability&nbsp;</li>
-            <li style="margin-left: 20px;">allocation of rooms</li>
-        </ul>
-    </li>
-    <li>allow confirmation of bookings<ul>
-            <li style="margin-left: 20px;">confirm of mutiple bookings</li>
-        </ul>
-    </li>
-    <li>add perscription<ul>
-            <li style="margin-left: 20px;">calculation of perscription cost nhsfee*number of row in perscription</li>
-            <li style="margin-left: 20px;">Allow the doctor to write down instruction using abbreviations, See the Latin abbreviations part in<ul>
-                <li style="margin-left: 40px;">maybe in patient viewing perscription side, include a table for translation of latin abbrivations</li>
-                <li style="margin-left: 40px;">https://bnf.nice.org.uk/about/abbreviations-and-symbols.html</li>
-             </ul>
-        </ul>
-    </li>
-    <li>book followup appointments</li>
-    <li>allow next appiontment</li>
-</ul>
-<p><br></p>
-<p>Patient</p>
-<ul>
-    <li>&nbsp; register</li>
-    <li>&nbsp; login</li>
-    <li>&nbsp; book appointments<ul>
-            <li style="margin-left: 20px;">ratings for doctor</li>
-            <li style="margin-left: 20px;">chose doctor and time</li>
-            <li style="margin-left: 20px;">if no preference chose the earliest avaliable time</li>
-            <li style="margin-left: 20px;">base on availability</li>
-            <li style="margin-left: 20px;">description for appointment:&nbsp;</li>
-            <li style="margin-left: 20px;">description of illness: fever, respirotory symptom</li>
-        </ul>
-    </li>
-    <li>cancel appiontment</li>
-    <li>allow patient to place a rate appointments</li>
-    <li>allow patient review appiontments and perscription, translating the Latin abbreviations to readable form if needed</li>
-</ul>
-
+Classes/structure:
+  <ol><li><b>User classes</b>
+    <ul><li><b>class User</b> (main.py) - this is the main class for a "user" type object. It can be intialised directly -> testuser = User(username), but it's probably better to only initialise it via the child classes. The only parameter required is the username.<ul><li>User.__init__ initialises the object with a bunch of values from the database based on the username</li><li>User.print_hello prints "Login successful" message. This is a regular (non-static) method so needs to be run on a specific instance -> testuser.print_hello()</li><li>User.print_information prints information from user profile -> also testuser.print_information()</li></ul></li>
+      <li><b>class GP(User)</b> (GP.py) - class for GP objects which inherit from basic User features -> testGP = GP(username). This has a bunch of methods, refer to the code for details</li>
+      <li><b>class Admin(User)</b> (admin.py) - documentation not yet created but will also inherit from User -> test_admin = Admin(username).</li>
+      <li><b>class Patient(User)</b> (patient.py) - as above -> test_patient = Patient(username).</li>
+      </li></ul><br>
+  <li><b>Helper classes</b> - important: helper classes are designed to consist only of @staticmethod -s. They are a collection of helpful functions with a common theme and they are only grouped into a class for clarity and organisation purposes. They can be initiated without initialising an object.
+  <ul><li><b>class MenuHelper</b> (main.py) - this is a helper class to manage the main menu
+    <ul><li>@staticmethod MenuHelper.login() is the main login method, returns dictionary: {"username": username, "user_type": "user_type"}. Username, password and activation status is checked inside this method and if it fails, it returns False</li>
+      <li>@staticmethod MenuHelper.register() - <b>this needs to be written</b> but I'd imagine it checks for username in the database (to avoid duplicates), then inserts and returns True (or False if registration fails for some reason)</li>
+      <li>@staticmethod MenuHelper.dispatcher(username, user_type) - this is the main structure for starting different parts of the application. The current flow is as follows: if "L" is selected after starting the application, MenuHelper.login() is performed and returns username and user_type, which are then passed to MenuHelper.dispatcher - within this method, GP/Admin/Patient objects are initialised depending on the user_type variable.</li></ul></ol>
+  
+  I also need to add some notes about the Parser and SQLQuery helper classes... Watch this space.
+  
+  Some helpful functions you can use:
+  <ul><li><b>Parser.print_clean(message1,message2,message3,...)</b> - this is a great function that works just like regular print, but it also clears the terminal window beforehand. You can also run it without any argument: Parser.print_clean(), and it will just clean the window without printing anything. If you want to make the usage simpler, simply put <b>print_clean = Parser.print_clean</b> at the beginning of your file, and you can use simply print_clean(arguments) everywhere then :)</li></ul>
+  
+  Other notes:
+  <ul><li><b>Consider whether your method needs to be a regular method or a static one! </b>Relying too much on @staticmethod -s is not great style and it can lead to issues with conflicts in variable names if the program runs for a prolonged period of time. If you are operating on a specific user, always use an instance method. Only use @staticmethod for helper methods which perform some simple tasks and are unrelated to the user you're logged in as/editing.</li>
+  <li>When operating within a class (or class instance specifically) and running one method from within another, consider using the method arguments instead of instance variables to share data between functions. This ensures naming safety, which then translates to type safety and better runtime performance. </li>
+  <li>Return types are important - even if you don't need to return any variable/value from a function after it's finished running, it's good to at least return True or return False to indicate whether the task succeeded or failed. Even if you're not using it right now, this makes it much easier to implement extra functionalities later on because you don't need to edit existing functions to add new ones.</li><li>Put all your exceptions in exceptions.py and make sure they are written in CapitalLetterNamingConvention, and have 'Error' at the end.</li></ul>
+  
+  As we progress with adding new code, we will be repeatedly revising everything we've written to make sure that methods which can be reused, are reused, or preferably moved to higher-order classes to limit the amount of code the program needs to run. This should help us maintain good, logical structure and get us a great grade!
+    
+  
+      
+   
