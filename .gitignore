@@ -4,3 +4,4 @@ venv/.DS_Store
 __pycache__/databaseHelp.cpython-38.pyc
 *.pyc
 .DS_Store
+*.pyc
