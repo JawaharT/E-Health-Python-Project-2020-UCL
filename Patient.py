@@ -35,7 +35,7 @@ class Patient(User):
             elif option_selection == "B":
                 self.book_appointment()
             elif option_selection == "C":
-                self.ancel_appointment()
+                self.cancel_appointment()
             elif option_selection == "R":
                 self.review_appointment()
 
@@ -65,7 +65,21 @@ class Patient(User):
             print(tabulate(availability_table, headers=["Pointer", "Timeslot"]))
         option_selection = Parser.selection_parser(
             options={"B": "Book appointments",  "--back": "back to previous page"})
+        if option_selection == "--back":
+            return
+        else:
+            descforaptm =
+            descforillness = MenuHelper.getIllness()
+
+        @staticmethod
+        def getIllness():
+            return EncryptionHelper().encryptToBits(Parser.string_parser("Please enter your description of illness:"))
+
+
+            insert_query = SQLQuery("Insert INTO  VALUES ()")
         pass
+
+
 
     def cancel_appointment(self):
         pass
