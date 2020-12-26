@@ -90,7 +90,7 @@ class MenuHelper:
         insert_query.executeCommit((new_id, username, password, birthday, first_name, last_name,
                                     telephone, address, postcode, user_group, "T"))
 
-        Parser.print_clean("Account Created But Currently Deactivated.\n")
+        Parser.print_clean("Successfully Registered But Currently Deactivated.")
         return True
 
     def get_check_user_input(self, parameter_name, user_group):
@@ -283,5 +283,5 @@ if __name__ == '__main__':
         else:
             result = MenuHelper.register()
             if result:
-                Parser.print_clean("Successfully Registered. Contact an Admin to activate account.\n")
+                Parser.print_clean("Contact an Administrator to activate account.\n")
                 Parser.user_quit()

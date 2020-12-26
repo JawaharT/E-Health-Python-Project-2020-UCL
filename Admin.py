@@ -119,7 +119,7 @@ class Admin(User):
                     new_parameter_value = menu.register_new_password()
                     parameter = "passCode"
                 elif record_editor == "B":
-                    new_parameter_value = menu.get_address()
+                    new_parameter_value = menu.get_birthday()
                     parameter = "birthday"
                 elif record_editor == "C":
                     new_parameter_value = menu.get_name("first")
