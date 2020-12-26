@@ -1,4 +1,3 @@
-import os
 from tabulate import tabulate
 
 from encryption import encryptionHelper
@@ -69,10 +68,10 @@ class Patient(User):
             return
         else:
 
-            desccription = MenuHelper.getIllness()
+            description = MenuHelper.getillness()
 
         @staticmethod
-        def getIllness():
+        def getillness():
             return EncryptionHelper().encryptToBits(Parser.string_parser("Please enter your description of illness:"))
 
 

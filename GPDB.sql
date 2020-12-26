@@ -38,26 +38,49 @@ CREATE TABLE Visit(
   BookingNo INT,
   NHSNo varchar(10) CHECK(NHSNo BETWEEN 1000000000 AND 9999999999),
   StaffID varchar(10),
-  Timeslot datetime,
-  Description BLOB,
-  Rating int CHECK(Rating >= 0 OR Rating <= 10),
+  Timeslot datetime, 
+  PatientInfo BLOB,
   Confirmed char(1) CHECK(Confirmed IN ('T', 'F', 'P')),
   Attended char(1) CHECK(Attended IN ('T', 'F')),
   Diagnosis BLOB,
   Notes BLOB,
+  Rating int CHECK(Rating >= 0 OR Rating <= 5),
   PRIMARY KEY (BookingNo),
   FOREIGN KEY (StaffID, Timeslot) REFERENCES available_time (StaffID, Timeslot) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (NHSNo) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
+
 );
 
-DROP TABLE IF EXISTS perscription;
-CREATE TABLE perscription (
+DROP TABLE IF EXISTS prescription;
+CREATE TABLE prescription (
   BookingNo INT,
   drugName BLOB,
   quantity BLOB,
   Instructions BLOB,
   PRIMARY KEY (BookingNo, drugName),
-  FOREIGN KEY (BookingNo) REFERENCES Visit (BookingNo) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (BookingNo) REFERENCES VisitBooking (BookingNo) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+DROP TABLE IF EXISTS GP;
+CREATE TABLE GP (
+  ID varchar(10) PRIMARY KEY CHECK (ID LIKE 'G%'),
+  Gender char(1) CHECK(Gender IN ('M', 'F', 'N')),
+  ClinicAddress BLOB,
+  ClinicPostcode BLOB,
+  Speciality BLOB,
+  Introduction BLOB,
+  Rating INT CHECK(Rating >= 0 OR Rating <= 5),
+  FOREIGN KEY (ID) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 
+DROP TABLE IF EXISTS Patient;
+CREATE TABLE Patient (
+
+  NHSNo varchar(10) CHECK(NHSNo BETWEEN 1000000000 AND 9999999999),
+  Gender char(1) CHECK(Gender IN ('M', 'F', 'N')),
+  Introduction BLOB,
+  Notice BLOB,
+  PRIMARY KEY (NHSNo),
+  FOREIGN KEY (NHSNo) REFERENCES Users (ID) ON DELETE   CASCADE ON UPDATE CASCADE
+);
