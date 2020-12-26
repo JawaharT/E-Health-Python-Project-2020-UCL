@@ -245,7 +245,7 @@ if __name__ == '__main__':
     # # testng for storing encrypted value and decrypting it
     Q = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
     EH = EncryptionHelper()
-    # noinspection PyTypeChecker
+    # example GP user
     result = Q.executeCommit(("G01",
                             "testGP", 
                             PasswordHelper.hashPW("testGPPW"),
@@ -257,7 +257,31 @@ if __name__ == '__main__':
                             EH.encryptToBits("A1 7RT"),
                             "GP",
                             "F"))
-    # noinspection PyTypeChecker
+
+    result = Q.executeCommit(("G02",
+                              "testGP2",
+                              PasswordHelper.hashPW("testGPPW02"),
+                              EH.encryptToBits("1993-01-05"),
+                              EH.encryptToBits("testGP02FitstName"),
+                              EH.encryptToBits("testGP02LastName"),
+                              EH.encryptToBits("0123432100"),
+                              EH.encryptToBits("testGPHome Address, test Road"),
+                              EH.encryptToBits("A3 7BA"),
+                              "GP",
+                              "F"))
+
+    result = Q.executeCommit(("G03",
+                              "testGP3",
+                              PasswordHelper.hashPW("testGPPW03"),
+                              EH.encryptToBits("1989-04-04"),
+                              EH.encryptToBits("testGP03FitstName"),
+                              EH.encryptToBits("testGP03LastName"),
+                              EH.encryptToBits("0129870233"),
+                              EH.encryptToBits("testGPHome Address, test Road"),
+                              EH.encryptToBits("A5 8DT"),
+                              "GP",
+                              "F"))
+    # example patient user
     result = Q.executeCommit(("1929282829",
                             "testPatient", 
                             PasswordHelper.hashPW("tPPW"),
@@ -269,7 +293,7 @@ if __name__ == '__main__':
                             EH.encryptToBits("A0 5QS"),
                             "Patient",
                             "F"))
-    # noinspection PyTypeChecker
+
     result = Q.executeCommit(("2929282822",
                             "testPatient2", 
                             PasswordHelper.hashPW("tPPW2"),
@@ -282,6 +306,20 @@ if __name__ == '__main__':
                             "Patient",
                             "F"))
 
+    result = Q.executeCommit(("3334567878",
+                              "testPatient3",
+                              PasswordHelper.hashPW("tPPW3"),
+                              EH.encryptToBits("1984-02-03"),
+                              EH.encryptToBits("testPatient3FitstName"),
+                              EH.encryptToBits("testPatient3LastName"),
+                              EH.encryptToBits("1929292823"),
+                              EH.encryptToBits("testPatient3Home Address, test Road"),
+                              EH.encryptToBits("B0 5QK"),
+                              "Patient",
+                              "F"))
+
+    # EH = encryptionHelper()
+    # example admin user
     result = Q.executeCommit(("AD1",
                             "testAdmin124",
                             PasswordHelper.hashPW("testAdmin"),
@@ -293,25 +331,37 @@ if __name__ == '__main__':
                             EH.encryptToBits("A1 7RT"),
                             "Admin",
                             "F"))
-    result = Q.executeCommit(("333",
-                              "testPatient3",
-                              PasswordHelper.hashPW("tPPW3"),
-                              EH.encryptToBits("1984-02-03"),
-                              EH.encryptToBits("testPatient2FitstName"),
-                              EH.encryptToBits("testPatient2LastName"),
-                              EH.encryptToBits("1929292823"),
-                              EH.encryptToBits("testPatient2Home Address, test Road"),
-                              EH.encryptToBits("B0 5QK"),
-                              "Patient",
+
+    result = Q.executeCommit(("AD2",
+                              "testAdmin2",
+                              PasswordHelper.hashPW("testAdmin2"),
+                              EH.encryptToBits("1991-10-08"),
+                              EH.encryptToBits("testAdmin02FirstName"),
+                              EH.encryptToBits("testAdmin02LastName"),
+                              EH.encryptToBits("0123457890"),
+                              EH.encryptToBits("testAdmin02Home Address, test Road"),
+                              EH.encryptToBits("A1 8BL"),
+                              "Admin",
                               "F"))
-    # EH = encryptionHelper()
-    # example admin user
-    result = Q.executeCommit(("Admin12",
-                              "testAdmin1",
-                              PasswordHelper.hashPW("testAdmin"),
+
+    result = Q.executeCommit(("AD3",
+                              "testAdmin3",
+                              PasswordHelper.hashPW("testAdmin3"),
+                              EH.encryptToBits("1981-01-04"),
+                              EH.encryptToBits("testAdmin03FirstName"),
+                              EH.encryptToBits("testAdmin03LastName"),
+                              EH.encryptToBits("0123454567"),
+                              EH.encryptToBits("testAdmin03Home Address, test Road"),
+                              EH.encryptToBits("A1 7RT"),
+                              "Admin",
+                              "F"))
+
+    result = Q.executeCommit(("AD4",
+                              "testAdmin4",
+                              PasswordHelper.hashPW("testAdmin4"),
                               EH.encryptToBits("1991-01-04"),
-                              EH.encryptToBits("testAdminFitstName"),
-                              EH.encryptToBits("testAdminLastName"),
+                              EH.encryptToBits("testAdmin04FitstName"),
+                              EH.encryptToBits("testAdmin04LastName"),
                               EH.encryptToBits("0123450281"),
                               EH.encryptToBits("test Admin Home Address, test Road"),
                               EH.encryptToBits("AD4 7RT"),
@@ -321,19 +371,101 @@ if __name__ == '__main__':
 
     Q2 = SQLQuery(" INSERT INTO visit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ")
     EH = EncryptionHelper()
-    result = Q2.executeCommit(("111",
-                               "333",
+    result = Q2.executeCommit(("1",
+                               "1929282829",
                                "G01",
-                               "2020-12-25 14:00:00",
-                               "",
+                               "2020-12-25 11:00:00",
+                               "fever",
                                "T",
                                "F",
-                               "",
-                               "Headache",
+                               "cold, eat some Vitamin C, drink a lot of water and take a lot of rest",
+                               "No medicine",
                                "5",
                                ))
 
+    result = Q2.executeCommit(("2",
+                               "2929282822",
+                               "G02",
+                               "2020-12-25 14:00:00",
+                               "stomachache",
+                               "T",
+                               "F",
+                               "Gastric cardia, Aspirin Tablet",
+                               "None",
+                               "4",
+                               ))
 
+    result = Q2.executeCommit(("3",
+                               "3334567878",
+                               "G03",
+                               "2020-12-25 14:00:00",
+                               "fever",
+                               "T",
+                               "F",
+                               "pneumonia, receive the treatment of intravenous drip in the hospital",
+                               "must use Sodium Chloride Injection",
+                               "5",
+                               ))
+
+    Q3 = SQLQuery("INSERT INTO GP VALUES (?, ?, ?, ?, ?, ?, ?)")
+    EH = EncryptionHelper()
+    result = Q3.executeCommit(("G01",
+                               "F",
+                               EH.encryptToBits("test G01 Clinic Address"),
+                               EH.encryptToBits("B2 1CH"),
+                               "Pediatrics",
+                               "Hi,I am G01. I am good at getting along with the children",
+                               "5"))
+
+    result = Q3.executeCommit(("G02",
+                               "M",
+                               EH.encryptToBits("test G02 Clinic Address"),
+                               EH.encryptToBits("B2 1CH"),
+                               "Orthopedics",
+                               "Hi,I am G02. Strong and gentle.",
+                               "4"))
+
+    result = Q3.executeCommit(("G03",
+                               "M",
+                               EH.encryptToBits("test G03 Clinic Address"),
+                               EH.encryptToBits("A2 1KL"),
+                               "Cardiology",
+                               "Hi,I am G03. Take me to your heart",
+                               "4"))
+
+    Q4 = SQLQuery("INSERT INTO Patient VALUES (?, ?, ?, ?)")
+    EH = EncryptionHelper()
+    result = Q4.executeCommit(("1929282829",
+                               "F",
+                               "I am an accountant",
+                               "penicillin allergy"))
+
+    result = Q4.executeCommit(("2929282822",
+                               "M",
+                               "I am a basketball player",
+                               "gluten intolerance"))
+
+    result = Q4.executeCommit(("3334567878",
+                               "M",
+                               "I am a sales manager",
+                               "diabetes"))
+
+    Q5 = SQLQuery("INSERT INTO prescription VALUES (?, ?, ?, ?)")
+    EH = EncryptionHelper()
+    result = Q5.executeCommit(("1",
+                               "Vitamin C",
+                               "60 pills",
+                               "take 1 or 2 pills after meals "))
+
+    result = Q5.executeCommit(("2",
+                               "Aspirin",
+                               "6 capsules * 3",
+                               "take 0ne capsule after breakast and dinner"))
+
+    result = Q5.executeCommit(("3",
+                               "IV ",
+                               "500ml *2bottles* 3days",
+                               "following 3 days in hospital"))
 
     # Q = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
     # EH = EncryptionHelper()
