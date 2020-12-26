@@ -3,7 +3,7 @@ import time
 import datetime
 import sys
 from typing import Union
-from Exceptions import *
+from exceptions import *
 import os
 
 

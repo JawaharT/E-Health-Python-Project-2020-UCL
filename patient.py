@@ -1,13 +1,13 @@
 import os
 from tabulate import tabulate
-from Main import User, MenuHelper
+from main import User, MenuHelper
 
-from Encryption import EncryptionHelper, PasswordHelper
-from DatabaseHelp import SQLQuery
+from encryption import EncryptionHelper, PasswordHelper
+from database_help import SQLQuery
 import time
 import sys
 
-from ParserHelp import Parser
+from parser_help import Parser
 
 
 class Patient(User):

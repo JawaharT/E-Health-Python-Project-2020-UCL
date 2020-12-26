@@ -1,11 +1,11 @@
 from tabulate import tabulate
-from Encryption import EncryptionHelper
-from ParserHelp import Parser
-from DatabaseHelp import SQLQuery
+from encryption import EncryptionHelper
+from parser_help import Parser
+from database_help import SQLQuery
 import time
 import datetime
-from Main import User
-from Exceptions import DBRecordError
+from main import User
+from exceptions import DBRecordError
 
 
 class GP(User):

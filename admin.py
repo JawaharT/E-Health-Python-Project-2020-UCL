@@ -1,8 +1,8 @@
 from tabulate import tabulate
-from Encryption import EncryptionHelper
-from ParserHelp import Parser
-from DatabaseHelp import SQLQuery
-from Main import User, MenuHelper
+from encryption import EncryptionHelper
+from parser_help import Parser
+from database_help import SQLQuery
+from main import User, MenuHelper
 
 
 class Admin(User):

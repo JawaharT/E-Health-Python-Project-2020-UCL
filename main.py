@@ -1,10 +1,10 @@
-from ParserHelp import Parser
-from DatabaseHelp import SQLQuery
-from Encryption import EncryptionHelper
-from Encryption import PasswordHelper
+from parser_help import Parser
+from database_help import SQLQuery
+from encryption import EncryptionHelper
+from encryption import PasswordHelper
 from getpass import getpass
 from tabulate import tabulate
-from Exceptions import DBRecordError
+from exceptions import DBRecordError
 
 
 class MenuHelper:
@@ -207,13 +207,13 @@ class MenuHelper:
         :return: Main menu of Logged in user
         """
         if user_type == "Admin":
-            from Admin import Admin
+            from admin import Admin
             user = Admin(username)
         elif user_type == "GP":
-            from GP import GP
+            from gp import GP
             user = GP(username)
         else:
-            from Patient import Patient
+            from patient import Patient
             user = Patient(username)
 
         user.print_hello()

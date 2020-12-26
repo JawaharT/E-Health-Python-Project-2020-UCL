@@ -1,7 +1,7 @@
-from DatabaseHelp import SQLQuery
+from database_help import SQLQuery
 from parserHelp import parser
-from Encryption import EncryptionHelper
-from Encryption import PasswordHelper
+from encryption import EncryptionHelper
+from encryption import PasswordHelper
 import time
 import sys
 import getpass
