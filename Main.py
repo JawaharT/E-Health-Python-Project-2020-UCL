@@ -89,8 +89,8 @@ class MenuHelper:
         insert_query.executeCommit((new_id, username, password, birthday, first_name, last_name,
                                     telephone, address, postcode, user_group, "T"))
 
-        Parser.print_clean("Successfully Registered. Contact an Admin to activate account.")
-        quit()
+        Parser.print_clean("Successfully Registered. Contact an Admin to activate account.\n")
+        Parser.user_quit()
 
     @staticmethod
     def getAddress():
@@ -123,23 +123,20 @@ class MenuHelper:
         """
         while True:
             Parser.print_clean("\nPress --back to go back.")
-            user_group = Parser.string_parser("Please enter type of user (GP or Patient): ").lower().strip()
+            user_group = Parser.selection_parser(options={"A": "GP", "B": "Patient", "--back": "back"})
             if user_group == "--back":
                 Parser.print_clean("\n")
                 return "", ""
-            if user_group == "gp":
+            elif user_group == "A":
                 new_id = Parser.gp_no_parser()
-                user_group = user_group.upper()
-                Parser.print_clean("\n")
-                return new_id, user_group
-            elif user_group == "patient":
-                new_id = Parser.nhs_no_parser()
-                user_group = user_group[0].upper() + user_group[1:]
+                user_group = "GP"
                 Parser.print_clean("\n")
                 return new_id, user_group
             else:
-                Parser.print_clean("Incorrect input. Please Try again.\n")
-                continue
+                new_id = Parser.nhs_no_parser()
+                user_group = "Patient"
+                Parser.print_clean("\n")
+                return new_id, user_group
 
     @staticmethod
     def getCheckUserInput(parameter_name, user_group):

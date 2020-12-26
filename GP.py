@@ -1,5 +1,4 @@
 from tabulate import tabulate
-
 from Encryption import EncryptionHelper
 from ParserHelp import Parser
 from DatabaseHelp import SQLQuery
