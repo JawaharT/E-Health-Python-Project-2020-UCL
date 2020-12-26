@@ -68,8 +68,8 @@ class Patient(User):
         if option_selection == "--back":
             return
         else:
-            descforaptm =
-            descforillness = MenuHelper.getIllness()
+
+            desccription = MenuHelper.getIllness()
 
         @staticmethod
         def getIllness():

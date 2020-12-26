@@ -39,13 +39,13 @@ CREATE TABLE Visit(
   NHSNo varchar(10) CHECK(NHSNo BETWEEN 1000000000 AND 9999999999),
   StaffID varchar(10),
   Timeslot datetime,
-  /*Rating int CHECK(Rating >= 0 OR Rating <= 10),*/
+  Description BLOB,
+  Rating int CHECK(Rating >= 0 OR Rating <= 10),
   Confirmed char(1) CHECK(Confirmed IN ('T', 'F', 'P')),
   Attended char(1) CHECK(Attended IN ('T', 'F')),
   Diagnosis BLOB,
   Notes BLOB,
   PRIMARY KEY (BookingNo),
-  FOREIGN KEY (BookingNo) REFERENCES appointment(BookingNo) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (StaffID, Timeslot) REFERENCES available_time (StaffID, Timeslot) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (NHSNo) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -57,22 +57,7 @@ CREATE TABLE perscription (
   quantity BLOB,
   Instructions BLOB,
   PRIMARY KEY (BookingNo, drugName),
-  FOREIGN KEY (BookingNo) REFERENCES appointment (BookingNo) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (BookingNo) REFERENCES Visit (BookingNo) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-DROP TABLE IF EXISTS appointment;
-CREATE TABLE appointment(
-  BookingNo INT,
-  NHSNo varchar(10) CHECK(NHSNo BETWEEN 1000000000 AND 9999999999),
-  username varchar(50) UNIQUE,
-  birthday BLOB,
-  firstName BLOB,
-  lastName BLOB,
-  phoneNo BLOB,
-  Timeslot datetime,
-  Description BLOB,
-  Notes BLOB,
-  Deactivated char(1) CHECK(Deactivated IN ('T','F')),
-  PRIMARY KEY (BookingNo),
-  FOREIGN KEY (NHSNo) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
-);
+
