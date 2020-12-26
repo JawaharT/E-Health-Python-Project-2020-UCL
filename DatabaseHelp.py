@@ -281,6 +281,64 @@ if __name__ == '__main__':
                             EH.encryptToBits("B0 5QK"),
                             "Patient",
                             "F"))
+
+    result = Q.executeCommit(("AD1",
+                            "testAdmin124",
+                            PasswordHelper.hashPW("testAdmin"),
+                            EH.encryptToBits("1991-01-04"),
+                            EH.encryptToBits("testAdminFirstName"),
+                            EH.encryptToBits("testAdminLastName"),
+                            EH.encryptToBits("0123450233"),
+                            EH.encryptToBits("testAdminHome Address, test Road"),
+                            EH.encryptToBits("A1 7RT"),
+                            "Admin",
+                            "F"))
+    result = Q.executeCommit(("333",
+                              "testPatient3",
+                              PasswordHelper.hashPW("tPPW3"),
+                              EH.encryptToBits("1984-02-03"),
+                              EH.encryptToBits("testPatient2FitstName"),
+                              EH.encryptToBits("testPatient2LastName"),
+                              EH.encryptToBits("1929292823"),
+                              EH.encryptToBits("testPatient2Home Address, test Road"),
+                              EH.encryptToBits("B0 5QK"),
+                              "Patient",
+                              "F"))
+    # EH = encryptionHelper()
+    # example admin user
+    result = Q.executeCommit(("Admin12",
+                              "testAdmin1",
+                              PasswordHelper.hashPW("testAdmin"),
+                              EH.encryptToBits("1991-01-04"),
+                              EH.encryptToBits("testAdminFitstName"),
+                              EH.encryptToBits("testAdminLastName"),
+                              EH.encryptToBits("0123450281"),
+                              EH.encryptToBits("test Admin Home Address, test Road"),
+                              EH.encryptToBits("AD4 7RT"),
+                              "Admin",
+                              "F"))
+
+
+    Q2 = SQLQuery(" INSERT INTO visit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ")
+    EH = EncryptionHelper()
+    result = Q2.executeCommit(("111",
+                               "333",
+                               "G01",
+                               "2020-12-25 14:00:00",
+                               "",
+                               "T",
+                               "F",
+                               "",
+                               "Headache",
+                               "5",
+                               ))
+
+
+
+    # Q = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    # EH = EncryptionHelper()
+    # # noinspection PyTypeChecker
+    #
     # Q2 = SQLQuery("SELECT * FROM Users")
     # result = Q2.executeFetchAll()
     # print(result)
