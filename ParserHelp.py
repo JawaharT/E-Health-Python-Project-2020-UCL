@@ -14,18 +14,18 @@ class Parser:
     """
 
     @staticmethod
-    def integer_parser(question, allowback=True) -> Union[str, int]:
+    def integer_parser(question, allow_back=True) -> Union[str, int]:
         """
         Method to collect valid integer input from user.
 
         :param str question: Prompt for the user
-        :param bool allowback: Specific whether '--back' is an allowed input
+        :param bool allow_back: Specific whether '--back' is an allowed input
         """
         while True:
             try:
                 print(question)
                 input_string = input()
-                if allowback and input_string == '--back':
+                if allow_back and input_string == '--back':
                     return input_string
                 else:
                     result = int(input_string)
@@ -34,22 +34,22 @@ class Parser:
                 Parser.print_clean("This is not a valid integer !")
 
     @staticmethod
-    def time_parser(question, limit_quarter_intervals=True, allowback=True) -> object:
+    def time_parser(question, limit_quarter_intervals=True, allow_back=True) -> object:
         """
         Method to collect valid time input from user.
 
         :param str question: Prompt for the user
         :param bool limit_quarter_intervals: If true, only 0, 15, 30, 45 are valid minutes
-        :param bool allowback: Specific whether '--back' is an allowed input
+        :param bool allow_back: Specific whether '--back' is an allowed input
         """
 
         while True:
             try:
                 Parser.print_clean(question + " Please input datetime in this format 'HH:MM'")
-                if allowback:
+                if allow_back:
                     print("Or enter '--back' to go back to previous page")
                 user_input = input()
-                if allowback and user_input == '--back':
+                if allow_back and user_input == '--back':
                     return user_input
                 input_time = datetime.datetime.strptime(user_input, '%H:%M').time()
                 if datetime.time(8, 30, 0) > input_time or input_time > datetime.time(19, 0, 0):
@@ -180,24 +180,24 @@ class Parser:
                 Parser.print_clean("Invalid Input!\n")
 
     @staticmethod
-    def list_number_parser(question, full_num_range, allowback=True) -> Union[list, str]:
+    def list_number_parser(question, full_num_range, allow_back=True) -> Union[list, str]:
         """
         Method to collect and process a range selection from user
 
         :param str question: Prompt for the user
         :param tuple full_num_range: (a, b)-like tuple specifying upper and lower bounds of the range
-        :param bool allowback: Specific whether '--back' is an allowed input
+        :param bool allow_back: Specific whether '--back' is an allowed input
         """
         while True:
             try:
                 print(question)
                 print("Use ',' to separate values.")
                 print("Use 'a-b' to select the number in range a to b inclusive")
-                if allowback:
+                if allow_back:
                     print("Or enter '--back' to go back to previous page")
                 result_final = []
                 result_raw = input()
-                if allowback and result_raw == '--back':
+                if allow_back and result_raw == '--back':
                     return result_raw
                 result_raw = (result_raw.strip(" ")).split(',')
                 for element in result_raw:

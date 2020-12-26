@@ -32,12 +32,12 @@ class MenuHelper:
                     username = try_username
                     login_array = query_result[0]
                     user_type = login_array[3]
-                    print("Username validated.")
+                    Parser.print_clean("Username validated.")
                     break
             except DBRecordError:
-                print(f"Invalid Username: {i} attempts remaining")
+                Parser.print_clean(f"Invalid Username: {i} attempts remaining")
         else:
-            print("You've entered an incorrect username too many times.")
+            Parser.print_clean("You've entered an incorrect username too many times.")
             Parser.user_quit()
         for i in range(4, -1, -1):
             try:
@@ -45,18 +45,18 @@ class MenuHelper:
                 # hide the needed
                 try_pw = PasswordHelper.hashPW(getpass("Enter your password: "))
                 if try_pw == login_array[1]:
-                    print("Password correct!")
+                    Parser.print_clean("Password correct!")
                     if login_array[2] == "T":
-                        print("Your account is deactivated. Please contact the system administrator. ")
+                        Parser.print_clean("Your account is deactivated. Please contact the system administrator. ")
                         Parser.user_quit()
                     else:
                         return {"username": username, "user_type": user_type}
                 else:
                     raise DBRecordError
             except DBRecordError:
-                print(f"Invalid Password: {i} attempts remaining")
+                Parser.print_clean(f"Invalid Password: {i} attempts remaining")
         else:
-            print("You've entered an incorrect password too many times.")
+            Parser.print_clean("You've entered an incorrect password too many times.")
             Parser.user_quit()
 
     @staticmethod
@@ -64,43 +64,76 @@ class MenuHelper:
         """
         Register a new GP or Patient Account.
         """
-        new_id, user_group = MenuHelper.getId()
+        new_id, user_group = MenuHelper.get_id()
         if (new_id == "") or (user_group == ""):
-            return
+            return False
 
-        username = MenuHelper.getCheckUserInput("username", user_group)
-        password = MenuHelper.registerNewPassword()
-        birthday = MenuHelper.getBirthday()
+        menu_helper = MenuHelper()
+        username = menu_helper.get_check_user_input("username", user_group)
+        password = menu_helper.register_new_password()
+        birthday = menu_helper.get_birthday()
         Parser.print_clean("\n")
 
-        first_name = MenuHelper.getName("first")
+        first_name = menu_helper.get_name("first")
         Parser.print_clean("\n")
 
-        last_name = MenuHelper.getName("last")
+        last_name = menu_helper.get_name("last")
         Parser.print_clean("\n")
 
-        telephone = MenuHelper.validLocalPhoneNumber()
-        address = MenuHelper.getAddress()
+        telephone = menu_helper.valid_local_phone()
+        address = menu_helper.get_address()
         Parser.print_clean("\n")
 
-        postcode = MenuHelper.validPostcode()
+        postcode = menu_helper.valid_postcode()
 
         insert_query = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         insert_query.executeCommit((new_id, username, password, birthday, first_name, last_name,
                                     telephone, address, postcode, user_group, "T"))
 
-        Parser.print_clean("Successfully Registered. Contact an Admin to activate account.\n")
-        Parser.user_quit()
+        Parser.print_clean("Account Created But Currently Deactivated.\n")
+        return True
+
+    def get_check_user_input(self, parameter_name, user_group):
+        """
+        :param str parameter_name: The name of the parameter for Admin to enter
+        :param str user_group: Patient or GP
+        :return: New unique Username that is not currently being used
+        """
+        while True:
+            parameter = Parser.string_parser("Please enter {0} of {1}: ".format(parameter_name, user_group))
+            # check if it exists in table, if it does ask again
+            exists_query = SQLQuery("SELECT 1 FROM Users WHERE {0} = '{1}'".format(parameter_name, parameter))\
+                .executeFetchAll()
+            if exists_query:
+                Parser.print_clean("{0} already exists. Please choose another.\n".format(parameter_name))
+                continue
+            else:
+                Parser.print_clean("{0} approved.\n".format(parameter_name[0].upper() + parameter_name[1:]))
+                return parameter
+
+    def register_new_password(self):
+        """
+        :return: Check for valid new password
+        """
+        while True:
+            Parser.print_clean("Any leading or trailing empty spaces will be removed.")
+            password = getpass("Enter new password: ").strip()
+            password_confirm = getpass("Enter new password again: ").strip()
+            if (password != password_confirm) and (password != ""):
+                Parser.print_clean("Passwords do not match. Please try again.\n")
+            else:
+                Parser.print_clean("Passwords Match.\n")
+                return PasswordHelper.hashPW(password)
 
     @staticmethod
-    def getAddress():
+    def get_address():
         """
         :return: Encrypted First line of GP or Patient UK address
         """
         return EncryptionHelper().encryptToBits(Parser.string_parser("Please enter primary home address (one line): "))
 
     @staticmethod
-    def getName(name_type):
+    def get_name(name_type):
         """
         :param str name_type: First/Last Name flag for user input
         :return: Encrypted new first/last name of user
@@ -109,7 +142,7 @@ class MenuHelper:
             "Please enter {0} name: ".format(name_type)))
 
     @staticmethod
-    def getBirthday():
+    def get_birthday():
         """
         :return: Encrypted User birthday
         """
@@ -117,7 +150,7 @@ class MenuHelper:
                                                                        allow_back=False, allow_past=True)))
 
     @staticmethod
-    def getId():
+    def get_id():
         """
         :return: Valid user ID and type of user
         """
@@ -139,41 +172,7 @@ class MenuHelper:
                 return new_id, user_group
 
     @staticmethod
-    def getCheckUserInput(parameter_name, user_group):
-        """
-        :param str parameter_name: The name of the parameter for Admin to enter
-        :param str user_group: Patient or GP
-        :return: New unique Username that is not currently being used
-        """
-        while True:
-            parameter = Parser.string_parser("Please enter {0} of {1}: ".format(parameter_name, user_group))
-            # check if it exists in table, if it does ask again
-            exists_query = SQLQuery("SELECT 1 FROM Users WHERE {0} = '{1}'".format(parameter_name, parameter))\
-                .executeFetchAll()
-            if exists_query:
-                Parser.print_clean("{0} already exists. Please choose another.\n".format(parameter_name))
-                continue
-            else:
-                Parser.print_clean("{0} approved.\n".format(parameter_name[0].upper() + parameter_name[1:]))
-                return parameter
-
-    @staticmethod
-    def registerNewPassword():
-        """
-        :return: Check for valid new password
-        """
-        while True:
-            Parser.print_clean("Any leading or trailing empty spaces will be removed.")
-            password = getpass("Enter new password: ").strip()
-            password_confirm = getpass("Enter new password again: ").strip()
-            if (password != password_confirm) and (password != ""):
-                Parser.print_clean("Passwords do not match. Please try again.\n")
-            else:
-                Parser.print_clean("Passwords Match.\n")
-                return PasswordHelper.hashPW(password)
-
-    @staticmethod
-    def validLocalPhoneNumber():
+    def valid_local_phone():
         """
         :return: return a valid UK phone number
         """
@@ -188,7 +187,7 @@ class MenuHelper:
                 Parser.print_clean("Invalid Phone Number. Please try again.\n")
 
     @staticmethod
-    def validPostcode():
+    def valid_postcode():
         """
         :return: return a valid UK postcode
         """
@@ -257,14 +256,14 @@ class User:
         """
         Display all User information.
         """
-        print(tabulate([("User Type:", self.user_type),
-                        ("First Name: ", self.first_name),
-                        ("Last Name: ", self.last_name),
-                        ("Birthday: ", self.birthday),
-                        ("Phone No: ", self.phone_no),
-                        ("Home Address: ", self.home_address),
-                        ("Post Code: ", self.postcode)
-                        ]))
+        Parser.print_clean(tabulate([("User Type:", self.user_type),
+                                     ("First Name: ", self.first_name),
+                                     ("Last Name: ", self.last_name),
+                                     ("Birthday: ", self.birthday),
+                                     ("Phone No: ", self.phone_no),
+                                     ("Home Address: ", self.home_address),
+                                     ("Post Code: ", self.postcode)
+                                     ]))
         return True
 
 
@@ -282,4 +281,7 @@ if __name__ == '__main__':
             current_user = MenuHelper.login()
             MenuHelper.dispatcher(current_user["username"], current_user["user_type"])
         else:
-            MenuHelper.register()
+            result = MenuHelper.register()
+            if result:
+                Parser.print_clean("Successfully Registered. Contact an Admin to activate account.\n")
+                Parser.user_quit()

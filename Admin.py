@@ -19,16 +19,15 @@ class Admin(User):
             if user_input == "--logout":
                 Parser.user_quit()
             elif user_input == "A":
-                self.viewRecords()
+                self.view_records()
             elif user_input == "B":
-                self.addGPPatient()
+                self.add_gp_patient()
             elif user_input == "C":
-                self.editGPPatient()
+                self.edit_gp_patient()
             else:
-                self.deleteGPPatient()
+                self.delete_gp_patient()
 
-    @staticmethod
-    def viewRecords():
+    def view_records(self):
         """
         User interface for viewing the desired records
         """
@@ -71,14 +70,13 @@ class Admin(User):
             Parser.print_clean("Completed operation.\n")
             continue
 
-    @staticmethod
-    def addGPPatient():
+    def add_gp_patient(self):
         """
         Updated table with new GP or patient record
         """
-        MenuHelper.register()
+        MenuHelper().register()
 
-    def editGPPatient(self):
+    def edit_gp_patient(self):
         """
         Edit existing GP or Patient Record
         """
@@ -91,7 +89,7 @@ class Admin(User):
             Parser.print_clean("No Patients or GPs registered. Please add before coming back.\n")
             return
 
-        all_gps_and_patients_table, gps_and_patients = self.viewAllPatientsAndGPs(view_all_gps_and_patients_result)
+        all_gps_and_patients_table, gps_and_patients = self.view_all_patients_and_GPs(view_all_gps_and_patients_result)
         Parser.print_clean(tabulate(all_gps_and_patients_table, headers=("Record No", "Username")))
 
         # select a user from the table
@@ -118,25 +116,25 @@ class Admin(User):
                     Parser.print_clean("\n")
                     return
                 elif record_editor == "A":
-                    new_parameter_value = menu.registerNewPassword()
+                    new_parameter_value = menu.register_new_password()
                     parameter = "passCode"
                 elif record_editor == "B":
-                    new_parameter_value = menu.getBirthday()
+                    new_parameter_value = menu.get_address()
                     parameter = "birthday"
                 elif record_editor == "C":
-                    new_parameter_value = menu.getName("first")
+                    new_parameter_value = menu.get_name("first")
                     parameter = "firstName"
                 elif record_editor == "D":
-                    new_parameter_value = menu.getName("last")
+                    new_parameter_value = menu.get_name("last")
                     parameter = "lastName"
                 elif record_editor == "E":
-                    new_parameter_value = menu.validLocalPhoneNumber()
+                    new_parameter_value = menu.valid_local_phone()
                     parameter = "phoneNo"
                 elif record_editor == "F":
-                    new_parameter_value = menu.getAddress()
+                    new_parameter_value = menu.get_address()
                     parameter = "HomeAddress"
                 elif record_editor == "G":
-                    new_parameter_value = menu.validPostcode()
+                    new_parameter_value = menu.valid_postcode()
                     parameter = "postCode"
                 else:
                     current_status = SQLQuery("SELECT Deactivated FROM Users WHERE username = '{0}'"
@@ -149,11 +147,11 @@ class Admin(User):
 
                     Parser.print_clean("User {0} will be {1}.\n".format(selected_user, status))
 
-                self.updateParameterRecord(selected_user, parameter, new_parameter_value)
+                self.update_parameter_record(selected_user, parameter, new_parameter_value)
                 Parser.print_clean("Successfully Updated to Database. Going back to home page.\n")
                 return
 
-    def deleteGPPatient(self):
+    def delete_gp_patient(self):
         """
         updated table with the deleted GP record
         """
@@ -166,7 +164,7 @@ class Admin(User):
             Parser.print_clean("No deactivated GPs available to delete.\n")
             return
 
-        all_deactivated_gps_table, gps_and_patients = self.viewAllPatientsAndGPs(all_deactivated_gps_result)
+        all_deactivated_gps_table, gps_and_patients = self.view_all_patients_and_GPs(all_deactivated_gps_result)
         Parser.print_clean(tabulate(all_deactivated_gps_table, headers=("Record No", "Username")))
 
         # select a deactivated GP account to delete
@@ -186,8 +184,7 @@ class Admin(User):
                 Parser.print_clean("GP {0} deleted from Users table.\n".format(selected_gp))
                 return
 
-    @staticmethod
-    def viewAllPatientsAndGPs(all_results):
+    def view_all_patients_and_GPs(self, all_results):
         """
         :param list all_results: All results from query
         :return: List of all GPs and Patients with ID and another list with only names of patient/GP
@@ -198,8 +195,7 @@ class Admin(User):
             all_gps_and_patients_table.append([nameIndex + 1, all_results[nameIndex][0]])
         return all_gps_and_patients_table, gp_and_patient
 
-    @staticmethod
-    def updateParameterRecord(selected_user, parameter, new_parameter_value):
+    def update_parameter_record(self, selected_user, parameter, new_parameter_value):
         """
         :param selected_user: Current user, admin is changing
         :param parameter: Current table column admin is changing
