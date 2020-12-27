@@ -273,6 +273,7 @@ if __name__ == '__main__':
     """Main Program starts here."""
 
     # Exception handling if database not present/cannot connect
+    # Exception handling of sqlite3.DatabaseError: database disk image is malformed
     # conn = create_connection("GPDB.db")
 
     while True:

@@ -1,7 +1,6 @@
 import sqlite3
 from sqlite3 import Error
-from encryption import encryptionHelper
-from encryption import passwordHelper
+from encryption import EncryptionHelper, PasswordHelper
 
 
 class Database:
@@ -90,7 +89,7 @@ class SQLQuery(Database):
         cur.execute(self.query, parameters)
         result = cur.fetchall()
         Database.close_connection(conn)
-        if isinstance(decrypter, encryptionHelper):
+        if isinstance(decrypter, EncryptionHelper):
             decrypted_result = list()
             for row in result:
                 current_row = list()
@@ -135,11 +134,11 @@ if __name__ == '__main__':
 
     # # testng for storing encrypted value and decrypting it
     Q = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    EH = encryptionHelper()
+    EH = EncryptionHelper()
     # example GP user
     Q.executeCommit(("G01",
                      "testGP",
-                     passwordHelper.hashPW("testGPPW"),
+                     PasswordHelper.hashPW("testGPPW"),
                      EH.encryptToBits("1991-01-04"),
                      EH.encryptToBits("testGPFitstName"),
                      EH.encryptToBits("testGPLastName"),
@@ -151,7 +150,7 @@ if __name__ == '__main__':
 
     Q.executeCommit(("G02",
                      "testGP2",
-                     passwordHelper.hashPW("testGPPW02"),
+                     PasswordHelper.hashPW("testGPPW02"),
                      EH.encryptToBits("1993-01-05"),
                      EH.encryptToBits("testGP02FitstName"),
                      EH.encryptToBits("testGP02LastName"),
@@ -163,7 +162,7 @@ if __name__ == '__main__':
 
     Q.executeCommit(("G03",
                      "testGP3",
-                     passwordHelper.hashPW("testGPPW03"),
+                     PasswordHelper.hashPW("testGPPW03"),
                      EH.encryptToBits("1989-04-04"),
                      EH.encryptToBits("testGP03FitstName"),
                      EH.encryptToBits("testGP03LastName"),
@@ -175,7 +174,7 @@ if __name__ == '__main__':
     # example patient user
     Q.executeCommit(("1929282829",
                      "testPatient",
-                     passwordHelper.hashPW("tPPW"),
+                     PasswordHelper.hashPW("tPPW"),
                      EH.encryptToBits("1982-02-03"),
                      EH.encryptToBits("testPatientFitstName"),
                      EH.encryptToBits("testPatientLastName"),
@@ -187,7 +186,7 @@ if __name__ == '__main__':
 
     Q.executeCommit(("2929282822",
                      "testPatient2",
-                     passwordHelper.hashPW("tPPW2"),
+                     PasswordHelper.hashPW("tPPW2"),
                      EH.encryptToBits("1984-02-03"),
                      EH.encryptToBits("testPatient2FitstName"),
                      EH.encryptToBits("testPatient2LastName"),
@@ -199,7 +198,7 @@ if __name__ == '__main__':
 
     Q.executeCommit(("3334567878",
                      "testPatient3",
-                     passwordHelper.hashPW("tPPW3"),
+                     PasswordHelper.hashPW("tPPW3"),
                      EH.encryptToBits("1984-02-03"),
                      EH.encryptToBits("testPatient3FitstName"),
                      EH.encryptToBits("testPatient3LastName"),
@@ -212,7 +211,7 @@ if __name__ == '__main__':
     # example admin user
     Q.executeCommit(("AD1",
                      "testAdmin124",
-                     passwordHelper.hashPW("testAdmin"),
+                     PasswordHelper.hashPW("testAdmin"),
                      EH.encryptToBits("1991-01-04"),
                      EH.encryptToBits("testAdminFirstName"),
                      EH.encryptToBits("testAdminLastName"),
@@ -224,7 +223,7 @@ if __name__ == '__main__':
 
     Q.executeCommit(("AD2",
                      "testAdmin2",
-                     passwordHelper.hashPW("testAdmin2"),
+                     PasswordHelper.hashPW("testAdmin2"),
                      EH.encryptToBits("1991-10-08"),
                      EH.encryptToBits("testAdmin02FirstName"),
                      EH.encryptToBits("testAdmin02LastName"),
@@ -236,7 +235,7 @@ if __name__ == '__main__':
 
     Q.executeCommit(("AD3",
                      "testAdmin3",
-                     passwordHelper.hashPW("testAdmin3"),
+                     PasswordHelper.hashPW("testAdmin3"),
                      EH.encryptToBits("1981-01-04"),
                      EH.encryptToBits("testAdmin03FirstName"),
                      EH.encryptToBits("testAdmin03LastName"),
@@ -248,7 +247,7 @@ if __name__ == '__main__':
 
     Q.executeCommit(("AD4",
                      "testAdmin4",
-                     passwordHelper.hashPW("testAdmin4"),
+                     PasswordHelper.hashPW("testAdmin4"),
                      EH.encryptToBits("1991-01-04"),
                      EH.encryptToBits("testAdmin04FitstName"),
                      EH.encryptToBits("testAdmin04LastName"),
@@ -259,7 +258,7 @@ if __name__ == '__main__':
                      "F"))
 
     Q2 = SQLQuery(" INSERT INTO visit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ")
-    EH = encryptionHelper()
+    EH = EncryptionHelper()
     Q2.executeCommit(("1",
                       "1929282829",
                       "G01",
@@ -322,7 +321,7 @@ if __name__ == '__main__':
                       "4"))
 
     Q4 = SQLQuery("INSERT INTO Patient VALUES (?, ?, ?, ?)")
-    EH = encryptionHelper()
+    EH = EncryptionHelper()
     Q4.executeCommit(("1929282829",
                       "F",
                       "I am an accountant",
@@ -339,7 +338,7 @@ if __name__ == '__main__':
                       "diabetes"))
 
     Q5 = SQLQuery("INSERT INTO prescription VALUES (?, ?, ?, ?)")
-    EH = encryptionHelper()
+    EH = EncryptionHelper()
     Q5.executeCommit(("1",
                       "Vitamin C",
                       "60 pills",
@@ -357,7 +356,7 @@ if __name__ == '__main__':
 
 
     Q6 = SQLQuery("INSERT INTO available_time VALUES (?, ?)")
-    EH = encryptionHelper()
+    EH = EncryptionHelper()
     Q6.executeCommit(("G01",
                       "2020-12-25 11:00:00"
                       ))
@@ -405,7 +404,7 @@ if __name__ == '__main__':
     #                   "following 3 days in hospital"))
 
     # Q = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-    # EH = encryptionHelper()
+    # EH = EncryptionHelper()
     # # noinspection PyTypeChecker
     #
     # Q2 = SQLQuery("SELECT * FROM Users")
