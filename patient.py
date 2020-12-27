@@ -61,21 +61,22 @@ class Patient(User):
 
             else:
                 query_string = "SELECT prescription.BookingNo, users.ID, users.firstName, users.lastName, " \
-                               "visit.PatientInfo, visit.Diagnosis, prescription.drugName, prescription.quantity, " \
-                               "prescription.Instructions, visit.Notes " \
-                               "FROM ((visit INNER JOIN users ON visit.NHSNo = users.ID)" \
-                               "INNER JOIN prescription ON visit.BookingNo = prescription.BookingNo" \
-                               "WHERE visit.NHSNo = ? "
+                               "visit.PatientInfo, visit.Diagnosis, visit.Notes, prescription.drugName, " \
+                               "prescription.quantity, prescription.Instructions " \
+                               "FROM (visit INNER JOIN users ON visit.NHSNo = users.ID) " \
+                               "INNER JOIN prescription ON " \
+                               "visit.BookingNo = prescription.BookingNo WHERE visit.NHSNo = ? "
+
                 headers = ("BookingNo", "NHSNo", "Firstname", "Lastname", "PatientInfo", "Diagnosis",
                            "DrugName", "Quantity", "Instructions", "Notes")
 
             query = SQLQuery(query_string)
-            all_data = query.executeFetchAll(decrypter=EncryptionHelper(), parameters=(self.ID))
+            all_data = query.executeFetchAll(decrypter=EncryptionHelper(), parameters=(self.ID,))
 
             if len(list(all_data)) == 0:
                 Parser.print_clean("No records Available.\n")
             else:
-                Parser.print(tabulate(all_data, headers))
+                print(tabulate(all_data, headers))
 
 
 if __name__ == "__main__":
