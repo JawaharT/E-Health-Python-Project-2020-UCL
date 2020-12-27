@@ -3,6 +3,7 @@ from main import User, MenuHelper
 
 import random
 from encryption import encryptionHelper
+from encryption import EncryptionHelper
 from parser_help import Parser
 from database_help import SQLQuery
 import time
@@ -13,15 +14,15 @@ from main import User
 print_clean = Parser.print_clean
 delta = datetime.timedelta
 
-
 class Patient(User):
     """
     GP Class with navigation options and various functionalities.
     """
 
+
     def main_menu(self) -> None:
         """
-        Main Menu for GP-type users.
+        Main Menu for Patient-type users.
         """
         while True:
             print("You're currently viewing main menu options for Patient {}.".format(self.username))
@@ -160,24 +161,46 @@ class Patient(User):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def reviewApmt(self):
-        pass
-
     def cancel_appointment(self):
         pass
+
+    def review_appointment(self):
+
+        while True:
+            record_viewer = Parser.selection_parser(
+                options={"A": "Review Appointments", "B": "Review Prescriptions",
+                         "--back": "back"})
+
+            if record_viewer == "--back":
+                Parser.print_clean("\n")
+                return
+            elif record_viewer == "A":
+                query_string = "SELECT visit.BookingNo, visit.NHSNo, users.firstName, users.lastName, " \
+                               "visit.Timeslot, visit.PatientInfo, visit.Confirmed, visit.Attended,visit.Rating " \
+                               "FROM visit INNER JOIN users ON " \
+                               "visit.NHSNo = users.ID WHERE visit.NHSNo = ? "
+                headers = ("BookingNo", "NHSNo", "Firstname", "Lastname", "Timeslot",
+                           "PatientInfo", "Confirmed", "Attended", "Rating")
+
+            else:
+                query_string = "SELECT prescription.BookingNo, users.ID, users.firstName, users.lastName, " \
+                               "visit.PatientInfo, visit.Diagnosis, visit.Notes, prescription.drugName, " \
+                               "prescription.quantity, prescription.Instructions " \
+                               "FROM (visit INNER JOIN users ON visit.NHSNo = users.ID) " \
+                               "INNER JOIN prescription ON " \
+                               "visit.BookingNo = prescription.BookingNo WHERE visit.NHSNo = ? "
+
+                headers = ("BookingNo", "NHSNo", "Firstname", "Lastname", "PatientInfo", "Diagnosis",
+                           "DrugName", "Quantity", "Instructions", "Notes")
+
+            query = SQLQuery(query_string)
+            all_data = query.executeFetchAll(decrypter=EncryptionHelper(), parameters=(self.ID,))
+
+            if len(list(all_data)) == 0:
+                Parser.print_clean("No records Available.\n")
+            else:
+                print(tabulate(all_data, headers))
+
 
 if __name__ == "__main__":
     current_user = MenuHelper.login()
