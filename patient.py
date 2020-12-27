@@ -1,15 +1,11 @@
 from tabulate import tabulate
 from main import User, MenuHelper
-
-import random
-from encryption import encryptionHelper
 from encryption import EncryptionHelper
 from parser_help import Parser
 from database_help import SQLQuery
-import time
 # import sys
 import datetime
-from main import User
+import random
 
 print_clean = Parser.print_clean
 delta = datetime.timedelta
