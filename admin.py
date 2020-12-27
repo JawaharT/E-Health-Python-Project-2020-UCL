@@ -37,8 +37,9 @@ class Admin(User):
                          "C": "View Available Timeslots", "D": "View Patient Appointments",
                          "E": "View Patient Prescriptions", "--back": "back"})
 
+            parameters = ()
             if record_viewer == "--back":
-                Parser.print_clean("\n")
+                Parser.print_clean()
                 return
             elif record_viewer == "C":
                 query_string = "SELECT * FROM available_time"
@@ -51,23 +52,29 @@ class Admin(User):
                 headers = ("BookingNo", "DrugName", "Quantity", "Instructions")
             else:
                 query_string = "SELECT ID, Username, Deactivated, birthday, firstName, lastName, phoneNo, " \
-                               "HomeAddress, postCode FROM USERS WHERE UserType = '{0}'"
+                               "HomeAddress, postCode FROM USERS WHERE UserType == ?"
                 headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
                 if record_viewer == "A":
-                    query_string = query_string.format("Patient")
+                    user_type = "Patient"
                 else:
-                    query_string = query_string.format("GP")
+                    user_type = "GP"
+                parameters = (user_type,)
 
             query = SQLQuery(query_string)
-            all_data = query.executeFetchAll(decrypter=EncryptionHelper())
+            all_data = query.executeFetchAll(decrypter=EncryptionHelper(), parameters=parameters)
 
             if len(list(all_data)) == 0:
                 Parser.print_clean("No records Available.\n")
                 continue
 
-            Parser.print_clean(tabulate(all_data, headers))
-            Parser.print_clean("Completed operation.\n")
+            for row in all_data:
+                current = []
+                for index, title in enumerate(headers):
+                    current.append((title+":", row[index]))
+                print(tabulate(current))
+
+            print("Completed operation.\n")
             continue
 
     def add_gp_patient(self):
@@ -90,20 +97,17 @@ class Admin(User):
             return
 
         all_gps_and_patients_table, gps_and_patients = self.view_all_patients_and_GPs(view_all_gps_and_patients_result)
-        Parser.print_clean(tabulate(all_gps_and_patients_table, headers=("Record No", "Username")))
 
         # select a user from the table
         while True:
-            Parser.print_clean("Press --back to go back.")
-            selected_user = Parser.string_parser("Enter the username to edit the profile: ")
-            if selected_user == "--back":
-                Parser.print_clean("\n")
+            # selected_user = Parser.string_parser("Enter the username to edit the profile: ")
+            selected_user_number = Parser.selection_parser(options=all_gps_and_patients_table)
+            selected_user = all_gps_and_patients_table[selected_user_number]
+            if selected_user == "back":
+                Parser.print_clean()
                 break
-            if selected_user not in gps_and_patients:
-                Parser.print_clean("This username does not exist. Please enter a valid username.\n")
-                continue
             else:
-                Parser.print_clean("\n")
+                Parser.print_clean()
                 record_editor = Parser.selection_parser(
                     options={"A": "Update Password", "B": "Update Birthday",
                              "C": "Update First Name", "D": "Update Last Name",
@@ -113,9 +117,9 @@ class Admin(User):
 
                 menu = MenuHelper()
                 if record_editor == "--back":
-                    Parser.print_clean("\n")
+                    Parser.print_clean()
                     return
-                elif record_editor == "A":
+                elif record_editor == "":
                     new_parameter_value = menu.register_new_password()
                     parameter = "passCode"
                 elif record_editor == "B":
@@ -145,10 +149,10 @@ class Admin(User):
                     else:
                         new_parameter_value, status = "F", parameter[2].upper() + parameter[3:]
 
-                    Parser.print_clean("User {0} will be {1}.\n".format(selected_user, status))
+                    print("User {0} will be {1}.\n".format(selected_user, status))
 
                 self.update_parameter_record(selected_user, parameter, new_parameter_value)
-                Parser.print_clean("Successfully Updated to Database. Going back to home page.\n")
+                print("Successfully Updated to Database. Going back to home page.\n")
                 return
 
     def delete_gp_patient(self):
@@ -161,22 +165,19 @@ class Admin(User):
         all_deactivated_gps_result = list(all_deactivated_gps.executeFetchAll())
 
         if len(all_deactivated_gps_result) == 0:
-            Parser.print_clean("No deactivated GPs available to delete.\n")
+            Parser.print_clean("No deactivated GPs available to delete.")
             return
 
-        all_deactivated_gps_table, gps_and_patients = self.view_all_patients_and_GPs(all_deactivated_gps_result)
-        Parser.print_clean(tabulate(all_deactivated_gps_table, headers=("Record No", "Username")))
+        all_deactivated_gps_table, _ = self.view_all_patients_and_GPs(all_deactivated_gps_result)
 
         # select a deactivated GP account to delete
         while True:
-            Parser.print_clean("\nPress --back to go back.")
-            selected_gp = Parser.string_parser("Write the name of GP to delete: ")
-            if selected_gp == "--back":
-                Parser.print_clean("\n")
+            print("\nPress --back to go back.")
+            selected_gp_number = Parser.selection_parser(options=all_deactivated_gps_table)
+            selected_gp = all_deactivated_gps_table[selected_gp_number]
+            if selected_gp == "back":
+                Parser.print_clean()
                 break
-            if selected_gp not in gps_and_patients:
-                Parser.print_clean("\nThis name does not exist. Please try again.")
-                continue
             else:
                 # delete query, make sure to delete all presence of that user
                 delete_query = SQLQuery("DELETE FROM Users WHERE username=:who")
@@ -189,17 +190,18 @@ class Admin(User):
         :param list all_results: All results from query
         :return: List of all GPs and Patients with ID and another list with only names of patient/GP
         """
-        all_gps_and_patients_table, gp_and_patient = [], []
+        all_gps_and_patients_table, gp_and_patient = {}, []
         for nameIndex in range(len(all_results)):
-            gp_and_patient.append(all_results[nameIndex][0])
-            all_gps_and_patients_table.append([nameIndex + 1, all_results[nameIndex][0]])
+            gp_and_patient.append((nameIndex, all_results[nameIndex][0]))
+            all_gps_and_patients_table[str(nameIndex+1)] = all_results[nameIndex][0]
+        all_gps_and_patients_table["--back"] = "back"
         return all_gps_and_patients_table, gp_and_patient
 
     def update_parameter_record(self, selected_user, parameter, new_parameter_value):
         """
-        :param selected_user: Current user, admin is changing
-        :param parameter: Current table column admin is changing
-        :param new_parameter_value: New value to change within the table column of the currently selected user
+        :param str selected_user: Current user, admin is changing
+        :param str parameter: Current table column admin is changing
+        :param str new_parameter_value: New value to change within the table column of the currently selected user
         :return: Updated Users table
         """
         SQLQuery("UPDATE Users SET {0} = ? WHERE username = ?".format(parameter)).executeCommit((new_parameter_value,
