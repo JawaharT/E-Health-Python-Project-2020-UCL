@@ -30,7 +30,6 @@ DROP TABLE IF EXISTS available_time;
 CREATE TABLE available_time (
   StaffID varchar(10) CHECK(StaffID LIKE 'G%'),
   Timeslot datetime,
-  Availability char(1) CHECK(Availability IN ('T','F')),
   PRIMARY KEY (StaffID, Timeslot),
   FOREIGN KEY (StaffID) REFERENCES Users (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
