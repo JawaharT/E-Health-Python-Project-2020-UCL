@@ -27,13 +27,12 @@ class MenuHelper:
                 try_username = Parser.string_parser("Please enter your username: ")
                 # retrieving the user if exist to compare to PW
                 username_query = SQLQuery("SELECT username, passCode, Deactivated, UserType FROM Users "
-                                          "WHERE username == ?")
-                query_result = username_query.executeFetchAll(parameters=(try_username,))
-                if len(query_result) != 1:
+                                          "WHERE username == ?").fetch_all(parameters=(try_username,))
+                if len(username_query) != 1:
                     raise DBRecordError
                 else:
                     username = try_username
-                    login_array = query_result[0]
+                    login_array = username_query[0]
                     user_type = login_array[3]
                     Parser.print_clean("Username validated.")
                     break
@@ -46,7 +45,7 @@ class MenuHelper:
             try:
                 # the PW is saved in hash so need to convert to hash to compare special parsing function because it will
                 # hide the needed
-                try_pw = PasswordHelper.hashPW(getpass("Enter your password: "))
+                try_pw = PasswordHelper.hash_pw(getpass("Enter your password: "))
                 if try_pw == login_array[1]:
                     Parser.print_clean("Password correct!")
                     if login_array[2] == "T":
@@ -68,24 +67,32 @@ class MenuHelper:
         Register a new GP or Patient Account.
         """
         new_id, user_group = MenuHelper.get_id()
-        if (new_id == "") or (user_group == ""):
+        if not new_id or not user_group:
             return False
 
         menu_helper = MenuHelper()
-        first_name = menu_helper.get_name("first")
-        last_name = menu_helper.get_name("last")
         username = menu_helper.get_check_user_input("username", user_group)
         password = menu_helper.register_new_password()
         birthday = menu_helper.get_birthday()
+        Parser.print_clean("\n")
+
+        first_name = menu_helper.get_name("first")
+        Parser.print_clean("\n")
+
+        last_name = menu_helper.get_name("last")
+        Parser.print_clean("\n")
+
         telephone = menu_helper.valid_local_phone()
         address = menu_helper.get_address()
+        Parser.print_clean("\n")
+
         postcode = menu_helper.valid_postcode()
 
         insert_query = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        insert_query.executeCommit((new_id, username, password, birthday, first_name, last_name,
-                                    telephone, address, postcode, user_group, "T"))
+        insert_query.commit((new_id, username, password, birthday, first_name, last_name,
+                             telephone, address, postcode, user_group, "T"))
 
-        Parser.print_clean("Successfully Registered But Currently Deactivated.\n")
+        Parser.print_clean("Successfully Registered But Currently Deactivated.")
         return True
 
     def get_check_user_input(self, parameter_name, user_group):
@@ -95,18 +102,16 @@ class MenuHelper:
         :return: New unique Username that is not currently being used
         """
         while True:
-            try:
-                parameter = Parser.string_parser("Please enter {0} of {1}: ".format(parameter_name, user_group))
-                # check if it exists in table, if it does ask again
-                exists_query = SQLQuery("SELECT 1 FROM Users WHERE {0} = '{1}'".format(parameter_name, parameter))\
-                    .executeFetchAll()
-                if exists_query:
-                    raise InValidUsernameError
-                else:
-                    return parameter
-            except InValidUsernameError:
-                print("{0} already exists. Please choose another.\n".format(parameter_name))
-                input("Press Enter to continue...")
+            parameter = Parser.string_parser("Please enter {0} of {1}: ".format(parameter_name, user_group))
+            # check if it exists in table, if it does ask again
+            exists_query = SQLQuery("SELECT 1 FROM Users WHERE {0} = '{1}'".format(parameter_name, parameter)) \
+                .fetch_all()
+            if exists_query:
+                Parser.print_clean("{0} already exists. Please choose another.\n".format(parameter_name))
+                continue
+            else:
+                Parser.print_clean("{0} approved.\n".format(parameter_name[0].upper() + parameter_name[1:]))
+                return parameter
 
     def register_new_password(self):
         """
@@ -114,16 +119,38 @@ class MenuHelper:
         """
         while True:
             Parser.print_clean("Any leading or trailing empty spaces will be removed.")
-            try:
-                password = getpass("Enter new password: ").strip()
-                password_confirm = getpass("Enter new password again: ").strip()
-                if (password != password_confirm) and (password != ""):
-                    raise InValidPasswordError
-                else:
-                    return PasswordHelper.hashPW(password)
-            except InValidPasswordError:
-                print("Passwords do not match. Please try again.\n")
-                input("Press Enter to continue...")
+            password = getpass("Enter new password: ").strip()
+            password_confirm = getpass("Enter new password again: ").strip()
+            if (password != password_confirm) and (password != ""):
+                Parser.print_clean("Passwords do not match. Please try again.\n")
+            else:
+                Parser.print_clean("Passwords Match.\n")
+                return PasswordHelper.hash_pw(password)
+
+    @staticmethod
+    def get_address():
+        """
+        :return: Encrypted First line of GP or Patient UK address
+        """
+        return EncryptionHelper().encrypt_to_bits(
+            Parser.string_parser("Please enter primary home address (one line): "))
+
+    @staticmethod
+    def get_name(name_type):
+        """
+        :param str name_type: First/Last Name flag for user input
+        :return: Encrypted new first/last name of user
+        """
+        return EncryptionHelper().encrypt_to_bits(Parser.string_parser(
+            "Please enter {0} name: ".format(name_type)))
+
+    @staticmethod
+    def get_birthday():
+        """
+        :return: Encrypted User birthday
+        """
+        return EncryptionHelper().encrypt_to_bits(str(Parser.date_parser("Please enter birthday: ",
+                                                                         allow_back=False, allow_past=True)))
 
     @staticmethod
     def get_id():
@@ -131,17 +158,20 @@ class MenuHelper:
         :return: Valid user ID and type of user
         """
         while True:
+            Parser.print_clean("Press --back to go back.")
             user_group = Parser.selection_parser(options={"A": "GP", "B": "Patient", "--back": "back"})
-            Parser.print_clean()
             if user_group == "--back":
-                return "", ""
+                Parser.print_clean()
+                return False, False
+            elif user_group == "A":
+                new_id = Parser.gp_no_parser()
+                user_group = "GP"
+                Parser.print_clean("\n")
+                return new_id, user_group
             else:
-                if user_group == "A":
-                    new_id = Parser.gp_no_parser()
-                    user_group = "GP"
-                else:
-                    new_id = Parser.nhs_no_parser()
-                    user_group = "Patient"
+                new_id = Parser.nhs_no_parser()
+                user_group = "Patient"
+                Parser.print_clean("\n")
                 return new_id, user_group
 
     @staticmethod
@@ -150,17 +180,14 @@ class MenuHelper:
         :return: return a valid UK phone number
         """
         while True:
-            try:
-                phone_number = Parser.string_parser("Please enter local UK phone number: ").strip()
-                if (len(phone_number) == 11) and \
-                        (not any([char in phone_number for char in ["+", "-", "(", ")"]])) and \
-                        (not phone_number.isupper()) and (not phone_number.islower()):
-                    return EncryptionHelper().encryptToBits(phone_number)
-                else:
-                    raise InValidPhoneNumberError
-            except InValidPhoneNumberError:
-                print("Invalid Phone Number. Please try again.\n")
-                input("Press Enter to continue...")
+            phone_number = Parser.string_parser("Please enter local UK phone number: ").strip()
+            if (len(phone_number) == 11) and \
+                    (not any([char in phone_number for char in ["+", "-", "(", ")"]])) and \
+                    (not phone_number.isupper()) and (not phone_number.islower()):
+                Parser.print_clean("Valid Phone Number.\n")
+                return EncryptionHelper().encrypt_to_bits(phone_number)
+            else:
+                Parser.print_clean("Invalid Phone Number. Please try again.\n")
 
     @staticmethod
     def valid_postcode():
@@ -168,39 +195,12 @@ class MenuHelper:
         :return: return a valid UK postcode
         """
         while True:
-            try:
-                temp_postcode = Parser.string_parser("Please enter primary home postcode: ").strip().replace(" ", "")
-                if (len(temp_postcode) != 5) and (len(temp_postcode) != 7):
-                    raise InValidPostcodeError
-                else:
-                    return EncryptionHelper().encryptToBits(temp_postcode)
-            except InValidPostcodeError:
-                print("Invalid Postcode. Please try again.\n")
-                input("Press Enter to continue...")
-
-    @staticmethod
-    def get_address():
-        """
-        :return: Encrypted First line of GP or Patient UK address
-        """
-        return EncryptionHelper().encryptToBits(Parser.string_parser("Please enter primary home address (one line): "))
-
-    @staticmethod
-    def get_name(name_type):
-        """
-        :param str name_type: First/Last Name flag for user input
-        :return: Encrypted new first/last name of user
-        """
-        return EncryptionHelper().encryptToBits(Parser.string_parser(
-            "Please enter {0} name: ".format(name_type)))
-
-    @staticmethod
-    def get_birthday():
-        """
-        :return: Encrypted User birthday
-        """
-        return EncryptionHelper().encryptToBits(str(Parser.date_parser("Please enter birthday: ",
-                                                                       allow_back=False, allow_past=True)))
+            temp_postcode = Parser.string_parser("Please enter primary home postcode: ").strip().replace(" ", "")
+            if (len(temp_postcode) != 5) and (len(temp_postcode) != 7):
+                Parser.print_clean("Invalid Postcode. Please try again.\n")
+            else:
+                Parser.print_clean("Valid Postcode.\n")
+                return EncryptionHelper().encrypt_to_bits(temp_postcode)
 
     @staticmethod
     def dispatcher(username, user_type):
@@ -234,7 +234,7 @@ class User:
         # retrieving the full information from DATAbase instead of just the password for authentication
         self.user_data = SQLQuery(
             "SELECT ID, username, firstName, lastName, phoneNo, HomeAddress, postCode, UserType, "
-            "deactivated, birthday FROM Users WHERE username == ?").executeFetchAll(decrypter=EncryptionHelper(),
+            "deactivated, birthday FROM Users WHERE username == ?").fetch_all(decrypter=EncryptionHelper(),
                                                                                     parameters=(username,))[0]
         # loading the user info into a state
         self.ID = self.user_data[0]
