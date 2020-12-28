@@ -4,12 +4,11 @@ from encryption import EncryptionHelper
 from parser_help import Parser
 from database import SQLQuery
 # import sys
+import time
 import datetime
 import random
 from exceptions import DBRecordError
 
-print_clean = Parser.print_clean
-delta = datetime.timedelta
 
 class Patient(User):
     """
@@ -341,7 +340,71 @@ class Patient(User):
 
 
     def cancel_appointment(self):
-        pass
+        """
+        bookings can be cancelled five days in advance
+        move from visit
+        insert in available time
+        """
+        stage = 0
+        while True:
+            while stage == 0:
+                query_string = "SELECT BookingNo, NHSNo, StaffID, Timeslot, PatientInfo" \
+                               "FROM visit  WHERE NHSNo = ? AND Timeslot >= ? "
+                all_valid_cancel = SQLQuery(query_string)
+                all_valid_cancel_result = all_valid_cancel.executeFetchAll(
+                    parameters=(self.ID,datetime.datetime.now() + datetime.timedelta(days=5)))
+                cancel_table = []
+                cancel_table_raw = []
+                cancel_pointer = []
+
+                for i in range(len(all_valid_cancel_result)):
+                    cancel_table.append([i + 1, str(all_valid_cancel_result[i][0]),str(all_valid_cancel_result[i][1]),
+                                         str(all_valid_cancel_result[i][2]),str(all_valid_cancel_result[i][3]),
+                                         str(all_valid_cancel_result[i][4])])
+                    cancel_table_raw.append([i + 1, all_valid_cancel_result[i][0],all_valid_cancel_result[i][1],
+                                             all_valid_cancel_result[i][2],all_valid_cancel_result[i][3],
+                                             all_valid_cancel_result[i][4]])
+                    cancel_pointer.append(i + 1)
+                print(f"You are viewing all the appointments can be cancelled.")
+                if len(cancel_table) == 0:
+                    print(f"No Appointments can be cancelled.\n")
+                    return
+                else:
+                    stage = 1
+
+            while stage == 1:
+                print(tabulate(cancel_table, headers = ["Pointer","BookingNo", "NHSNo",
+                                                        "StaffID", "Timeslot","PatientInfo"]))
+                selected_cancel_appointment = Parser.pick_pointer_parser("Select an appointment "
+                                                                       "to cancel by the Pointer.",
+                                                                       (1,len(cancel_table)))
+
+                selected_row = cancel_table[selected_cancel_appointment - 1]
+                selected_row_raw = cancel_table_raw[selected_cancel_appointment - 1]
+
+                print("This is appointment you want to cancel:")
+                print(tabulate([selected_row],headers = ["Pointer","BookingNo", "NHSNo",
+                                                        "StaffID", "Timeslot","PatientInfo"]))
+
+                confirmation = Parser.selection_parser(options= {"Y":"Confirm","N": "Go back and select again"})
+                if confirmation == "Y":
+                    SQLQuery("DELETE FROM visit WHERE BookingNo = ? "
+                             ).executeCommit(parameters = (selected_row_raw[1]))
+                    SQLQuery("INSERT INTO available_time VALUES (?,?)"
+                             ).executeCommit(parameters = (selected_row_raw[3],selected_row_raw[4]))
+                    print("Appointment is cancelled successfully.")
+
+                    visit_result = SQLQuery("SELECT bookingNo, NHSNo, StaffID, Timeslot, PatientInfo FROM visit "
+                                            "WHERE NHSNo = ? AND Timeslot >= ? "
+                                            ).executeFetchAll(parameters = (self.ID,datetime.datetime.now() + datetime.timedelta(days=5)))
+
+                    print(tabulate(visit_result, headers=["bookingNo", "NHSNo", "GP", "Timeslot","PatientInfo"]))
+
+                else:
+                    Parser.print_clean()
+                    return
+
+
 
     def review_appointment(self):
 
