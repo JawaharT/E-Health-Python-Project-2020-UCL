@@ -8,7 +8,8 @@ import time
 import datetime
 import random
 from exceptions import DBRecordError
-
+print_clean = Parser.print_clean
+delta = datetime.timedelta
 
 class Patient(User):
     """
@@ -22,7 +23,7 @@ class Patient(User):
         while True:
             print("You're currently viewing main menu options for Patient {}.".format(self.username))
             option_selection = Parser.selection_parser(
-                options={"B": "book appointments", "I":"check in appointment", "C": "cancel appiontment", "R": "review appointments",
+                options={"B": "book appointments", "I":"view /check in unattended appointment", "C": "cancel appiontment", "R": "review/rate appointments",
                          "--logout": "Logout"})
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
@@ -35,7 +36,14 @@ class Patient(User):
             elif option_selection == "C":
                 self.cancel_appointment()
             elif option_selection == "R":
-                self.review_appointment()
+                r_selection = Parser.selection_parser(options={"A": "review", "B": "rate", "--back": "back"})
+                if r_selection == "--back":
+                    print_clean("back...")
+                elif r_selection == "A":
+                    self.review_appointment()
+                elif r_selection == "B":
+                    self.rate_appointment()
+
 
 
     def book_appointment(self):
@@ -91,19 +99,20 @@ class Patient(User):
                 selected_gp_pointer = Parser.pick_pointer_parser("Select GP by the Pointer.",
                                                            (1, len(gp_table)))
                 #print(selected_gp_pointer)
-
+                if selected_gp_pointer == '--back':
+                    return False
                 # if selected_gp_pointer not in gp_pointer:
                 #     print("please choose from this list")
                 #     stage = 1
                 # else:
                 #selected_gp = gp_table([selected_gp_pointer],[1])
 
-                gp_table_raw = gp_table_raw[selected_gp_pointer - 1]
+                selected_gp_row = gp_table_raw[selected_gp_pointer - 1]
                 # print(selected_gp)
                 appointment_result = SQLQuery(
                     "SELECT StaffID, Timeslot FROM available_time "
                     "WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ?",
-                ).executeFetchAll(parameters=(gp_table_raw[1], selected_date, selected_date + delta(days=1)))
+                ).executeFetchAll(parameters=(selected_gp_row[1], selected_date, selected_date + delta(days=1)))
 
 
                 appointment_table = []
@@ -216,32 +225,16 @@ class Patient(User):
         while True:
             while stage == 0:
                 print("This is time slot booked by you:")
-
-               # visit_table_raw = gp_table_raw[selected_gp_pointer - 1]
-                # print(selected_gp)
                 patient_appointment_result = SQLQuery(
                     "SELECT bookingNo, NHSNo, StaffID, Timeslot, Confirmed FROM visit "
                     "WHERE NHSNo = ? AND Attended = ? ",
                 ).executeFetchAll(parameters=(self.ID,"F"))
 
-                patient_appointment_table = []
-                patient_appointment_table_raw = []
                 patient_confirmed_appointment_table = []
                 patient_unconfirmed_appointment_table = []
-                patient_appointment_pointer = []
+
                 j=0
                 for i in range(len(patient_appointment_result)):
-                    # patient_appointment_table.append([i + 1, str(patient_appointment_result[i][0]),
-                    #                                          str(patient_appointment_result[i][1]),
-                    #                                          str(patient_appointment_result[i][2]),
-                    #                                          str(patient_appointment_result[i][3]),
-                    #                                          str(patient_appointment_result[i][4])])
-                    # patient_appointment_table_raw.append([i + 1, patient_appointment_result[i][0],
-                    #                                              patient_appointment_result[i][1],
-                    #                                              patient_appointment_result[i][2],
-                    #                                              patient_appointment_result[i][3],
-                    #                                              patient_appointment_result[i][4]])
-                    # patient_appointment_pointer.append(i + 1)
 
                     if patient_appointment_result[i][4] == "T":
                         patient_confirmed_appointment_table.append([i + 1, str(patient_appointment_result[i][0]),
@@ -250,11 +243,13 @@ class Patient(User):
                                                              str(patient_appointment_result[i][3]),
                                                              str(patient_appointment_result[i][4])])
                     elif patient_appointment_result[i][4] == "F":
+                        #j = j + 1
                         patient_unconfirmed_appointment_table.append([j + 1, str(patient_appointment_result[i][0]),
                                                                     str(patient_appointment_result[i][1]),
                                                                     str(patient_appointment_result[i][2]),
                                                                     str(patient_appointment_result[i][3]),
                                                                     str(patient_appointment_result[i][4])])
+                        j = j + 1
                     else:
                         print("error")
 
@@ -271,14 +266,14 @@ class Patient(User):
                     print(f"These are appointments already confirmed by GP")
                     print("\n")
                     print(tabulate(patient_confirmed_appointment_table, headers=["pointer","bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
-                    print("\n")
+
 
 
                 if len(patient_unconfirmed_appointment_table) != 0 :
                     print(f"These appointment have not been confirmed by GP, please wait or change your appointment ")
                     print("\n")
                     print(tabulate(patient_unconfirmed_appointment_table, headers=["pointer","bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
-                    print("\n")
+
 
                 option_selection = Parser.selection_parser(
                         options={"I":"check in confirmed appointment","C": "change appointment","--back": "back"})
@@ -321,7 +316,7 @@ class Patient(User):
                     try:
                         for appointment in appointment_to_check_in:
                             SQLQuery(" UPDATE Visit SET Attended = ? WHERE BookingNo = ? "
-                                     ).executeCommit(("T",appointment))
+                                     ).executeCommit(("T", appointment))
 
                         print("check in successfully.")
                         input("Press Enter to continue...")
@@ -335,9 +330,6 @@ class Patient(User):
                     print("Removal cancelled.")
                     slots_to_remove = []
                     input("Press Enter to continue...")
-
-
-
 
     def cancel_appointment(self):
         """
@@ -404,8 +396,6 @@ class Patient(User):
                     Parser.print_clean()
                     return
 
-
-
     def review_appointment(self):
 
         while True:
@@ -442,6 +432,57 @@ class Patient(User):
                 Parser.print_clean("No records Available.\n")
             else:
                 print(tabulate(all_data, headers))
+
+    def rate_appointment(self):
+        while True:
+            stage = 0
+            while True:
+                while stage == 0:
+
+                    patient_result = SQLQuery(
+                        "SELECT bookingNo, StaffID, Timeslot FROM visit "
+                        "WHERE NHSNo = ? AND Attended = ? ",
+                    ).executeFetchAll(parameters=(self.ID, "T"))
+
+                    patient_attended_appointment_table = []
+                    #patient_unconfirmed_appointment_table_raw = []
+                    if len(patient_result) == 0 :
+                        print(f"You don't have any attended appointment")
+                        input("Press Enter to back...")
+                        return
+                    else:
+                        for i in range(len(patient_result)):
+                            patient_attended_appointment_table.append([i + 1, str(patient_result[i][0]),
+                                                                            str(patient_result[i][1]),
+                                                                            str(patient_result[i][2])])
+                        print("This is appointments attended by you:")
+                        print(tabulate(patient_attended_appointment_table,headers=["pointer", "bookingNo", "staffID", "timeslot"]))
+
+                        print("We think highly of your feelings, please give a rate to your GP")
+
+                        selected_rate_appointment = Parser.pick_pointer_parser("Select an appointment "
+                                                                                 "to cancel by the Pointer.",
+                                                                                 (1, len(patient_attended_appointment_table)))
+
+                        selected_row = patient_attended_appointment_table[selected_rate_appointment - 1]
+
+                        print("This is the appointment you want to rate:")
+                        print(tabulate([selected_row], headers=["Pointer", "BookingNo", "NHSNo",
+                                                                "StaffID", "Timeslot", "PatientInfo"]))
+
+                        rate_selection = Parser.selection_parser(options={"Y": "Rate", "N": "Go back"})
+
+                        if rate_selection == "N":
+                            return
+                        elif rate_selection == "Y":
+                            selected_rate = Parser.pick_pointer_parser("Select form 1 - 5 ", (1, 5))
+                            SQLQuery(" UPDATE Visit SET Rating = ? WHERE BookingNo = ? "
+                                     ).executeCommit((selected_rate, selected_row[1]))
+
+                            print("Your rate have been recorded successfully!")
+                            Parser.string_parser("Press Enter to continue...")
+                            return
+
 
 
 if __name__ == "__main__":
