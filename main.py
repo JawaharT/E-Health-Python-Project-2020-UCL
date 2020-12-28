@@ -1,3 +1,5 @@
+import sqlite3
+
 from parser_help import Parser
 from database_help import SQLQuery
 from encryption import EncryptionHelper
@@ -273,7 +275,16 @@ if __name__ == '__main__':
 
     # Exception handling if database not present/cannot connect
     # Exception handling of sqlite3.DatabaseError: database disk image is malformed
-    # conn = create_connection("GPDB.db")
+    try:
+        from urllib.request import pathname2url
+        database = 'file:{}?mode=rw'.format(pathname2url("GPDB.db"))
+        conn = sqlite3.connect(database, uri=True)
+    except sqlite3.OperationalError:
+        Parser.print_clean("Database does not exist.")
+        Parser.user_quit()
+    except sqlite3.DatabaseError:
+        Parser.print_clean("Database disk image is malformed.")
+        Parser.user_quit()
 
     while True:
         print("Welcome to Group 6 GP System")
