@@ -1,5 +1,5 @@
-from database_help import SQLQuery
-from parserHelp import parser
+from database import SQLQuery
+from parser_help import Parser
 from encryption import EncryptionHelper
 from encryption import PasswordHelper
 import time

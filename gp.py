@@ -1,7 +1,7 @@
 from tabulate import tabulate
 from encryption import EncryptionHelper
 from parser_help import Parser
-from database_help import SQLQuery
+from database import SQLQuery
 import time
 import datetime
 from main import User

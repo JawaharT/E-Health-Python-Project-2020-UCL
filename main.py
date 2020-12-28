@@ -1,7 +1,7 @@
 import sqlite3
 
 from parser_help import Parser
-from database_help import SQLQuery
+from database import SQLQuery
 from encryption import EncryptionHelper
 from encryption import PasswordHelper
 from getpass import getpass
