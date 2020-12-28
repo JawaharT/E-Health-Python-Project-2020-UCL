@@ -13,6 +13,7 @@ class Admin(User):
         Main Menu for Admin-type users.
         """
         while True:
+            print("You're currently viewing main menu options for Admin {}.".format(self.username))
             user_input = Parser.selection_parser(
                 options={"A": "View Records", "B": "Add New GP or Patient", "C": "Edit GP or Patient",
                          "D": "Delete Existing GP or Patient", "--logout": "logout"})
@@ -81,6 +82,7 @@ class Admin(User):
         """
         Updated table with new GP or patient record
         """
+        Parser.print_clean()
         MenuHelper().register()
 
     def edit_gp_patient(self):
@@ -96,18 +98,16 @@ class Admin(User):
             Parser.print_clean("No Patients or GPs registered. Please add before coming back.\n")
             return
 
-        all_gps_and_patients_table, gps_and_patients = self.view_all_patients_and_GPs(view_all_gps_and_patients_result)
-
         # select a user from the table
         while True:
-            # selected_user = Parser.string_parser("Enter the username to edit the profile: ")
+            all_gps_and_patients_table, gps_and_patients = self.view_all_patients_and_GPs(
+                view_all_gps_and_patients_result)
             selected_user_number = Parser.selection_parser(options=all_gps_and_patients_table)
             selected_user = all_gps_and_patients_table[selected_user_number]
             if selected_user == "back":
                 Parser.print_clean()
                 break
             else:
-                Parser.print_clean()
                 record_editor = Parser.selection_parser(
                     options={"A": "Update Password", "B": "Update Birthday",
                              "C": "Update First Name", "D": "Update Last Name",
@@ -153,7 +153,7 @@ class Admin(User):
 
                 self.update_parameter_record(selected_user, parameter, new_parameter_value)
                 print("Successfully Updated to Database. Going back to home page.\n")
-                return
+                break
 
     def delete_gp_patient(self):
         """
@@ -165,14 +165,12 @@ class Admin(User):
         all_deactivated_gps_result = list(all_deactivated_gps.executeFetchAll())
 
         if len(all_deactivated_gps_result) == 0:
-            Parser.print_clean("No deactivated GPs available to delete.")
+            print("No deactivated GPs available to delete.\n")
             return
-
-        all_deactivated_gps_table, _ = self.view_all_patients_and_GPs(all_deactivated_gps_result)
 
         # select a deactivated GP account to delete
         while True:
-            print("\nPress --back to go back.")
+            all_deactivated_gps_table, _ = self.view_all_patients_and_GPs(all_deactivated_gps_result)
             selected_gp_number = Parser.selection_parser(options=all_deactivated_gps_table)
             selected_gp = all_deactivated_gps_table[selected_gp_number]
             if selected_gp == "back":
@@ -183,7 +181,7 @@ class Admin(User):
                 delete_query = SQLQuery("DELETE FROM Users WHERE username=:who")
                 delete_query.executeCommit({"who": selected_gp})
                 Parser.print_clean("GP {0} deleted from Users table.\n".format(selected_gp))
-                return
+                break
 
     def view_all_patients_and_GPs(self, all_results):
         """

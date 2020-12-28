@@ -15,7 +15,6 @@ class Patient(User):
     patient Class with navigation options and various functionalities.
     """
 
-
     def main_menu(self) -> None:
         """
         Main Menu for Patient-type users.

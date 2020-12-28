@@ -129,7 +129,6 @@ class MenuHelper:
         :return: Valid user ID and type of user
         """
         while True:
-            print("Press --back to go back.")
             user_group = Parser.selection_parser(options={"A": "GP", "B": "Patient", "--back": "back"})
             Parser.print_clean()
             if user_group == "--back":

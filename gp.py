@@ -18,15 +18,12 @@ class GP(User):
         Main Menu for GP-type users.
         """
         while True:
-            Parser.print_clean("You're currently viewing main menu options for GP {}.".format(self.username))
+            print("You're currently viewing main menu options for GP {}.".format(self.username))
             option_selection = Parser.selection_parser(
                 options={"A": "View/Edit availability", "M": "Manage bookings", "V": "View/Start appointment",
                          "--logout": "Logout"})
 
-            Parser.print_clean("\n")
             if option_selection == "--logout":
-                # Quitting is required for logout to ensure all personal data is cleared from session
-                Parser.print_clean("Logging you out...")
                 Parser.user_quit()
 
             elif option_selection == "A":
@@ -46,18 +43,18 @@ class GP(User):
                 options={"A": "View all your current availability", "D": "Edit availability by date",
                          "--back": "to go back"})
             if option_selection == "--back":
-                Parser.print_clean("\n")
+                Parser.print_clean()
                 return
             elif option_selection == "A":
                 availability_result = SQLQuery("SELECT Timeslot FROM available_time WHERE StaffId = ?"
                                                ).executeFetchAll(parameters=(self.ID,))
-                Parser.print_clean(f"Viewing current availability for GP {self.username}")
                 if len(availability_result) == 0:
-                    Parser.print_clean("You have no current availability recorded in the system.")
+                    print("You have no current availability recorded in the system.")
                 else:
+                    print(f"Viewing current availability for GP {self.username}")
                     for slot in availability_result:
-                        Parser.print_clean(slot[0])
-                Parser.string_parser("Press Enter to continue...")
+                        print(slot[0])
+                input("Press Enter to continue...")
                 continue
             selected_date = Parser.date_parser(f"Editing availability for GP {self.username}.\n"
                                                "Select a Date:")
@@ -81,7 +78,7 @@ class GP(User):
             if len(availability_table) == 0:
                 Parser.print_clean(f"You have no availability for this day yet.\n")
             else:
-                Parser.print_clean(tabulate(availability_table, headers=["Pointer", "Timeslot"]))
+                print(tabulate(availability_table, headers=["Pointer", "Timeslot"]))
                 options["R"] = "remove availability"
 
             options["--back"] = "back to previous page"
@@ -106,16 +103,16 @@ class GP(User):
         while True:
             # Selecting the entries to remove
             selected_entry = Parser.list_number_parser("Select the entry to remove using their corresponding IDs"
-                                                       "from the 'Pointer' column.",
+                                                       " from the 'Pointer' column.",
                                                        (1, len(availability_table) + 1))
             if selected_entry == '--back':
                 return False
             for row in availability_table:
                 if row[0] in selected_entry:
                     slots_to_remove.append(row[1])
-            Parser.print_clean("These time slot will be removed and made unavailable for future bookings:")
+            print("These time slot will be removed and made unavailable for future bookings:")
             for slot in slots_to_remove:
-                Parser.print_clean(slot)
+                print(slot)
             confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
             # Confirm if user wants to delete slots
             if confirm == "Y":
@@ -123,18 +120,18 @@ class GP(User):
                     for slot in slots_to_remove:
                         SQLQuery("DELETE FROM available_time WHERE StaffID = ? AND Timeslot = ?"
                                  ).executeCommit((self.ID, slot))
-                    Parser.print_clean("Slots removed successfully.")
-                    Parser.string_parser("Press Enter to continue...")
+                    print("Slots removed successfully.")
+                    input("Press Enter to continue...")
                     return True
                 # temporary exception
                 except DBRecordError:
-                    Parser.print_clean("Error encountered")
+                    print("Error encountered")
                     slots_to_remove = []
-                    Parser.string_parser("Press Enter to continue...")
+                    input("Press Enter to continue...")
             if confirm == "N":
-                Parser.print_clean("Removal cancelled.")
+                print("Removal cancelled.")
                 slots_to_remove = []
-                Parser.string_parser("Press Enter to continue...")
+                input("Press Enter to continue...")
 
     def add_availability(self, selected_date) -> bool:
         """
@@ -169,28 +166,28 @@ class GP(User):
                 while temporary_time < selected_end:
                     slots_to_add.append(temporary_time)
                     temporary_time = temporary_time + datetime.timedelta(minutes=15)
-                Parser.print_clean("You have chosen to add the following slots: ")
+                print("You have chosen to add the following slots: ")
                 for slot in slots_to_add:
-                    Parser.print_clean(slot)
+                    print(slot)
                 confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
                 if confirm == "Y":
                     try:
                         for slot in slots_to_add:
                             SQLQuery("INSERT INTO available_time VALUES (?, ?)").executeCommit((self.ID, slot))
-                        Parser.print_clean("Your slots have been successfully added!")
-                        Parser.string_parser("Press Enter to continue...")
+                        print("Your slots have been successfully added!")
+                        input("Press Enter to continue...")
                         return True
                     # temporary exception
                     except DBRecordError:
-                        Parser.print_clean("Invalid selection. Some of the entries may already be in the database. "
+                        print("Invalid selection. Some of the entries may already be in the database. "
                                            "Please Retry")
                         stage = 0
                         slots_to_add = []
-                        Parser.string_parser("Press Enter to continue...")
+                        input("Press Enter to continue...")
                 if confirm == "N":
                     stage = 0
                     slots_to_add = []
-                    Parser.print_clean("Starting over...")
+                    print("Starting over...")
                     time.sleep(2)
 
     def manage_bookings(self) -> None:
@@ -199,13 +196,14 @@ class GP(User):
         """
         stage = 0
         while True:
+            Parser.print_clean()
             while stage == 0:
                 Parser.print_clean(f"Managing bookings for GP {self.username}.")
                 option_selection = Parser.selection_parser(
                     options={"P": "View and edit your pending bookings", "D": "View and edit bookings by date",
                              "--back": "to go back"})
                 if option_selection == "--back":
-                    Parser.print_clean("\n")
+                    Parser.print_clean()
                     return
                 elif option_selection == "P":
                     bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
@@ -253,14 +251,14 @@ class GP(User):
                                    booking[4], translation[booking[5]]])
             bookings_table_raw.append([i + 1, booking[0], booking[1]])
             i += 1
-        Parser.print_clean("You are viewing your bookings " + message)
+        print("You are viewing your bookings " + message)
         if len(bookings_table) == 0:
-            Parser.print_clean("No bookings match current search criteria.")
+            print("No bookings match current search criteria.")
             # stage = 0
-            Parser.string_parser("Press Enter to continue.")
+            input("Press Enter to continue.")
             return False
         else:
-            Parser.print_clean(tabulate(bookings_table,
+            print(tabulate(bookings_table,
                                         headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
                                                  "P. Last Name", "Confirmed"]))
             selected_entry = Parser.integer_parser(question="Select entry using number from Pointer column or "
@@ -281,8 +279,8 @@ class GP(User):
         :param: list selected_row_raw: As above but in raw format (see GP.manage_bookings)
         """
         while True:
-            Parser.print_clean("You selected the following booking:")
-            Parser.print_clean(
+            print("You selected the following booking:")
+            print(
                 tabulate([selected_row], headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
                                                   "P. Last Name", "Confirmed"]))
             user_input = Parser.selection_parser(
@@ -290,7 +288,7 @@ class GP(User):
             if user_input == "--back":
                 return False
             elif user_input == "C":
-                Parser.print_clean("Warning! This will reject all other pending bookings for this timeslot. ")
+                print("Warning! This will reject all other pending bookings for this timeslot. ")
                 confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Rollback"})
                 if confirm == 'N':
                     pass
@@ -312,16 +310,17 @@ class GP(User):
         """
         stage = 0
         while True:
+            Parser.print_clean()
             while stage == 0:
-                Parser.print_clean(f"Viewing confirmed appointments for GP {self.username}.")
+                print(f"Viewing confirmed appointments for GP {self.username}.")
                 user_input = Parser.selection_parser(options={"T": "View today's appointments", "D": "Select by Date",
                                                               "--back": "to go back"})
                 if user_input == "T":
                     selected_date = datetime.datetime.today().date()
-                    Parser.print_clean(str(selected_date))
+                    print(str(selected_date))
                     stage = 1
                 elif user_input == "--back":
-                    Parser.print_clean("\n")
+                    print("\n")
                     return
                 else:
                     selected_date = Parser.date_parser(question="Select a Date:")
@@ -360,61 +359,61 @@ class GP(User):
                                            "users.HomeAddress, users.postcode, visit.diagnosis, visit.notes FROM visit "
                                            "INNER JOIN users ON visit.NHSNo = users.ID WHERE visit.BookingNo = ? "
                                            ).executeFetchAll(decrypter=EncryptionHelper(), parameters=(booking_no,))
-            Parser.print_clean(tabulate([booking_information[0][:-3]],
+            print(tabulate([booking_information[0][:-3]],
                                headers=["BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name",
                                         "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
-            Parser.print_clean("\nDiagnosis:")
-            Parser.print_clean(booking_information[0][10])
-            Parser.print_clean("\n----------")
-            Parser.print_clean("Notes:")
-            Parser.print_clean(booking_information[0][11])
-            Parser.print_clean("\n-------------")
+            print("\nDiagnosis:")
+            print(booking_information[0][10])
+            print("\n----------")
+            print("Notes:")
+            print(booking_information[0][11])
+            print("\n-------------")
             parser_result = SQLQuery("SELECT PrescriptionNumber, drugName, quantity, instructions FROM prescription "
                                      "WHERE BookingNo = ? "
                                      ).executeFetchAll(decrypter=EncryptionHelper(), parameters=(booking_no,))
             if parser_result:
-                Parser.print_clean(tabulate(parser_result,
+                print(tabulate(parser_result,
                                             headers=["Prescription No", "Drug Name", "Quantity",
                                                      "Dosage & Instructions"]))
             else:
-                Parser.print_clean("Prescriptions:\nNone")
+                print("Prescriptions:\nNone")
 
-            Parser.print_clean("")
+            Parser.print_clean()
             user_input = Parser.selection_parser(
                 options={"D": "Edit diagnosis", "N": "Add notes", "P": "Edit prescriptions",
                          "--back": "go back to previous page"})
             if user_input == "--back":
                 return
             elif user_input == "D":
-                Parser.print_clean(
+                print(
                     f"The current diagnosis for patient {booking_information[0][3]} {booking_information[0][4]}, "
                     f"appointment number {booking_no}:")
-                Parser.print_clean(booking_information[0][10])
-                Parser.print_clean("")
+                print(booking_information[0][10])
+                print("")
                 diagnosis = Parser.string_parser("Please enter your diagnosis: ")
                 SQLQuery(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ").executeCommit((diagnosis, booking_no))
-                Parser.print_clean("The diagnosis has been recorded successfully!")
-                Parser.string_parser("Press Enter to continue...")
+                print("The diagnosis has been recorded successfully!")
+                input("Press Enter to continue...")
 
             elif user_input == "N":
-                Parser.print_clean(f"Your notes for appointment number {booking_no}")
-                Parser.print_clean("")
-                Parser.print_clean(booking_information[0][11])
+                print(f"Your notes for appointment number {booking_no}")
+                print("")
+                print(booking_information[0][11])
                 notes_input = Parser.string_parser("Please enter your notes: ")
                 SQLQuery(" UPDATE Visit SET notes = ? WHERE BookingNo = ? ").executeCommit((notes_input,
                                                                                             booking_no))
-                Parser.print_clean("Your notes have been recorded successfully!")
-                Parser.string_parser("Press Enter to continue...")
+                print("Your notes have been recorded successfully!")
+                input("Press Enter to continue...")
 
             elif user_input == "P":
-                Parser.print_clean(f"Current prescription for patient {booking_information[0][3]} "
+                print(f"Current prescription for patient {booking_information[0][3]} "
                                    f"{booking_information[0][4]} "
                                    f"under appointment number {booking_no}:")
-                Parser.print_clean("")
-                Parser.print_clean(tabulate(parser_result,
+                print("")
+                print(tabulate(parser_result,
                                             headers=["Prescription No", "Drug Name", "Quantity", "Dosage & "
                                                                                                  "Instructions"]))
-                Parser.print_clean("")
+                print("")
                 user_input = Parser.selection_parser(
                     options={"A": "add prescription", "R": "remove prescription", "--back": "back to previous page"})
                 if user_input == "--back":
@@ -426,17 +425,17 @@ class GP(User):
                     SQLQuery("INSERT INTO prescription (BookingNo, drugName, quantity, instructions) VALUES (?, ?, ?, "
                              "?)").executeCommit((booking_no, drug_name, quantity, instructions))
                     Parser.print_clean("Your prescription has been recorded successfully!")
-                    Parser.string_parser("Press Enter to continue...")
+                    input("Press Enter to continue...")
                     continue
                 elif user_input == "R":
                     while True:
                         allowed_numbers = [prescription[0] for prescription in parser_result]
                         prescription_number = str(Parser.integer_parser("Please enter the Prescription No to delete: "))
                         if prescription_number not in allowed_numbers:
-                            Parser.print_clean("Incorrect prescription number!")
+                            print("Incorrect prescription number!")
                             continue
                         SQLQuery(" DELETE FROM prescription WHERE PrescriptionNumber = ? "
                                  ).executeCommit((prescription_number,))
-                        Parser.print_clean("Prescription removed correctly!")
-                        Parser.string_parser("Press Enter to continue...")
+                        print("Prescription removed correctly!")
+                        input("Press Enter to continue...")
                         break
