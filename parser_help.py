@@ -221,6 +221,32 @@ class Parser:
                 Parser.print_clean("Invalid input! Either not an integer or out of range.")
 
     @staticmethod
+    def pick_pointer_parser(question, num_range, allow_back=True) -> Union[list, int]:
+        """
+        Method to collect and process a range selection from user
+
+        :param str question: Prompt for the user
+        :param tuple full_num_range: (a, b)-like tuple specifying upper and lower bounds of the range
+        :param bool allow_back: Specific whether '--back' is an allowed input
+        """
+        while True:
+            try:
+                print(question)
+
+                if allow_back:
+                    print("Or enter '--back' to go back to previous page")
+                    input_string = input()
+                if allow_back and input_string  == '--back':
+                    return input_string
+                else:
+                    result = int(input_string)
+                    if not min(num_range) <= result <= max(num_range):
+                        raise ValueError
+                    return result
+            except ValueError:
+                print("Invalid input! Either not an integer or out of range.")
+
+    @staticmethod
     def user_quit() -> None:
         """Method to quit the application on request."""
         print("Application quitting...")
