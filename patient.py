@@ -73,15 +73,10 @@ class Patient(User):
                     "WHERE Timeslot >= ? AND Timeslot <= ? )",
                 ).executeFetchAll(parameters=(selected_date, selected_date + delta(days=1)))
                 gp_table = []
-                #gp_table_raw = []
+
                 for i in range(len(gp_result)):
                     # gp_table.append(str(gp_result[i]))
                     gp_table.append([i + 1, str(gp_result[i][0]), str(gp_result[i][1]), str(gp_result[i][2])])
-                # print(gp_table[i])
-                # print(gp_result[i])
-                #print(gp_table)
-                #print(gp_result[i])
-
 
                 if len(gp_table) == 0:
                     print(f"there is no booking for this day yet.")
@@ -94,12 +89,7 @@ class Patient(User):
 
             while stage == 1:
                 # show list of time
-
                 print(tabulate(gp_table, headers=["Pointer", "GP", "Introduction", "Rating"]))
-                # selected_gp_pointer = Parser.integer_parser(
-                #     question="Select entry using number from Pointer column or "
-                #              "type '--back' to go back")
-
 
                 selected_gp_pointer = Parser.pick_pointer_parser("Select GP by the Pointer.",
                                                            (1, len(gp_table)))
@@ -114,15 +104,12 @@ class Patient(User):
                     "WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ?",
                 ).executeFetchAll(parameters=(selected_gp_row[1], selected_date, selected_date + delta(days=1)))
 
-
                 appointment_table = []
                 appointment_table_raw = []
-                #appointment_pointer = []
-
                 for i in range(len(appointment_result)):
                     appointment_table.append([i + 1, str(appointment_result[i][0]), str(appointment_result[i][1])])
                     appointment_table_raw.append([i + 1, appointment_result[i][0], appointment_result[i][1]])
-                    #appointment_pointer.append(i + 1)
+
                 print(f"You are viewing your schedule for: {selected_date}")
 
                 if len(appointment_table) == 0:
@@ -141,10 +128,6 @@ class Patient(User):
 
                 if selected_appointment == '--back':
                     return False
-                # if selected_appointment not in appointment_pointer:
-                #     print("please choose from this list")
-                #     stage = 2
-                # else:
 
                 selected_row = appointment_table[selected_appointment - 1]
                 selected_row_raw = appointment_table_raw[selected_appointment - 1]
@@ -160,17 +143,16 @@ class Patient(User):
                         repeat_booking_num = 1
                         while (repeat_booking_num ):
                             booking_no = random.randint(100000, 999999)
-                            #bookingNum = random.randint(1, 3)
-                            #bookingNum = 1
+
                             visit_same_booking_no = SQLQuery("SELECT bookingNo FROM visit WHERE bookingNo = ? ").executeFetchAll(parameters=(booking_no,))
                             if len(visit_same_booking_no) == 0:
-                                #repeat_booking_num = 0
+
                                 break
                             else:
                                 repeat_booking_num  = 1
 
                         visit_same_booking_num = SQLQuery(
-                            "SELECT Timeslot FROM visit WHERE Timeslot = ? ").executeFetchAll(parameters=(selected_row_raw[2],))
+                            "SELECT StaffID, Timeslot FROM visit WHERE StaffID = ? AND Timeslot = ? ").executeFetchAll(parameters=(selected_row_raw[1],selected_row_raw[2]))
                         if len(visit_same_booking_no) != 0:
                             # repeat_timeslot_num = 0
                             print("This time slot has been booked")
@@ -199,7 +181,6 @@ class Patient(User):
                         input("Press Enter to continue...")
                 if confirm == "N":
                     print("book cancelled.")
-                    slots_to_remove = []
                     input("Press Enter to continue...")
 
                 while stage == 3:
@@ -229,7 +210,6 @@ class Patient(User):
 
                 patient_confirmed_appointment_table = []
                 patient_unconfirmed_appointment_table = []
-                patient_confirmed_appointment_table_raw = []
 
                 j=0
                 for i in range(len(patient_appointment_result)):
@@ -242,7 +222,6 @@ class Patient(User):
                                                              str(patient_appointment_result[i][4])])
 
                     elif patient_appointment_result[i][4] == "F":
-                        #j = j + 1
                         patient_unconfirmed_appointment_table.append([j + 1, str(patient_appointment_result[i][0]),
                                                                     str(patient_appointment_result[i][1]),
                                                                     str(patient_appointment_result[i][2]),
@@ -259,18 +238,12 @@ class Patient(User):
                     input("Press Enter to continue...")
                     stage = 0
 
-
                 if not len(patient_confirmed_appointment_table) == 0 :
-
                     print(f"These are appointments already confirmed by GP")
-                    print("\n")
                     print(tabulate(patient_confirmed_appointment_table, headers=["pointer","bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
-
-
 
                 if not len(patient_unconfirmed_appointment_table) == 0 :
                     print(f"These appointment have not been confirmed by GP, please wait or change your appointment ")
-                    print("\n")
                     print(tabulate(patient_unconfirmed_appointment_table, headers=["pointer","bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
 
 
@@ -291,15 +264,7 @@ class Patient(User):
                 print(tabulate(patient_confirmed_appointment_table,
                                headers=["pointer", "bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
                 print("please check in after your attending")
-                # print("do you want to edit one or edit more at once?")
-                # option_selection = Parser.selection_parser(options={"E": "one change", "M": "more than one change","--back": "back"})
-                # if option_selection == "--back":
-                #     return
-                # elif option_selection == "E":
-                #     selected_appointment = Parser.pick_pointer_parser("Select an appointment by the Pointer.",
-                #                                                       (1, len(patient_confirmed_appointment_table)))
 
-                # elif option_selection == "M":
                 selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
                                                                       (1, len(patient_confirmed_appointment_table)))
 
@@ -452,6 +417,15 @@ class Patient(User):
                 print(tabulate(all_data, headers))
 
     def rate_appointment(self):
+        """
+        show appointment rate
+        choose one appointment tp rate
+        confirm and update in database
+
+
+        （set default as 5）
+
+        """
         while True:
             stage = 0
             while True:
@@ -486,8 +460,11 @@ class Patient(User):
                     print("We think highly of your feelings, please give a rate to your GP")
 
                     selected_rate_appointment = Parser.pick_pointer_parser("Select an appointment "
-                                                                             "to cancel by the Pointer.",
+                                                                             "to rate by the Pointer.",
                                                                              (1, len(patient_attended_appointment_table)))
+                    if selected_rate_appointment == "--back":
+                        Parser.print_clean("\n")
+                        return
 
                     selected_row = patient_attended_appointment_table[selected_rate_appointment - 1]
 
@@ -497,44 +474,49 @@ class Patient(User):
                     rate_selection = Parser.selection_parser(options={"Y": "Rate", "N": "Go back"})
 
                     if rate_selection == "N":
-                        return
+                            return
                     elif rate_selection == "Y":
-                        selected_rate = Parser.pick_pointer_parser("Select form 1 - 5 ", (1, 5))
+                        try:
+                            selected_rate = Parser.pick_pointer_parser("Select form 0 - 5 ", (0, 5))
 
-                        SQLQuery(" UPDATE Visit SET Rating = ? WHERE BookingNo = ? "
-                                 ).executeCommit((selected_rate, selected_row[1]))
+                            SQLQuery(" UPDATE Visit SET Rating = ? WHERE BookingNo = ? "
+                                     ).executeCommit((selected_rate, selected_row[1]))
 
-                        #print(selected_row[2])
+                            #print(selected_row[2])
 
-                        gp_rate_result = SQLQuery("SELECT Rating FROM visit WHERE StaffID = ? "
-                                 ).executeFetchAll(parameters=(selected_row[2],))
-                        gp_rate_num = 0
+                            gp_rate_result = SQLQuery("SELECT Rating FROM visit WHERE StaffID = ? "
+                                     ).executeFetchAll(parameters=(selected_row[2],))
+                            gp_rate_num = 0
 
-                        #print(gp_rate_result)
-                        if not gp_rate_result == 0:
+                            #print(gp_rate_result)
+                            if not gp_rate_result == 0:
 
-                            for i in range(len(gp_rate_result)):
-                                #print(gp_rate_result[i][0])
-                                gp_rate_num = gp_rate_num + gp_rate_result[i][0]
+                                for i in range(len(gp_rate_result)):
+                                    #print(gp_rate_result[i][0])
+                                    gp_rate_num = gp_rate_num + gp_rate_result[i][0]
 
-                            gp_rate_average = round((gp_rate_num/len(gp_rate_result)),2)
-                            #print(gp_rate_average)
+                                gp_rate_average = round((gp_rate_num/len(gp_rate_result)),2)
+                                #print(gp_rate_average)
 
-                            SQLQuery(" UPDATE GP SET Rating = ? WHERE ID = ? "
-                                     ).executeCommit((gp_rate_average, selected_row[2]))
-                            print("Your rate have been recorded successfully!")
+                                SQLQuery(" UPDATE GP SET Rating = ? WHERE ID = ? "
+                                         ).executeCommit((gp_rate_average, selected_row[2]))
+                                print("Your rate have been recorded successfully!")
 
-                        else:
-                            gp_rate_num = selected_rate
-                            # print(gp_rate_num )
-                            SQLQuery(" UPDATE gp SET Rating = ? WHERE ID = ? "
-                                     ).executeCommit((gp_rate_num , selected_row[2]))
-                            print("Your rate have been recorded successfully!")
+                            else:
+                                gp_rate_num = selected_rate
+                                # print(gp_rate_num )
+                                SQLQuery(" UPDATE gp SET Rating = ? WHERE ID = ? "
+                                         ).executeCommit((gp_rate_num , selected_row[2]))
+                                print("Your rate have been recorded successfully!")
+
+                            input("Press Enter to continue...")
+                            stage = 0
+                        except DBRecordError:
+                            print("Error encountered")
+                            slots_to_remove = []
+                            input("Press Enter to continue...")
 
 
-                        input("Press Enter to continue...")
-                        stage = 0
-                        #stage = 1
 
 
 
