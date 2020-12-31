@@ -1,6 +1,6 @@
 from tabulate import tabulate
 from encryption import EncryptionHelper
-from parser_help import Parser
+from parser import Parser
 from database import SQLQuery
 import time
 import datetime
@@ -24,6 +24,8 @@ class GP(User):
                          "--logout": "Logout"})
 
             if option_selection == "--logout":
+                # Quitting is required for logout to ensure all personal data is cleared from session
+                Parser.print_clean("Logging you out...")
                 Parser.user_quit()
 
             elif option_selection == "A":
@@ -47,7 +49,7 @@ class GP(User):
                 return
             elif option_selection == "A":
                 availability_result = SQLQuery("SELECT Timeslot FROM available_time WHERE StaffId = ?"
-                                               ).executeFetchAll(parameters=(self.ID,))
+                                               ).fetch_all(parameters=(self.ID,))
                 if len(availability_result) == 0:
                     print("You have no current availability recorded in the system.")
                 else:
@@ -66,7 +68,7 @@ class GP(User):
             # Retrieving availability from the database
             availability_result = SQLQuery(
                 "SELECT StaffID, Timeslot FROM available_time WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ?",
-            ).executeFetchAll(parameters=(self.ID, selected_date, selected_date + datetime.timedelta(days=1)))
+            ).fetch_all(parameters=(self.ID, selected_date, selected_date + datetime.timedelta(days=1)))
             # Creating two corresponding tables for the fetched data - one for SQL manipulation, one for display
             availability_table_raw = []
             availability_table = []
@@ -103,7 +105,7 @@ class GP(User):
         while True:
             # Selecting the entries to remove
             selected_entry = Parser.list_number_parser("Select the entry to remove using their corresponding IDs"
-                                                       " from the 'Pointer' column.",
+                                                       "from the 'Pointer' column.",
                                                        (1, len(availability_table) + 1))
             if selected_entry == '--back':
                 return False
@@ -119,7 +121,7 @@ class GP(User):
                 try:
                     for slot in slots_to_remove:
                         SQLQuery("DELETE FROM available_time WHERE StaffID = ? AND Timeslot = ?"
-                                 ).executeCommit((self.ID, slot))
+                                 ).commit((self.ID, slot))
                     print("Slots removed successfully.")
                     input("Press Enter to continue...")
                     return True
@@ -173,7 +175,7 @@ class GP(User):
                 if confirm == "Y":
                     try:
                         for slot in slots_to_add:
-                            SQLQuery("INSERT INTO available_time VALUES (?, ?)").executeCommit((self.ID, slot))
+                            SQLQuery("INSERT INTO available_time VALUES (?, ?)").commit((self.ID, slot))
                         print("Your slots have been successfully added!")
                         input("Press Enter to continue...")
                         return True
@@ -183,7 +185,7 @@ class GP(User):
                                            "Please Retry")
                         stage = 0
                         slots_to_add = []
-                        input("Press Enter to continue...")
+                        Parser.string_parser("Press Enter to continue...")
                 if confirm == "N":
                     stage = 0
                     slots_to_add = []
@@ -196,7 +198,6 @@ class GP(User):
         """
         stage = 0
         while True:
-            Parser.print_clean()
             while stage == 0:
                 Parser.print_clean(f"Managing bookings for GP {self.username}.")
                 option_selection = Parser.selection_parser(
@@ -209,7 +210,7 @@ class GP(User):
                     bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                                "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                                                "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Confirmed = "
-                                               "'P'").executeFetchAll(EncryptionHelper(), parameters=(self.ID,))
+                                               "'P'").fetch_all(EncryptionHelper(), parameters=(self.ID,))
                     message = "with status 'pending'."
                     stage = 1
                 elif option_selection == "D":
@@ -223,9 +224,9 @@ class GP(User):
                             "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                             "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ?"
                             " AND visit.Timeslot <= ?"
-                        ).executeFetchAll(EncryptionHelper(), (self.ID, selected_date,
-                                                               selected_date + datetime.timedelta(
-                                                                   days=1)))
+                        ).fetch_all(EncryptionHelper(), (self.ID, selected_date,
+                                                         selected_date + datetime.timedelta(
+                                                             days=1)))
                         message = f"for: {selected_date.strftime('%Y-%m-%d')}"
                         stage = 1
             while stage == 1:
@@ -258,7 +259,7 @@ class GP(User):
             input("Press Enter to continue.")
             return False
         else:
-            print(tabulate(bookings_table,
+            Parser.print_clean(tabulate(bookings_table,
                                         headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
                                                  "P. Last Name", "Confirmed"]))
             selected_entry = Parser.integer_parser(question="Select entry using number from Pointer column or "
@@ -274,7 +275,6 @@ class GP(User):
         """
         Method to change the status of a given booking for a GP.
         !IMPORTANT Should only be called from within GP.manage_bookings
-
         :param: list selected_row: Row from database representing a given booking
         :param: list selected_row_raw: As above but in raw format (see GP.manage_bookings)
         """
@@ -294,19 +294,18 @@ class GP(User):
                     pass
                 else:
                     SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE StaffID = ? AND Timeslot = ? AND BookingNo != ?"
-                             ).executeCommit((self.ID, selected_row_raw[2], selected_row_raw[1]))
+                             ).commit((self.ID, selected_row_raw[2], selected_row_raw[1]))
                     SQLQuery("UPDATE Visit SET Confirmed = 'T' WHERE BookingNo = ?"
-                             ).executeCommit((selected_row_raw[1],))
+                             ).commit((selected_row_raw[1],))
                     return True
             elif user_input == "R":
-                SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE BookingNo = ?").executeCommit((selected_row_raw[1],))
+                SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE BookingNo = ?").commit((selected_row_raw[1],))
                 return True
 
     def view_appointment(self):
         """
         step 1 in branch v ask which date the user wish to manipulate ->
         Display confirmed appointment of the date ->
-
         """
         stage = 0
         while True:
@@ -332,7 +331,7 @@ class GP(User):
                 bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                            "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                                            "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ? AND "
-                                           "visit.Timeslot <= ? AND visit.Confirmed = 'T' ").executeFetchAll(
+                                           "visit.Timeslot <= ? AND visit.Confirmed = 'T' ").fetch_all(
                     decrypter=EncryptionHelper(),
                     parameters=(self.ID, selected_date, selected_date + datetime.timedelta(days=1)))
                 message = f"for {selected_date.strftime('%Y-%m-%d')} (confirmed)."
@@ -353,17 +352,17 @@ class GP(User):
         for D and N they can change diagnosis or notes ->
         for P they can add or remove prescription
         """
-        #starting encrypter
+        # starting encrypter
         encrypter = EncryptionHelper()
         while True:
             booking_information = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                            "users.lastName, visit.Confirmed, users.birthday, users.phoneNo, "
                                            "users.HomeAddress, users.postcode, visit.diagnosis, visit.notes FROM visit "
                                            "INNER JOIN users ON visit.NHSNo = users.ID WHERE visit.BookingNo = ? "
-                                           ).executeFetchAll(decrypter=EncryptionHelper(), parameters=(booking_no,))
+                                           ).fetch_all(decrypter=EncryptionHelper(), parameters=(booking_no,))
             print(tabulate([booking_information[0][:-3]],
-                               headers=["BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name",
-                                        "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
+                           headers=["BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name",
+                                    "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
             print("\nDiagnosis:")
             print(booking_information[0][10])
             print("\n----------")
@@ -372,11 +371,11 @@ class GP(User):
             print("\n-------------")
             parser_result = SQLQuery("SELECT PrescriptionNumber, drugName, quantity, instructions FROM prescription "
                                      "WHERE BookingNo = ? "
-                                     ).executeFetchAll(decrypter=EncryptionHelper(), parameters=(booking_no,))
+                                     ).fetch_all(decrypter=EncryptionHelper(), parameters=(booking_no,))
             if parser_result:
                 print(tabulate(parser_result,
-                                            headers=["Prescription No", "Drug Name", "Quantity",
-                                                     "Dosage & Instructions"]))
+                               headers=["Prescription No", "Drug Name", "Quantity",
+                                        "Dosage & Instructions"]))
             else:
                 print("Prescriptions:\nNone")
 
@@ -394,7 +393,8 @@ class GP(User):
                 print("")
                 diagnosis = Parser.string_parser("Please enter your diagnosis: ")
                 diagnosis_encrypted = encrypter.encrypt_to_bits(info=diagnosis)
-                SQLQuery(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ").executeCommit((diagnosis_encrypted, booking_no))
+                SQLQuery(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ").commit(
+                    (diagnosis_encrypted, booking_no))
                 print("The diagnosis has been recorded successfully!")
                 input("Press Enter to continue...")
 
@@ -404,19 +404,19 @@ class GP(User):
                 print(booking_information[0][11])
                 notes_input = Parser.string_parser("Please enter your notes: ")
                 notes_input_encrypted = encrypter.encrypt_to_bits(info=notes_input)
-                SQLQuery(" UPDATE Visit SET notes = ? WHERE BookingNo = ? ").executeCommit((notes_input_encrypted,
+                SQLQuery(" UPDATE Visit SET notes = ? WHERE BookingNo = ? ").commit((notes_input_encrypted,
                                                                                             booking_no))
                 print("Your notes have been recorded successfully!")
                 input("Press Enter to continue...")
 
             elif user_input == "P":
                 print(f"Current prescription for patient {booking_information[0][3]} "
-                                   f"{booking_information[0][4]} "
-                                   f"under appointment number {booking_no}:")
+                      f"{booking_information[0][4]} "
+                      f"under appointment number {booking_no}:")
                 print("")
                 print(tabulate(parser_result,
-                                            headers=["Prescription No", "Drug Name", "Quantity", "Dosage & "
-                                                                                                 "Instructions"]))
+                               headers=["Prescription No", "Drug Name", "Quantity", "Dosage & "
+                                                                                    "Instructions"]))
                 print("")
                 user_input = Parser.selection_parser(
                     options={"A": "add prescription", "R": "remove prescription", "--back": "back to previous page"})
@@ -430,7 +430,8 @@ class GP(User):
                     quantity_encrypted = encrypter.encrypt_to_bits(info=quantity)
                     instructions_encrypted = encrypter.encrypt_to_bits(info=instructions)
                     SQLQuery("INSERT INTO prescription (BookingNo, drugName, quantity, instructions) VALUES (?, ?, ?, "
-                             "?)").executeCommit((booking_no, drug_name_encrypted, quantity_encrypted, instructions_encrypted))
+                             "?)").commit(
+                        (booking_no, drug_name_encrypted, quantity_encrypted, instructions_encrypted))
                     Parser.print_clean("Your prescription has been recorded successfully!")
                     input("Press Enter to continue...")
                     continue
@@ -438,12 +439,13 @@ class GP(User):
                     while True:
                         allowed_numbers = [prescription[0] for prescription in parser_result]
                         prescription_number = str(Parser.integer_parser("Please enter the Prescription No to delete: "))
-                        
+
                         if prescription_number not in allowed_numbers:
                             print("Incorrect prescription number!")
                             continue
                         SQLQuery("DELETE FROM prescription WHERE PrescriptionNumber = ?"
-                                 ).executeCommit((prescription_number,))
+                                 ).commit((prescription_number,))
                         print("Prescription removed correctly!")
                         input("Press Enter to continue...")
                         break
+

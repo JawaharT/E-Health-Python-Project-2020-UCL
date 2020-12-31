@@ -1,13 +1,9 @@
-import sqlite3
-
-from parser_help import Parser
+from parser import Parser
 from database import SQLQuery
-from encryption import EncryptionHelper
-from encryption import PasswordHelper
+from encryption import EncryptionHelper, PasswordHelper
 from getpass import getpass
 from tabulate import tabulate
-from exceptions import DBRecordError, InValidPhoneNumberError, \
-    InValidPostcodeError, InValidUsernameError, InValidPasswordError
+from exceptions import DBRecordError
 
 
 class MenuHelper:
@@ -62,7 +58,7 @@ class MenuHelper:
             Parser.user_quit()
 
     @staticmethod
-    def register():
+    def register(admin=False):
         """
         Register a new GP or Patient Account.
         """
@@ -87,12 +83,15 @@ class MenuHelper:
         Parser.print_clean("\n")
 
         postcode = menu_helper.valid_postcode()
-
+        activation = "F" if admin else "T"
         insert_query = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         insert_query.commit((new_id, username, password, birthday, first_name, last_name,
-                             telephone, address, postcode, user_group, "T"))
+                             telephone, address, postcode, user_group, activation))
 
-        Parser.print_clean("Successfully Registered But Currently Deactivated.")
+        Parser.print_clean("Successfully added account!")
+        if not admin:
+            print("Contact the administrator for activation. ")
+        input("Press Enter to continue...")
         return True
 
     def get_check_user_input(self, parameter_name, user_group):
@@ -227,7 +226,7 @@ class MenuHelper:
 class User:
     def __init__(self, username):
         """
-        initializing user login process and return a currentUser Object
+        initializing user login process and return a User Object
         """
         self.username = username
 
@@ -235,7 +234,7 @@ class User:
         self.user_data = SQLQuery(
             "SELECT ID, username, firstName, lastName, phoneNo, HomeAddress, postCode, UserType, "
             "deactivated, birthday FROM Users WHERE username == ?").fetch_all(decrypter=EncryptionHelper(),
-                                                                                    parameters=(username,))[0]
+                                                                              parameters=(username,))[0]
         # loading the user info into a state
         self.ID = self.user_data[0]
         self.username = self.user_data[1]
@@ -259,7 +258,7 @@ class User:
         """
         Display all User information.
         """
-        Parser.print_clean(tabulate([("User Type:", self.user_type),
+        print(tabulate([("User Type:", self.user_type),
                                      ("First Name: ", self.first_name),
                                      ("Last Name: ", self.last_name),
                                      ("Birthday: ", self.birthday),
@@ -274,17 +273,7 @@ if __name__ == '__main__':
     """Main Program starts here."""
 
     # Exception handling if database not present/cannot connect
-    # Exception handling of sqlite3.DatabaseError: database disk image is malformed
-    try:
-        from urllib.request import pathname2url
-        database = 'file:{}?mode=rw'.format(pathname2url("GPDB.db"))
-        conn = sqlite3.connect(database, uri=True)
-    except sqlite3.OperationalError:
-        Parser.print_clean("Database does not exist.")
-        Parser.user_quit()
-    except sqlite3.DatabaseError:
-        Parser.print_clean("Database disk image is malformed.")
-        Parser.user_quit()
+    # conn = create_connection("GPDB.db")
 
     while True:
         print("Welcome to Group 6 GP System")
@@ -295,6 +284,4 @@ if __name__ == '__main__':
             MenuHelper.dispatcher(current_user["username"], current_user["user_type"])
         else:
             result = MenuHelper.register()
-            if result:
-                Parser.print_clean("Contact an Administrator to activate account.\n")
-                Parser.user_quit()
+            Parser.user_quit()
