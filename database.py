@@ -2,6 +2,7 @@ import sqlite3
 from sqlite3 import Error
 from encryption import EncryptionHelper
 from encryption import PasswordHelper
+from parser import Parser
 import os
 
 
@@ -67,7 +68,13 @@ class SQLQuery(Database):
         """
         if self.create_connection():
             cur = self.conn.cursor()
-            cur.execute(self.query, parameters)
+
+            try:
+                cur.execute(self.query, parameters)
+            except sqlite3.DatabaseError:
+                Parser.print_clean("Database disk image is malformed.")
+                Parser.user_quit()
+
             result = cur.fetchall()
             self.close_connection()
             if isinstance(decrypter, EncryptionHelper):

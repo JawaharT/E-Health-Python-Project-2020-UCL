@@ -1,9 +1,8 @@
 from tabulate import tabulate
 from encryption import EncryptionHelper
-from parser import Parser
+from parser_help import Parser
 from database import SQLQuery
 from main import User, MenuHelper
-from typing import Union, Tuple
 
 
 class Admin(User):
@@ -29,12 +28,11 @@ class Admin(User):
             else:
                 self.delete_gp_patient()
 
-    def view_records(self) -> None:
+    def view_records(self):
         """
         User interface for viewing the desired records
         """
         while True:
-            Parser.print_clean("You're logged in as {} with Administrator previleges.".format(self.username))
             record_viewer = Parser.selection_parser(
                 options={"A": "View Patients", "B": "View GPs",
                          "C": "View Available Timeslots", "D": "View Patient Appointments",
@@ -49,8 +47,7 @@ class Admin(User):
                 headers = ("StaffID", "Timeslot")
             elif record_viewer == "D":
                 query_string = "SELECT * FROM Visit"
-                headers = ("BookingNo", "NHSNo", "StaffID", "Timeslot", "Symptoms", "Confirmed", "Attended",
-                           "Diagnosis", "Notes")
+                headers = ("BookingNo", "NHSNo", "StaffID", "Timeslot", "Confirmed", "Attended", "Diagnosis", "Notes")
             elif record_viewer == "E":
                 query_string = "SELECT * FROM prescription"
                 headers = ("BookingNo", "DrugName", "Quantity", "Instructions")
@@ -65,69 +62,48 @@ class Admin(User):
                     user_type = "GP"
                 parameters = (user_type,)
 
-            all_data = SQLQuery(query_string).fetch_all(decrypter=EncryptionHelper(), parameters=parameters)
+            query = SQLQuery(query_string)
+            all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=parameters)
 
             if len(list(all_data)) == 0:
                 Parser.print_clean("No records Available.\n")
-                input("Press Enter to continue...")
                 continue
 
             for row in all_data:
                 current = []
                 for index, title in enumerate(headers):
-                    current.append((title + ":", row[index]))
+                    current.append((title+":", row[index]))
                 print(tabulate(current))
 
             print("Completed operation.\n")
-            if record_viewer == "A" or record_viewer == "B":
-                user_input = Parser.selection_parser(
-                    options={"A": "Proceed to editing the records", "--back": "back"})
-                if user_input == "A" and user_type == "Patient":
-                    self.edit_gp_patient("Patient")
-                elif user_input == "A" and user_type == "GP":
-                    self.edit_gp_patient("GP")
-                else:
-                    continue
-            else:
-                input("Press Enter to continue...")
+            continue
 
-    @staticmethod
-    def add_gp_patient():
+    def add_gp_patient(self):
         """
-        Update table with new GP or patient record
+        Updated table with new GP or patient record
         """
-        Parser.print_clean("You are now adding a new account as administrator. The new record will be automatically "
-                           "activated.")
-        input("Press Enter to continue...")
-        MenuHelper().register(admin=True)
+        Parser.print_clean()
+        MenuHelper().register()
 
-    def edit_gp_patient(self, account_types="all") -> None:
+    def edit_gp_patient(self):
         """
         Edit existing GP or Patient Record
         """
         # show all GPs and Patients
-        if account_types == "all":
-            list_accounts = list(SQLQuery("SELECT username FROM Users WHERE UserType = 'GP' or "
-                                          "UserType = 'Patient'").fetch_all())
-        elif account_types == "GP":
-            list_accounts = list(SQLQuery("SELECT username FROM Users WHERE UserType = 'GP'").fetch_all())
+        view_all_gps_and_patients = SQLQuery("SELECT username FROM Users WHERE UserType = 'GP' or "
+                                             "UserType = 'Patient'")
+        view_all_gps_and_patients_result = list(view_all_gps_and_patients.fetch_all())
 
-        elif account_types == "Patient":
-            list_accounts = list(SQLQuery("SELECT username FROM Users WHERE UserType = 'Patient'").fetch_all())
-
-        else:
-            print("Input incorrect...")
-            return
-
-        if len(list_accounts) == 0:
-            Parser.print_clean("No user accounts matching the search criteria... Please add before coming back.\n")
+        if len(view_all_gps_and_patients_result) == 0:
+            Parser.print_clean("No Patients or GPs registered. Please add before coming back.\n")
             return
 
         # select a user from the table
         while True:
-            full_accounts_table, accounts_table = self.list_accounts(list_accounts)
-            selected_user_number = Parser.selection_parser(options=full_accounts_table)
-            selected_user = full_accounts_table[selected_user_number]
+            all_gps_and_patients_table, gps_and_patients = self.view_all_patients_and_GPs(
+                view_all_gps_and_patients_result)
+            selected_user_number = Parser.selection_parser(options=all_gps_and_patients_table)
+            selected_user = all_gps_and_patients_table[selected_user_number]
             if selected_user == "back":
                 Parser.print_clean()
                 break
@@ -179,7 +155,7 @@ class Admin(User):
                 print("Successfully Updated to Database. Going back to home page.\n")
                 break
 
-    def delete_gp_patient(self) -> bool:
+    def delete_gp_patient(self):
         """
         updated table with the deleted GP record
         """
@@ -190,54 +166,67 @@ class Admin(User):
 
         if len(all_deactivated_gps_result) == 0:
             print("No deactivated GPs available to delete.\n")
-            return False
+            return
 
         # select a deactivated GP account to delete
         while True:
-            Parser.print_clean("For safety, you can only delete accounts which are currently deactivated. To remove "
-                               "an active account, deactivate it first.")
-            all_deactivated_gps_table, _ = self.list_accounts(all_deactivated_gps_result)
+            all_deactivated_gps_table, _ = self.view_all_patients_and_GPs(all_deactivated_gps_result)
             selected_gp_number = Parser.selection_parser(options=all_deactivated_gps_table)
             selected_gp = all_deactivated_gps_table[selected_gp_number]
-            if selected_gp == "--back":
-                return False
+            if selected_gp == "back":
+                Parser.print_clean()
+                break
             else:
                 # delete query, make sure to delete all presence of that user
                 delete_query = SQLQuery("DELETE FROM Users WHERE username=:who")
                 delete_query.commit({"who": selected_gp})
-                print("GP {0} deleted from Users table.\n".format(selected_gp))
-                Parser.print_clean()
-                return True
+                Parser.print_clean("GP {0} deleted from Users table.\n".format(selected_gp))
+                break
 
-    @staticmethod
-    def list_accounts(all_results) -> Tuple[dict, list]:
+    def view_all_patients_and_GPs(self, all_results):
         """
         :param list all_results: All results from query
-        :return: Tuple[list,list]: dict with all GPs and Patients with ID and another list with only names of patient/GP
+        :return: List of all GPs and Patients with ID and another list with only names of patient/GP
         """
-        full_accounts_table, accounts_table = {}, []
+        all_gps_and_patients_table, gp_and_patient = {}, []
         for nameIndex in range(len(all_results)):
-            accounts_table.append((nameIndex, all_results[nameIndex][0]))
-            full_accounts_table[str(nameIndex + 1)] = all_results[nameIndex][0]
-        full_accounts_table["--back"] = "back"
-        return full_accounts_table, accounts_table
+            gp_and_patient.append((nameIndex, all_results[nameIndex][0]))
+            all_gps_and_patients_table[str(nameIndex+1)] = all_results[nameIndex][0]
+        all_gps_and_patients_table["--back"] = "back"
+        return all_gps_and_patients_table, gp_and_patient
 
-    @staticmethod
-    def update_parameter_record(selected_user, parameter, new_parameter_value) -> bool:
+    def update_parameter_record(self, selected_user, parameter, new_parameter_value):
         """
         :param str selected_user: Current user, admin is changing
         :param str parameter: Current table column admin is changing
         :param str new_parameter_value: New value to change within the table column of the currently selected user
+        :return: Updated Users table
         """
-        try:
-            SQLQuery("UPDATE Users SET {0} = ? WHERE username = ?".format(parameter)).commit((new_parameter_value,
+        SQLQuery("UPDATE Users SET {0} = ? WHERE username = ?".format(parameter)).commit((new_parameter_value,
                                                                                                  selected_user))
-            return True
-        except:
-            return False
 
 
 if __name__ == "__main__":
+    # loginParam = loginHelp.Login()
+    # user = currentUser(loginParam[0], loginParam[1])
+    # current_admin = AdminNavigator()
+    # AdminNavigator().mainNavigator("testAdmin124")
+
+    # Q = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    # EH = EncryptionHelper()
+    # # noinspection PyTypeChecker
+    # result = Q.executeCommit(("AD1",
+    #                           "testAdmin124",
+    #                           PasswordHelper.hashPW("testAdmin"),
+    #                           EH.encryptToBits("1991-01-04"),
+    #                           EH.encryptToBits("testAdminFirstName"),
+    #                           EH.encryptToBits("testAdminLastName"),
+    #                           EH.encryptToBits("0123450233"),
+    #                           EH.encryptToBits("testAdminHome Address, test Road"),
+    #                           EH.encryptToBits("A1 7RT"),
+    #                           "Admin",
+    #                           "F"))
+
     current_user = MenuHelper.login()
     MenuHelper.dispatcher(current_user["username"], current_user["user_type"])
     Admin(current_user).main_menu()

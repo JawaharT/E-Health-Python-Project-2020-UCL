@@ -24,7 +24,8 @@ class Parser:
         while True:
             try:
                 print(question)
-                input_string = input()
+                # input_string = input()
+                input_string = Parser.handle_interrupts("")
                 if allow_back and input_string == '--back':
                     return input_string
                 else:
@@ -48,7 +49,8 @@ class Parser:
                 Parser.print_clean(question + " Please input datetime in this format 'HH:MM'")
                 if allow_back:
                     print("Or enter '--back' to go back to previous page")
-                user_input = input()
+                # user_input = input()
+                user_input = Parser.handle_interrupts("")
                 if allow_back and user_input == '--back':
                     return user_input
                 input_time = datetime.datetime.strptime(user_input, '%H:%M').time()
@@ -64,10 +66,12 @@ class Parser:
             except ValueError:
                 print("This is not a valid time, or it is outside of the allowed working hours: 8:30 - "
                       "19:00!")
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_interrupts()
             except NotQuarterIntervalError:
                 print("Appointments are limited to 15 min sessions!")
-                input("Press Enter to continue...")
+                #input("Press Enter to continue...")
+                Parser.handle_interrupts()
 
     @staticmethod
     def date_parser(question, allow_back=True, allow_past=False) -> object:
@@ -83,7 +87,8 @@ class Parser:
                 Parser.print_clean(question + " Please input date in the following format 'YYYY-MM-DD'")
                 if allow_back:
                     print("Or enter '--back' to go back to previous page")
-                user_input = input()
+                # user_input = input()
+                user_input = Parser.handle_interrupts()
                 if allow_back and user_input == '--back':
                     return user_input
                 else:
@@ -99,7 +104,8 @@ class Parser:
             except ValueError:
                 print("This is not a valid date! Either the format is incorrect, it is earlier than "
                       "today, or it is more than 6 months ahead.")
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.Parser.handle_interrupts()
 
     @staticmethod
     def nhs_no_parser(question="Please input your NHS Number") -> int:
@@ -111,7 +117,8 @@ class Parser:
         while True:
             try:
                 print(question)
-                result = int(input())
+                # result = int(input())
+                result = int(Parser.handle_interrupts())
                 if 1000000000 <= result <= 9999999999:
                     return result
                 else:
@@ -129,7 +136,8 @@ class Parser:
         while True:
             try:
                 print(question)
-                result = input()
+                # result = input()
+                result = Parser.handle_interrupts("")
                 # testing if th rest o the string is integer
                 int(result[1:10])
                 if result[0] != 'A' or len(result) != 10:
@@ -148,7 +156,8 @@ class Parser:
         while True:
             try:
                 print(question)
-                result = input()
+                # result = input()
+                result = Parser.handle_interrupts("")
                 # testing if th rest o the string is integer
                 int(result[1:10])
                 if result[0] != 'G' or len(result) != 10:
@@ -170,7 +179,8 @@ class Parser:
                 print("Please select from the following options:")
                 for key in options:
                     print(f"Enter '{key}' to {options[key]}")
-                result = input().strip()
+                # result = input().strip()
+                result = Parser.handle_interrupts("").strip()
                 if result == "--quit":
                     Parser.user_quit()
                 if result not in options:
@@ -223,7 +233,8 @@ class Parser:
                     if allow_back:
                         print("Or enter '--back' to go back to previous page")
                     result_final = []
-                    result_raw = input()
+                    # result_raw = input()
+                    result_ray = Parser.handle_interrupts("")
                     if allow_back and result_raw == '--back':
                         return result_raw
                     result_raw = (result_raw.strip(" ")).split(',')
@@ -247,7 +258,8 @@ class Parser:
                 else:
                     if allow_back:
                         print("Or enter '--back' to go back to previous page")
-                        input_string = input()
+                        # input_string = input()
+                        input_string = Parser.handle_interrupts("")
                     if allow_back and input_string == '--back':
                         return input_string
                     else:
@@ -286,10 +298,19 @@ class Parser:
         while True:
             try:
                 Parser.print_clean(question)
-                result = input()
+                # result = input()
+                result = Parser.handle_interrupts("")
                 if result == "--quit":
                     Parser.user_quit()
                 else:
                     return result
             except ValueError:
                 print("Invalid Input")
+
+    @staticmethod
+    def handle_interrupts(question="Press Enter to Continue: "):
+        while True:
+            try:
+                return input(question)
+            except KeyboardInterrupt:
+                continue

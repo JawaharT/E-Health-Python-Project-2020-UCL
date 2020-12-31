@@ -56,7 +56,8 @@ class GP(User):
                     print(f"Viewing current availability for GP {self.username}")
                     for slot in availability_result:
                         print(slot[0])
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_interrupts()
                 continue
             selected_date = Parser.date_parser(f"Editing availability for GP {self.username}.\n"
                                                "Select a Date:")
@@ -123,17 +124,20 @@ class GP(User):
                         SQLQuery("DELETE FROM available_time WHERE StaffID = ? AND Timeslot = ?"
                                  ).commit((self.ID, slot))
                     print("Slots removed successfully.")
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_interrupts()
                     return True
                 # temporary exception
                 except DBRecordError:
                     print("Error encountered")
                     slots_to_remove = []
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_interrupts()
             if confirm == "N":
                 print("Removal cancelled.")
                 slots_to_remove = []
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_interrupts()
 
     def add_availability(self, selected_date) -> bool:
         """
@@ -177,7 +181,8 @@ class GP(User):
                         for slot in slots_to_add:
                             SQLQuery("INSERT INTO available_time VALUES (?, ?)").commit((self.ID, slot))
                         print("Your slots have been successfully added!")
-                        input("Press Enter to continue...")
+                        # input("Press Enter to continue...")
+                        Parser.handle_interrupts()
                         return True
                     # temporary exception
                     except DBRecordError:
@@ -256,7 +261,8 @@ class GP(User):
         if len(bookings_table) == 0:
             print("No bookings match current search criteria.")
             # stage = 0
-            input("Press Enter to continue.")
+            # input("Press Enter to continue.")
+            Parser.handle_interrupts()
             return False
         else:
             Parser.print_clean(tabulate(bookings_table,
@@ -396,7 +402,8 @@ class GP(User):
                 SQLQuery(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ").commit(
                     (diagnosis_encrypted, booking_no))
                 print("The diagnosis has been recorded successfully!")
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_interrupts()
 
             elif user_input == "N":
                 print(f"Your notes for appointment number {booking_no}")
@@ -407,7 +414,8 @@ class GP(User):
                 SQLQuery(" UPDATE Visit SET notes = ? WHERE BookingNo = ? ").commit((notes_input_encrypted,
                                                                                             booking_no))
                 print("Your notes have been recorded successfully!")
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_interrupts()
 
             elif user_input == "P":
                 print(f"Current prescription for patient {booking_information[0][3]} "
@@ -433,7 +441,8 @@ class GP(User):
                              "?)").commit(
                         (booking_no, drug_name_encrypted, quantity_encrypted, instructions_encrypted))
                     Parser.print_clean("Your prescription has been recorded successfully!")
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_interrupts()
                     continue
                 elif user_input == "R":
                     while True:
@@ -446,6 +455,7 @@ class GP(User):
                         SQLQuery("DELETE FROM prescription WHERE PrescriptionNumber = ?"
                                  ).commit((prescription_number,))
                         print("Prescription removed correctly!")
-                        input("Press Enter to continue...")
+                        # input("Press Enter to continue...")
+                        Parser.handle_interrupts()
                         break
 

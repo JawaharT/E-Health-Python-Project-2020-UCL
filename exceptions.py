@@ -1,6 +1,6 @@
 class DBRecordError(Exception):
     """
-    error class created for datetime object
+    error class created for database records
     """
     pass
 
@@ -19,29 +19,29 @@ class NotQuarterIntervalError(Exception):
     pass
 
 
-class InValidPhoneNumberError(Exception):
-    """
-    error class created for phone number
-    """
-    pass
-
-
-class InValidPostcodeError(Exception):
-    """
-    error class created for postcode
-    """
-    pass
-
-
-class InValidUsernameError(Exception):
-    """
-    error class for invalid username
-    """
-    pass
-
-
-class InValidPasswordError(Exception):
-    """
-    error class for invalid password
-    """
-    pass
+# class InValidPhoneNumberError(Exception):
+#     """
+#     error class created for phone number
+#     """
+#     pass
+#
+#
+# class InValidPostcodeError(Exception):
+#     """
+#     error class created for postcode
+#     """
+#     pass
+#
+#
+# class InValidUsernameError(Exception):
+#     """
+#     error class for invalid username
+#     """
+#     pass
+#
+#
+# class InValidPasswordError(Exception):
+#     """
+#     error class for invalid password
+#     """
+#     pass
