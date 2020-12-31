@@ -308,6 +308,11 @@ class Parser:
 
     @staticmethod
     def handle_input(input_question="Press Enter to Continue: "):
+        """
+        Method to handle keyboard interrupt exception on user input.
+
+        :param str input_question: Prompt for the user
+        """
         while True:
             try:
                 return input(input_question)

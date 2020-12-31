@@ -102,6 +102,10 @@ class SQLQuery(Database):
             return []
 
     def execute_query(self, cursor, parameters):
+        """
+        :param cursor: connection to the database
+        :param tuple parameters: Parameters for the query
+        """
         try:
             cursor.execute(self.query, parameters)
         except sqlite3.DatabaseError:
