@@ -34,7 +34,7 @@ class Admin(User):
         User interface for viewing the desired records
         """
         while True:
-            Parser.print_clean("You're logged in as {} with Administrator previleges.".format(self.username))
+            Parser.print_clean("You're logged in as {} with Administrator privileges.".format(self.username))
             record_viewer = Parser.selection_parser(
                 options={"A": "View Patients", "B": "View GPs",
                          "C": "View Available Timeslots", "D": "View Patient Appointments",
@@ -69,7 +69,8 @@ class Admin(User):
 
             if len(list(all_data)) == 0:
                 Parser.print_clean("No records Available.\n")
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_input()
                 continue
 
             for row in all_data:
@@ -89,7 +90,8 @@ class Admin(User):
                 else:
                     continue
             else:
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_input()
 
     @staticmethod
     def add_gp_patient():
@@ -98,7 +100,8 @@ class Admin(User):
         """
         Parser.print_clean("You are now adding a new account as administrator. The new record will be automatically "
                            "activated.")
-        input("Press Enter to continue...")
+        # input("Press Enter to continue...")
+        Parser.handle_input()
         MenuHelper().register(admin=True)
 
     def edit_gp_patient(self, account_types="all") -> None:
@@ -143,7 +146,7 @@ class Admin(User):
                 if record_editor == "--back":
                     Parser.print_clean()
                     return
-                elif record_editor == "":
+                elif record_editor == "A":
                     new_parameter_value = menu.register_new_password()
                     parameter = "passCode"
                 elif record_editor == "B":

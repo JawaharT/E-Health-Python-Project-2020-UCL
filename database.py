@@ -67,7 +67,7 @@ class SQLQuery(Database):
         """
         if self.create_connection():
             cur = self.conn.cursor()
-            cur.execute(self.query, parameters)
+            self.execute(cur, parameters)
             result = cur.fetchall()
             self.close_connection()
             if isinstance(decrypter, EncryptionHelper):
@@ -94,13 +94,20 @@ class SQLQuery(Database):
         """
         if self.create_connection():
             cur = self.conn.cursor()
-            cur.execute(self.query, parameters)
+            self.execute(cur, parameters)
             self.conn.commit()
             result = cur.lastrowid
             self.close_connection()
             return result
         else:
             return []
+
+    def execute(self, cursor, parameters):
+        try:
+            cursor.execute(self.query, parameters)
+        except sqlite3.DatabaseError:
+            Parser.print_clean("Database disk image is malformed.")
+            Parser.user_quit()
 
 
 if __name__ == '__main__':

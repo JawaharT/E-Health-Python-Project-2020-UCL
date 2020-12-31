@@ -87,7 +87,8 @@ class Patient(User):
                 if len(gp_table) == 0:
                     print("There are no available appointments for this day.")
                     stage = 0
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_input()
                 else:
                     stage = 1
 
@@ -120,14 +121,17 @@ class Patient(User):
                                                 ).fetch_all(parameters=(gp_number,selected_appointment[3]))
                         print(tabulate(visit_result, headers=["bookingNo", "NHSNo", "GP", "Timeslot"]))
                         stage = 3
-                        input("Press Enter to continue...")
+                        # input("Press Enter to continue...")
+                        Parser.handle_input()
                     except DBRecordError:
                         print("Error encountered")
-                        input("Press Enter to continue...")
+                        # input("Press Enter to continue...")
+                        Parser.handle_input()
                 if confirm == "N":
                     print("Booking cancelled.")
                     slots_to_remove = []
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_input()
                 while stage == 3:
                     print_clean()
                     info_input = Parser.string_parser(
@@ -135,7 +139,8 @@ class Patient(User):
                     SQLQuery(" UPDATE Visit SET PatientInfo = ? WHERE StaffID = ? AND Timeslot = ? "
                              ).commit((info_input, gp_number, selected_appointment[3]))
                     Parser.print_clean("Your description have been recorded successfully!")
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_input()
                     return True
 
     def check_in_appointment(self):
@@ -180,7 +185,8 @@ class Patient(User):
 
                 if len(patient_confirmed_appointment_table) == 0 and len(patient_unconfirmed_appointment_table) == 0:
                     print(f"You don't have any unattended appointment")
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_input()
                     stage = 0
 
                 if len(patient_confirmed_appointment_table) != 0:
@@ -239,17 +245,20 @@ class Patient(User):
                                      ).commit(("T", appointment))
 
                         print("check in successfully.")
-                        input("Press Enter to continue...")
+                        # input("Press Enter to continue...")
+                        Parser.handle_input()
                         return True
                     # temporary exception
                     except DBRecordError:
                         print("Error encountered")
                         slots_to_remove = []
-                        input("Press Enter to continue...")
+                        # input("Press Enter to continue...")
+                        Parser.handle_input()
                 if confirm == "N":
                     print("Removal cancelled.")
                     slots_to_remove = []
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_input()
 
     def cancel_appointment(self):
         """
@@ -369,7 +378,8 @@ class Patient(User):
                     # patient_unconfirmed_appointment_table_raw = []
                     if len(patient_result) == 0:
                         print(f"You don't have any attended appointment")
-                        input("Press Enter to back...")
+                        # input("Press Enter to back...")
+                        Parser.handle_input("Press Enter to back...")
                         return
                     else:
                         for i in range(len(patient_result)):
