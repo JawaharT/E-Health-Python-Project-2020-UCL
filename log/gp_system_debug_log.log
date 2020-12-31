@@ -46,3 +46,11 @@
 2020-12-31 20:56:44,327 - __main__ - main - DEBUG - Entered user session creation sequence with user: testGP; type GP
 2020-12-31 20:56:44,406 - __main__ - main - DEBUG - <class '__main__.User'> created using GP method
 2020-12-31 20:56:44,406 - __main__ - main - INFO - user: testGP; type GP: logged in
+2020-12-31 21:08:35,925 - __main__ - main - DEBUG - Selected Login
+2020-12-31 21:08:35,925 - __main__ - main - DEBUG - Entered Login Sequence
+2020-12-31 21:08:35,925 - __main__ - main - DEBUG - Username attempt 1
+2020-12-31 21:08:40,220 - __main__ - main - DEBUG - UserName Entered: testGP
+2020-12-31 21:08:40,239 - __main__ - main - INFO - testGP, user valid
+2020-12-31 21:08:44,357 - __main__ - main - DEBUG - Entered user session creation sequence with user: testGP; type GP
+2020-12-31 21:08:44,424 - __main__ - main - DEBUG - <class '__main__.User'> created using GP method
+2020-12-31 21:08:44,425 - __main__ - main - INFO - user: testGP; type GP: logged in

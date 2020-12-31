@@ -1,6 +1,6 @@
 from tabulate import tabulate
 from encryption import EncryptionHelper
-from customparser import Parser
+from iohandler import Parser
 from database import SQLQuery
 import time
 import datetime
@@ -61,7 +61,8 @@ class GP(User):
                     print(f"Viewing current availability for GP {self.username}")
                     for slot in availability_result:
                         print(slot[0])
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_input()
                 continue
             selected_date = Parser.date_parser(f"Editing availability for GP {self.username}.\n"
                                                "Select a Date:")
@@ -136,11 +137,13 @@ class GP(User):
                     print("Error encountered")
                     logger.warning("Error in DB, remove action failed")
                     slots_to_remove = []
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_input()
             if confirm == "N":
                 print("Removal cancelled.")
                 slots_to_remove = []
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_input()
 
     def add_availability(self, selected_date) -> bool:
         """
@@ -265,7 +268,8 @@ class GP(User):
         if len(bookings_table) == 0:
             print("No bookings match current search criteria.")
             # stage = 0
-            input("Press Enter to continue.")
+            # input("Press Enter to continue.")
+            Parser.handle_input()
             return False
         else:
             Parser.print_clean(tabulate(bookings_table,
@@ -410,7 +414,8 @@ class GP(User):
                     (diagnosis_encrypted, booking_no))
                 logger.info(f"Updated diagnosis for booking: {booking_no}")
                 print("The diagnosis has been recorded successfully!")
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_input()
 
             elif user_input == "N":
                 print(f"Your notes for appointment number {booking_no}")
@@ -422,7 +427,8 @@ class GP(User):
                                                                                             booking_no))
                 logger.info(f"Updated Notes for booking: {booking_no}")
                 print("Your notes have been recorded successfully!")
-                input("Press Enter to continue...")
+                # input("Press Enter to continue...")
+                Parser.handle_input()
 
             elif user_input == "P":
                 print(f"Current prescription for patient {booking_information[0][3]} "
@@ -449,7 +455,8 @@ class GP(User):
                         (booking_no, drug_name_encrypted, quantity_encrypted, instructions_encrypted))
                     logger.info(f"Drug: {drug_name} for current patient added to DB successfully")
                     Parser.print_clean("Your prescription has been recorded successfully!")
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_input()
                     continue
                 elif user_input == "R":
                     while True:
@@ -465,4 +472,3 @@ class GP(User):
                         logger.info(f"PrescriptionNo: {prescription_number} removed from DB successfully")
                         input("Press Enter to continue...")
                         break
-

@@ -1,4 +1,4 @@
-from customparser import Parser
+from iohandler import Parser
 from database import SQLQuery
 from encryption import EncryptionHelper, PasswordHelper
 from getpass import getpass
@@ -114,7 +114,8 @@ class MenuHelper:
         Parser.print_clean("Successfully added account!")
         if not admin:
             print("Contact the administrator for activation. ")
-        input("Press Enter to continue...")
+        # input("Press Enter to continue...")
+        Parser.handle_input()
         return True
 
     def get_check_user_input(self, parameter_name, user_group):
@@ -307,6 +308,15 @@ if __name__ == '__main__':
     logger.addHandler(fh_debug)
     logger.addHandler(fh_info)
     logger.addHandler(fh_warning)
+    import sqlite3
+    try:
+        from urllib.request import pathname2url
+        database = 'file:{}?mode=rw'.format(pathname2url("GPDB.db"))
+        conn = sqlite3.connect(database, uri=True)
+    except sqlite3.OperationalError:
+        Parser.print_clean("Database does not exist.")
+        Parser.user_quit()
+
     while True:
         print("Welcome to Group 6 GP System")
         option_selection = Parser.selection_parser(options={"R": "register", "L": "login", "--quit": "quit"})
