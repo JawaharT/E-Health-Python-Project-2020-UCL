@@ -1,12 +1,15 @@
 from tabulate import tabulate
 from encryption import EncryptionHelper
-from parser import Parser
+from customparser import Parser
 from database import SQLQuery
 import time
 import datetime
 from main import User
 from exceptions import DBRecordError
 
+#logging
+import logging
+logger = logging.getLogger(__name__)
 
 class GP(User):
     """
@@ -17,6 +20,7 @@ class GP(User):
         """
         Main Menu for GP-type users.
         """
+        logger.info("logged in as GP")
         while True:
             print("You're currently viewing main menu options for GP {}.".format(self.username))
             option_selection = Parser.selection_parser(
@@ -25,6 +29,7 @@ class GP(User):
 
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
+                logger.info("User Logged Out")
                 Parser.print_clean("Logging you out...")
                 Parser.user_quit()
 
@@ -123,11 +128,13 @@ class GP(User):
                         SQLQuery("DELETE FROM available_time WHERE StaffID = ? AND Timeslot = ?"
                                  ).commit((self.ID, slot))
                     print("Slots removed successfully.")
+                    logger.info("Removed timeslot, DB transaction completed")
                     input("Press Enter to continue...")
                     return True
                 # temporary exception
                 except DBRecordError:
                     print("Error encountered")
+                    logger.warning("Error in DB, remove action failed")
                     slots_to_remove = []
                     input("Press Enter to continue...")
             if confirm == "N":
@@ -177,6 +184,7 @@ class GP(User):
                         for slot in slots_to_add:
                             SQLQuery("INSERT INTO available_time VALUES (?, ?)").commit((self.ID, slot))
                         print("Your slots have been successfully added!")
+                        logger.info("Added timeslot, DB transaction completed")
                         input("Press Enter to continue...")
                         return True
                     # temporary exception
@@ -185,6 +193,7 @@ class GP(User):
                                            "Please Retry")
                         stage = 0
                         slots_to_add = []
+                        logger.warning("Error in DB, add action failed")
                         Parser.string_parser("Press Enter to continue...")
                 if confirm == "N":
                     stage = 0
@@ -295,11 +304,14 @@ class GP(User):
                 else:
                     SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE StaffID = ? AND Timeslot = ? AND BookingNo != ?"
                              ).commit((self.ID, selected_row_raw[2], selected_row_raw[1]))
+                    logger.info("removing conflicting confirmed bookings")
                     SQLQuery("UPDATE Visit SET Confirmed = 'T' WHERE BookingNo = ?"
                              ).commit((selected_row_raw[1],))
+                    logger.info("setting selected booking as confirmed, action successful")
                     return True
             elif user_input == "R":
                 SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE BookingNo = ?").commit((selected_row_raw[1],))
+                logger.info("removing confirmed bookings")
                 return True
 
     def view_appointment(self):
@@ -352,6 +364,7 @@ class GP(User):
         for D and N they can change diagnosis or notes ->
         for P they can add or remove prescription
         """
+        logger.info(f"starting appointment on bookingNo: {booking_no}")
         # starting encrypter
         encrypter = EncryptionHelper()
         while True:
@@ -379,7 +392,7 @@ class GP(User):
             else:
                 print("Prescriptions:\nNone")
 
-            Parser.print_clean()
+            #Parser.print_clean() #this one seems to be wrong
             user_input = Parser.selection_parser(
                 options={"D": "Edit diagnosis", "N": "Add notes", "P": "Edit prescriptions",
                          "--back": "go back to previous page"})
@@ -395,6 +408,7 @@ class GP(User):
                 diagnosis_encrypted = encrypter.encrypt_to_bits(info=diagnosis)
                 SQLQuery(" UPDATE Visit SET diagnosis = ? WHERE BookingNo = ? ").commit(
                     (diagnosis_encrypted, booking_no))
+                logger.info(f"Updated diagnosis for booking: {booking_no}")
                 print("The diagnosis has been recorded successfully!")
                 input("Press Enter to continue...")
 
@@ -406,6 +420,7 @@ class GP(User):
                 notes_input_encrypted = encrypter.encrypt_to_bits(info=notes_input)
                 SQLQuery(" UPDATE Visit SET notes = ? WHERE BookingNo = ? ").commit((notes_input_encrypted,
                                                                                             booking_no))
+                logger.info(f"Updated Notes for booking: {booking_no}")
                 print("Your notes have been recorded successfully!")
                 input("Press Enter to continue...")
 
@@ -424,7 +439,7 @@ class GP(User):
                     continue
                 elif user_input == "A":
                     drug_name = Parser.string_parser("Please enter the drug name: ")
-                    quantity = Parser.integer_parser("Please enter the quantity: ")
+                    quantity = str(Parser.integer_parser("Please enter the quantity: "))
                     instructions = Parser.string_parser("Please enter the instructions and dosage: ")
                     drug_name_encrypted = encrypter.encrypt_to_bits(info=drug_name)
                     quantity_encrypted = encrypter.encrypt_to_bits(info=quantity)
@@ -432,13 +447,14 @@ class GP(User):
                     SQLQuery("INSERT INTO prescription (BookingNo, drugName, quantity, instructions) VALUES (?, ?, ?, "
                              "?)").commit(
                         (booking_no, drug_name_encrypted, quantity_encrypted, instructions_encrypted))
+                    logger.info(f"Drug: {drug_name} for current patient added to DB successfully")
                     Parser.print_clean("Your prescription has been recorded successfully!")
                     input("Press Enter to continue...")
                     continue
                 elif user_input == "R":
                     while True:
                         allowed_numbers = [prescription[0] for prescription in parser_result]
-                        prescription_number = str(Parser.integer_parser("Please enter the Prescription No to delete: "))
+                        prescription_number = Parser.integer_parser("Please enter the Prescription No to delete: ")
 
                         if prescription_number not in allowed_numbers:
                             print("Incorrect prescription number!")
@@ -446,6 +462,7 @@ class GP(User):
                         SQLQuery("DELETE FROM prescription WHERE PrescriptionNumber = ?"
                                  ).commit((prescription_number,))
                         print("Prescription removed correctly!")
+                        logger.info(f"PrescriptionNo: {prescription_number} removed from DB successfully")
                         input("Press Enter to continue...")
                         break
 
