@@ -5,6 +5,7 @@ from getpass import getpass
 from tabulate import tabulate
 from exceptions import DBRecordError
 
+
 class MenuHelper:
     """
     Helper class for initialising the main menu.
@@ -90,8 +91,7 @@ class MenuHelper:
         Parser.print_clean("Successfully added account!")
         if not admin:
             print("Contact the administrator for activation. ")
-        # input("Press Enter to continue...")
-        Parser.handle_interrupts()
+        input("Press Enter to continue...")
         return True
 
     def get_check_user_input(self, parameter_name, user_group):
@@ -273,14 +273,7 @@ if __name__ == '__main__':
     """Main Program starts here."""
 
     # Exception handling if database not present/cannot connect
-    import sqlite3
-    try:
-        from urllib.request import pathname2url
-        database = 'file:{}?mode=rw'.format(pathname2url("GPDB.db"))
-        conn = sqlite3.connect(database, uri=True)
-    except sqlite3.OperationalError:
-        Parser.print_clean("Database does not exist.")
-        Parser.user_quit()
+    # conn = create_connection("GPDB.db")
 
     while True:
         print("Welcome to Group 6 GP System")
