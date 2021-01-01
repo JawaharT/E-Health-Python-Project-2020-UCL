@@ -80,12 +80,30 @@ class Admin(User):
                 Parser.handle_input()
                 continue
 
-            logger.info("Show existing records to admin")
-            for row in all_data:
-                current = []
-                for index, title in enumerate(headers):
-                    current.append((title + ":", row[index]))
-                print(tabulate(current))
+            logger.info("Show existing records to admin through pages")
+
+            # Paging records
+            start, step = 0, 2
+            end = len(all_data) if len(all_data) % 2 == 0 else len(all_data) + 1
+
+            for page_length in range(start, end, step):
+                logger.info("Shown Page: " + (page_length+2)/2)
+                for row in all_data[page_length: page_length+2]:
+                    current = []
+                    for index, title in enumerate(headers):
+                        current.append((title + ":", row[index]))
+                    print(tabulate(current))
+
+                if page_length+2 >= end:
+                    break
+
+                user_input = Parser.selection_parser(
+                    options={"A": "Proceed to next page", "B": "Continue to edit records"})
+
+                if user_input == "A":
+                    continue
+                else:
+                    break
 
             print("Completed operation.\n")
 
@@ -104,7 +122,7 @@ class Admin(User):
                 Parser.handle_input()
 
     @staticmethod
-    def add_gp_patient():
+    def add_gp_patient() -> None:
         """
         Update table with new GP or patient record
         """
@@ -221,8 +239,8 @@ class Admin(User):
                 logger.info("Selected GP/ Patient account to delete")
                 # delete query, make sure to delete all presence of that user
                 logger.info("Removed selected " + selected_user + " from Users table")
-                delete_query = SQLQuery("DELETE FROM Users WHERE username=:who")
-                delete_query.commit({"who": selected_user})
+                delete_query1 = SQLQuery("DELETE FROM Users WHERE username=:who")
+                delete_query1.commit({"who": selected_user})
                 print("GP {0} deleted from Users table.\n".format(selected_user))
                 Parser.print_clean()
                 return True
