@@ -130,7 +130,8 @@ class GP(User):
                                  ).commit((self.ID, slot))
                     print("Slots removed successfully.")
                     logger.info("Removed timeslot, DB transaction completed")
-                    input("Press Enter to continue...")
+                    # input("Press Enter to continue...")
+                    Parser.handle_input()
                     return True
                 # temporary exception
                 except DBRecordError:
@@ -188,7 +189,8 @@ class GP(User):
                             SQLQuery("INSERT INTO available_time VALUES (?, ?)").commit((self.ID, slot))
                         print("Your slots have been successfully added!")
                         logger.info("Added timeslot, DB transaction completed")
-                        input("Press Enter to continue...")
+                        # input("Press Enter to continue...")
+                        Parser.handle_input()
                         return True
                     # temporary exception
                     except DBRecordError:
@@ -470,5 +472,6 @@ class GP(User):
                                  ).commit((prescription_number,))
                         print("Prescription removed correctly!")
                         logger.info(f"PrescriptionNo: {prescription_number} removed from DB successfully")
-                        input("Press Enter to continue...")
+                        # input("Press Enter to continue...")
+                        Parser.handle_input()
                         break

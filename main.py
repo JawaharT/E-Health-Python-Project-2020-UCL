@@ -317,6 +317,9 @@ if __name__ == '__main__':
         Parser.print_clean("Database does not exist.")
         Parser.user_quit()
 
+    # logging
+
+
     while True:
         print("Welcome to Group 6 GP System")
         option_selection = Parser.selection_parser(options={"R": "register", "L": "login", "--quit": "quit"})

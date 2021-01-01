@@ -5,20 +5,25 @@ from database import SQLQuery
 from main import User, MenuHelper
 from typing import Union, Tuple
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class Admin(User):
     """Navigate through Admin features and functionality once logged in."""
 
-    def main_menu(self):
+    def main_menu(self) -> None:
         """
         Main Menu for Admin-type users.
         """
+        logger.info("logged in as Admin")
         while True:
             print("You're currently viewing main menu options for Admin {}.".format(self.username))
             user_input = Parser.selection_parser(
                 options={"A": "View Records", "B": "Add New GP or Patient", "C": "Edit GP or Patient",
                          "D": "Delete Existing GP or Patient", "--logout": "logout"})
             if user_input == "--logout":
+                logger.info("User Logged Out")
                 Parser.user_quit()
             elif user_input == "A":
                 self.view_records()
@@ -65,14 +70,17 @@ class Admin(User):
                     user_type = "GP"
                 parameters = (user_type,)
 
+            logger.info("Selected table to view")
             all_data = SQLQuery(query_string).fetch_all(decrypter=EncryptionHelper(), parameters=parameters)
 
             if len(list(all_data)) == 0:
+                logger.info("No Records to show")
                 Parser.print_clean("No records Available.\n")
                 # input("Press Enter to continue...")
                 Parser.handle_input()
                 continue
 
+            logger.info("Show existing records to admin")
             for row in all_data:
                 current = []
                 for index, title in enumerate(headers):
@@ -80,6 +88,8 @@ class Admin(User):
                 print(tabulate(current))
 
             print("Completed operation.\n")
+
+            logger.info("Option to edit records")
             if record_viewer == "A" or record_viewer == "B":
                 user_input = Parser.selection_parser(
                     options={"A": "Proceed to editing the records", "--back": "back"})
@@ -119,6 +129,7 @@ class Admin(User):
             list_accounts = list(SQLQuery("SELECT username FROM Users WHERE UserType = 'Patient'").fetch_all())
 
         else:
+            logger.warning("Incorrect input")
             print("Input incorrect...")
             return
 
@@ -135,6 +146,7 @@ class Admin(User):
                 Parser.print_clean()
                 break
             else:
+                logger.info("Edit " + account_types + " Users")
                 record_editor = Parser.selection_parser(
                     options={"A": "Update Password", "B": "Update Birthday",
                              "C": "Update First Name", "D": "Update Last Name",
@@ -178,6 +190,7 @@ class Admin(User):
 
                     print("User {0} will be {1}.\n".format(selected_user, status))
 
+                logger.info("Admin edited " + parameter + " of " + selected_user)
                 self.update_parameter_record(selected_user, parameter, new_parameter_value)
                 print("Successfully Updated to Database. Going back to home page.\n")
                 break
@@ -187,28 +200,30 @@ class Admin(User):
         updated table with the deleted GP record
         """
         # show all users that are deactivated for deletion
-        all_deactivated_gps = SQLQuery("SELECT username FROM Users WHERE Deactivated = 'T' AND "
-                                       "((UserType = 'GP') OR (UserType = 'Patient'))")
-        all_deactivated_gps_result = list(all_deactivated_gps.fetch_all())
+        all_deactivated_users = SQLQuery("SELECT username FROM Users WHERE Deactivated = 'T' AND "
+                                         "((UserType = 'GP') OR (UserType = 'Patient'))")
+        all_deactivated_users_result = list(all_deactivated_users.fetch_all())
 
-        if len(all_deactivated_gps_result) == 0:
+        if len(all_deactivated_users_result) == 0:
+            Parser.print_clean("For safety, you can only delete accounts which are currently deactivated. To remove "
+                               "an active account, deactivate it first.")
             print("No deactivated GPs available to delete.\n")
             return False
 
-        # select a deactivated GP account to delete
+        # select a deactivated GP/Patient account to delete
         while True:
-            Parser.print_clean("For safety, you can only delete accounts which are currently deactivated. To remove "
-                               "an active account, deactivate it first.")
-            all_deactivated_gps_table, _ = self.list_accounts(all_deactivated_gps_result)
-            selected_gp_number = Parser.selection_parser(options=all_deactivated_gps_table)
-            selected_gp = all_deactivated_gps_table[selected_gp_number]
-            if selected_gp == "--back":
+            all_deactivated_users_table, _ = self.list_accounts(all_deactivated_users_result)
+            selected_user_number = Parser.selection_parser(options=all_deactivated_users_table)
+            selected_user = all_deactivated_users_table[selected_user_number]
+            if selected_user == "--back":
                 return False
             else:
+                logger.info("Selected GP/ Patient account to delete")
                 # delete query, make sure to delete all presence of that user
+                logger.info("Removed selected " + selected_user + " from Users table")
                 delete_query = SQLQuery("DELETE FROM Users WHERE username=:who")
-                delete_query.commit({"who": selected_gp})
-                print("GP {0} deleted from Users table.\n".format(selected_gp))
+                delete_query.commit({"who": selected_user})
+                print("GP {0} deleted from Users table.\n".format(selected_user))
                 Parser.print_clean()
                 return True
 
@@ -234,9 +249,11 @@ class Admin(User):
         """
         try:
             SQLQuery("UPDATE Users SET {0} = ? WHERE username = ?".format(parameter)).commit((new_parameter_value,
-                                                                                                 selected_user))
+                                                                                              selected_user))
+            logger.info("Updated record in database")
             return True
-        except:
+        except Exception:
+            logger.debug("Unexpected database error")
             return False
 
 
