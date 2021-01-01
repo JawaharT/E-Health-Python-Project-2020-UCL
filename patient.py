@@ -3,12 +3,13 @@ from main import User, MenuHelper
 from encryption import EncryptionHelper
 from iohandler import Parser
 from database import SQLQuery
-# import sys
-import time
+#from typing import Union
 import datetime
-import random
-from exceptions import DBRecordError
 
+from exceptions import DBRecordError
+import logging
+logger = logging.getLogger(__name__)
+#this need to be changed
 print_clean = Parser.print_clean
 delta = datetime.timedelta
 
@@ -21,6 +22,7 @@ class Patient(User):
         """
         Main Menu for Patient-type users.
         """
+        logger.info("logged in as Patient")
         while True:
             print("You're currently viewing main menu options for Patient {}.".format(self.username))
             option_selection = Parser.selection_parser(
@@ -29,7 +31,7 @@ class Patient(User):
                          "--logout": "Logout"})
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
-                print_clean("Logging you out...")
+                logger.info("User Logged Out")
                 Parser.user_quit()
             elif option_selection == "B":
                 booking_selection = Parser.selection_parser(options={"G": "select by GP number", "D": "select by date"})
@@ -269,6 +271,7 @@ class Patient(User):
         stage = 0
         while True:
             while stage == 0:
+                logger.info("Selected all appointments can be cancelled")
                 query_string = "SELECT BookingNo, NHSNo, StaffID, Timeslot, PatientInfo" \
                                "FROM visit  WHERE NHSNo = ? AND Timeslot >= ? "
                 all_valid_cancel = SQLQuery(query_string)
@@ -288,12 +291,14 @@ class Patient(User):
                     cancel_pointer.append(i + 1)
                 print(f"You are viewing all the appointments can be cancelled.")
                 if len(cancel_table) == 0:
+                    logger.info("No Records to show")
                     print(f"No Appointments can be cancelled.\n")
                     return
                 else:
                     stage = 1
 
             while stage == 1:
+                logger.info("View all appointments that can be cancelled")
                 print(tabulate(cancel_table, headers=["Pointer", "BookingNo", "NHSNo",
                                                       "StaffID", "Timeslot", "PatientInfo"]))
                 selected_cancel_appointment = Parser.pick_pointer_parser("Select an appointment "
@@ -323,6 +328,7 @@ class Patient(User):
                     print(tabulate(visit_result, headers=["bookingNo", "NHSNo", "GP", "Timeslot", "PatientInfo"]))
 
                 else:
+                    logger.info("Go back and select again")
                     Parser.print_clean()
                     return
 
@@ -354,11 +360,12 @@ class Patient(User):
 
                 headers = ("BookingNo", "NHSNo", "Firstname", "Lastname", "PatientInfo", "Diagnosis",
                            "DrugName", "Quantity", "Instructions", "Notes")
-
+            logger.info("Selected table to view")
             query = SQLQuery(query_string)
             all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
 
             if len(list(all_data)) == 0:
+                logger.info("No Records to show")
                 Parser.print_clean("No records Available.\n")
             else:
                 print(tabulate(all_data, headers))
