@@ -98,7 +98,7 @@ class Admin(User):
                     break
 
                 user_input = Parser.selection_parser(
-                    options={"A": "Proceed to next page", "--back": "back"})
+                    options={"A": "Proceed to next page", "B": "Continue to edit records"})
 
                 if user_input == "A":
                     continue
