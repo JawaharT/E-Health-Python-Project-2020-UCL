@@ -87,7 +87,7 @@ class Admin(User):
             end = len(all_data) if len(all_data) % 2 == 0 else len(all_data) + 1
 
             for page_length in range(start, end, step):
-                logger.info("Shown Page: " + (page_length+2)/2)
+                logger.info("Shown Page: " + str((page_length+2)/2))
                 for row in all_data[page_length: page_length+2]:
                     current = []
                     for index, title in enumerate(headers):
@@ -98,7 +98,7 @@ class Admin(User):
                     break
 
                 user_input = Parser.selection_parser(
-                    options={"A": "Proceed to next page", "B": "Continue to edit records"})
+                    options={"A": "Proceed to next page", "B": "Continue to next part"})
 
                 if user_input == "A":
                     continue

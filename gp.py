@@ -7,9 +7,10 @@ import datetime
 from main import User
 from exceptions import DBRecordError
 
-#logging
+# logging
 import logging
 logger = logging.getLogger(__name__)
+
 
 class GP(User):
     """
@@ -195,7 +196,7 @@ class GP(User):
                     # temporary exception
                     except DBRecordError:
                         print("Invalid selection. Some of the entries may already be in the database. "
-                                           "Please Retry")
+                              "Please Retry")
                         stage = 0
                         slots_to_add = []
                         logger.warning("Error in DB, add action failed")
@@ -398,7 +399,7 @@ class GP(User):
             else:
                 print("Prescriptions:\nNone")
 
-            #Parser.print_clean() #this one seems to be wrong
+            # Parser.print_clean() #this one seems to be wrong
             user_input = Parser.selection_parser(
                 options={"D": "Edit diagnosis", "N": "Add notes", "P": "Edit prescriptions",
                          "--back": "go back to previous page"})
@@ -426,7 +427,7 @@ class GP(User):
                 notes_input = Parser.string_parser("Please enter your notes: ")
                 notes_input_encrypted = encrypter.encrypt_to_bits(info=notes_input)
                 SQLQuery(" UPDATE Visit SET notes = ? WHERE BookingNo = ? ").commit((notes_input_encrypted,
-                                                                                            booking_no))
+                                                                                     booking_no))
                 logger.info(f"Updated Notes for booking: {booking_no}")
                 print("Your notes have been recorded successfully!")
                 # input("Press Enter to continue...")

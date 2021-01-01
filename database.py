@@ -108,14 +108,15 @@ class SQLQuery(Database):
         """
         try:
             cursor.execute(self.query, parameters)
-        except sqlite3.DatabaseError:
-            print("Database disk image is malformed.")
+        except sqlite3.DatabaseError as e:
+            print("Database disk image is malformed.", e)
+            from iohandler import Parser
             Parser.user_quit()
 
 
 if __name__ == '__main__':
-    #refresh and create new DB
-    #if you have anything that you want to stay permanently edit and insert using sql script
+    # refresh and create new DB
+    # if you have anything that you want to stay permanently edit and insert using sql script
     DB = Database("GPDB.db")
     DB.executeSQLScript("GPDB.sql")
 

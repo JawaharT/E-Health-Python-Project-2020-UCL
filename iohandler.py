@@ -1,4 +1,3 @@
-# from datetime import datetime, timedelta, time
 import time
 import datetime
 import sys
@@ -7,7 +6,6 @@ from exceptions import *
 import os
 
 
-# noinspection PyUnusedLocal
 class Parser:
     """
     Helper class for collecting and validating user inputs in a command-line interface.
@@ -301,6 +299,8 @@ class Parser:
                 result = Parser.handle_input(input_question="")
                 if result == "--quit":
                     Parser.user_quit()
+                elif result == "":
+                    continue
                 else:
                     return result
             except ValueError:

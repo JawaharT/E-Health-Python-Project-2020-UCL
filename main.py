@@ -5,20 +5,22 @@ from getpass import getpass
 from tabulate import tabulate
 from exceptions import DBRecordError
 
-#logging
-import logging, logging.handlers
+# logging
+import logging
+import logging.handlers
 
 fh_info = logging.handlers.RotatingFileHandler('log/gp_system_info_log.log', maxBytes=1000000, backupCount=2)
-fh_info.setLevel(logging.INFO) #change this If you need different level
+fh_info.setLevel(logging.INFO) # change this If you need different level
 fh_info.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s'))
 
 fh_debug = logging.handlers.RotatingFileHandler('log/gp_system_debug_log.log', maxBytes=1000000, backupCount=2)
-fh_debug.setLevel(logging.DEBUG) #change this If you need different level
+fh_debug.setLevel(logging.DEBUG) # change this If you need different level
 fh_debug.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s'))
 
 fh_warning = logging.handlers.RotatingFileHandler('log/gp_system_warning_log.log', maxBytes=1000000, backupCount=2)
-fh_warning.setLevel(logging.WARNING) #change this If you need different level
+fh_warning.setLevel(logging.WARNING) # change this If you need different level
 fh_warning.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s'))
+
 
 class MenuHelper:
     """
@@ -107,9 +109,11 @@ class MenuHelper:
 
         postcode = menu_helper.valid_postcode()
         activation = "F" if admin else "T"
-        insert_query = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        login_count = 0
+
+        insert_query = SQLQuery("INSERT INTO Users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
         insert_query.commit((new_id, username, password, birthday, first_name, last_name,
-                             telephone, address, postcode, user_group, activation))
+                             telephone, address, postcode, user_group, activation, login_count))
 
         Parser.print_clean("Successfully added account!")
         if not admin:
@@ -129,7 +133,7 @@ class MenuHelper:
             # check if it exists in table, if it does ask again
             exists_query = SQLQuery("SELECT 1 FROM Users WHERE {0} = '{1}'".format(parameter_name, parameter)) \
                 .fetch_all()
-            if exists_query:
+            if exists_query or (parameter == ""):
                 Parser.print_clean("{0} already exists. Please choose another.\n".format(parameter_name))
                 continue
             else:
@@ -144,10 +148,11 @@ class MenuHelper:
             Parser.print_clean("Any leading or trailing empty spaces will be removed.")
             password = getpass("Enter new password: ").strip()
             password_confirm = getpass("Enter new password again: ").strip()
-            if (password != password_confirm) and (password != ""):
-                Parser.print_clean("Passwords do not match. Please try again.\n")
+            if (password != password_confirm) or (password == "") or (password_confirm == ""):
+                print("Passwords do not match. Please try again.\n")
+                continue
             else:
-                Parser.print_clean("Passwords Match.\n")
+                print("Passwords Match.\n")
                 return PasswordHelper.hash_pw(password)
 
     @staticmethod
@@ -236,7 +241,8 @@ class MenuHelper:
         if user_type == "Admin":
             from admin import Admin
             user = Admin(username)
-            logger.debug(f"{User} created using {user_type} method") #this line is to make sure tat it entered the correct route
+            # this line is to make sure tat it entered the correct route
+            logger.debug(f"{User} created using {user_type} method")
         elif user_type == "GP":
             from gp import GP
             user = GP(username)
@@ -287,13 +293,13 @@ class User:
         Display all User information.
         """
         print(tabulate([("User Type:", self.user_type),
-                                     ("First Name: ", self.first_name),
-                                     ("Last Name: ", self.last_name),
-                                     ("Birthday: ", self.birthday),
-                                     ("Phone No: ", self.phone_no),
-                                     ("Home Address: ", self.home_address),
-                                     ("Post Code: ", self.postcode)
-                                     ]))
+                        ("First Name: ", self.first_name),
+                        ("Last Name: ", self.last_name),
+                        ("Birthday: ", self.birthday),
+                        ("Phone No: ", self.phone_no),
+                        ("Home Address: ", self.home_address),
+                        ("Post Code: ", self.postcode)
+                        ]))
         return True
 
 

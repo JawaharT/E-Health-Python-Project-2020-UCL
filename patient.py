@@ -3,15 +3,11 @@ from main import User, MenuHelper
 from encryption import EncryptionHelper
 from iohandler import Parser
 from database import SQLQuery
-#from typing import Union
 import datetime
-
 from exceptions import DBRecordError
+
 import logging
 logger = logging.getLogger(__name__)
-#this need to be changed
-print_clean = Parser.print_clean
-delta = datetime.timedelta
 
 
 class Patient(User):
@@ -69,13 +65,13 @@ class Patient(User):
                 selected_date = Parser.date_parser(question=f"Booking appointments for Patient {self.username}.")
                 print(selected_date)
                 if selected_date == "--back":
-                    print_clean()
+                    Parser.print_clean()
                     return False
                 # show available GP
                 gp_result_raw = SQLQuery("SELECT ID, firstName, lastName, Timeslot FROM (available_time JOIN Users on "
-                                     "available_time.StaffID = Users.ID) WHERE Timeslot >= ? AND Timeslot <= ?"
-                                     ).fetch_all(decrypter=EncryptionHelper(),
-                                                 parameters=(selected_date, selected_date + delta(days=1)))
+                                         "available_time.StaffID = Users.ID) WHERE Timeslot >= ? AND Timeslot <= ?")\
+                    .fetch_all(decrypter=EncryptionHelper(),
+                               parameters=(selected_date, selected_date + datetime.timedelta(days=1)))
 
                 gp_numbers = []
                 gp_table = []
@@ -98,7 +94,7 @@ class Patient(User):
                 # show list of time
                 print(tabulate(gp_table, headers=["Pointer", "GP First Name", "GP Last Name", "Timeslot"]))
                 selected_gp_pointer = Parser.list_number_parser("Select appointment by Pointer:",
-                                                                 (1, len(gp_table)), allow_multiple=False)
+                                                                (1, len(gp_table)), allow_multiple=False)
                 if selected_gp_pointer == '--back':
                     return False
                 selected_appointment = gp_table[selected_gp_pointer - 1]
@@ -107,7 +103,8 @@ class Patient(User):
 
             while stage == 2:
                 print("This is the time slot which will be booked by you:")
-                print(tabulate([selected_appointment], headers=["Pointer", "GP First Name", "GP Last Name", "Timeslot"]))
+                print(tabulate([selected_appointment], headers=["Pointer", "GP First Name", "GP Last Name",
+                                                                "Timeslot"]))
                 confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
                 # Confirm if user wants to confirm booking
                 if confirm == "Y":
@@ -120,7 +117,7 @@ class Patient(User):
                         print("Booking successful!")
                         visit_result = SQLQuery("SELECT BookingNo, NHSNo, StaffID, Timeslot FROM visit "
                                                 "WHERE StaffID = ? AND Timeslot = ?"
-                                                ).fetch_all(parameters=(gp_number,selected_appointment[3]))
+                                                ).fetch_all(parameters=(gp_number, selected_appointment[3]))
                         print(tabulate(visit_result, headers=["bookingNo", "NHSNo", "GP", "Timeslot"]))
                         stage = 3
                         # input("Press Enter to continue...")
@@ -131,11 +128,11 @@ class Patient(User):
                         Parser.handle_input()
                 if confirm == "N":
                     print("Booking cancelled.")
-                    slots_to_remove = []
+                    # slots_to_remove = []
                     # input("Press Enter to continue...")
                     Parser.handle_input()
                 while stage == 3:
-                    print_clean()
+                    Parser.print_clean()
                     info_input = Parser.string_parser(
                         "Please input your primary complaint before the appointment: ")
                     SQLQuery(" UPDATE Visit SET PatientInfo = ? WHERE StaffID = ? AND Timeslot = ? "
@@ -221,7 +218,8 @@ class Patient(User):
 
                 print("please check in after your attending")
                 print("do you want to edit one or edit more at once?")
-                # option_selection = Parser.selection_parser(options={"E": "one change", "M": "more than one change","--back": "back"})
+                # option_selection = Parser.selection_parser(options={"E": "one change",
+                # "M": "more than one change","--back": "back"})
                 # if option_selection == "--back":
                 #     return
                 # elif option_selection == "E":
