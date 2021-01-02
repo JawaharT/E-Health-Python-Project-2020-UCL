@@ -4,7 +4,7 @@ from iohandler import Parser
 from database import SQLQuery
 import time
 import datetime
-from main import User
+from main import User, MenuHelper
 from exceptions import DBRecordError
 
 # logging
@@ -476,3 +476,25 @@ class GP(User):
                         # input("Press Enter to continue...")
                         Parser.handle_input()
                         break
+
+    def first_login(self):
+        Parser.print_clean("Welcome GP {}. This is your first login. ".format(self.username))
+        print(self.ID)
+        print("You need to input additional information before you can proceed.")
+        Parser.handle_input("Press Enter to continue...")
+        encrypt = EncryptionHelper().encrypt_to_bits
+        specialty = encrypt(Parser.string_parser("Enter your specialisation: "))
+        Parser.print_clean("Enter your gender: ")
+        gender = Parser.selection_parser(options={"M": "Male", "F": "Female", "N": "Do not disclose"})
+        clinic_address = encrypt(Parser.string_parser("Enter your clinic address (one line): "))
+        clinic_postcode = MenuHelper.valid_postcode()
+        info = encrypt(Parser.string_parser("Enter an intro paragraph about yourself: "))
+        try:
+            SQLQuery("INSERT INTO GP(ID, Gender, ClinicAddress, ClinicPostcode, Speciality, Introduction) VALUES (?, "
+                     "?, ?, ?, ?, ?)").commit(parameters=(self.ID, gender, clinic_address, clinic_postcode,
+                                                          specialty, info))
+            return True
+        except Exception as e:
+            print(e)
+            print("Database error")
+            return False

@@ -10,15 +10,15 @@ import logging
 import logging.handlers
 
 fh_info = logging.handlers.RotatingFileHandler('log/gp_system_info_log.log', maxBytes=1000000, backupCount=2)
-fh_info.setLevel(logging.INFO) # change this If you need different level
+fh_info.setLevel(logging.INFO)  # change this If you need different level
 fh_info.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s'))
 
 fh_debug = logging.handlers.RotatingFileHandler('log/gp_system_debug_log.log', maxBytes=1000000, backupCount=2)
-fh_debug.setLevel(logging.DEBUG) # change this If you need different level
+fh_debug.setLevel(logging.DEBUG)  # change this If you need different level
 fh_debug.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s'))
 
 fh_warning = logging.handlers.RotatingFileHandler('log/gp_system_warning_log.log', maxBytes=1000000, backupCount=2)
-fh_warning.setLevel(logging.WARNING) # change this If you need different level
+fh_warning.setLevel(logging.WARNING)  # change this If you need different level
 fh_warning.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s'))
 
 
@@ -27,6 +27,7 @@ class MenuHelper:
     Helper class for initialising the main menu.
     Methods for login, registering and starting specific sub-functionalities
     """
+
     @staticmethod
     def login():
         """
@@ -34,7 +35,7 @@ class MenuHelper:
         """
         logger.debug("Entered Login Sequence")
         for i in range(4, -1, -1):
-            logger.debug(f"Username attempt {5-i}")
+            logger.debug(f"Username attempt {5 - i}")
             # limit to 5 username attempts
             try:
                 # trying to get username
@@ -252,6 +253,9 @@ class MenuHelper:
             user = Patient(username)
             logger.debug(f"{User} created using {user_type} method")
         logger.info(f"user: {username}; type {user_type}: logged in")
+        if not user.handle_login_count():
+            print("Error handling login.")
+            Parser.user_quit()
         user.print_hello()
         user.print_information()
         user.main_menu()
@@ -267,8 +271,8 @@ class User:
         # retrieving the full information from DATAbase instead of just the password for authentication
         self.user_data = SQLQuery(
             "SELECT ID, username, firstName, lastName, phoneNo, HomeAddress, postCode, UserType, "
-            "deactivated, birthday FROM Users WHERE username == ?").fetch_all(decrypter=EncryptionHelper(),
-                                                                              parameters=(username,))[0]
+            "deactivated, birthday, LoginCount FROM Users WHERE username == ?").fetch_all(decrypter=EncryptionHelper(),
+                                                                                          parameters=(username,))[0]
         # loading the user info into a state
         self.ID = self.user_data[0]
         self.username = self.user_data[1]
@@ -280,6 +284,19 @@ class User:
         self.user_type = self.user_data[7]
         self.deactivated = self.user_data[8]
         self.birthday = self.user_data[9]
+        self.login_count = self.user_data[10]
+
+    def handle_login_count(self):
+        self.login_count += 1
+        if self.login_count <= 1:
+            if self.first_login():
+                SQLQuery("UPDATE Users SET LoginCount = ? WHERE ID = ?").commit(parameters=(self.login_count, self.ID))
+                return True
+            else:
+                return False
+        else:
+            SQLQuery("UPDATE Users SET LoginCount = ? WHERE ID = ?").commit(parameters=(self.login_count, self.ID))
+            return True
 
     def print_hello(self):
         """
@@ -308,15 +325,17 @@ if __name__ == '__main__':
 
     # Exception handling if database not present/cannot connect
     # conn = create_connection("GPDB.db")
-    
+
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     logger.addHandler(fh_debug)
     logger.addHandler(fh_info)
     logger.addHandler(fh_warning)
     import sqlite3
+
     try:
         from urllib.request import pathname2url
+
         database = 'file:{}?mode=rw'.format(pathname2url("GPDB.db"))
         conn = sqlite3.connect(database, uri=True)
     except sqlite3.OperationalError:

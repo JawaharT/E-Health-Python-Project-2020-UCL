@@ -31,9 +31,9 @@ class EncryptionHelper:
         self.cipher = Fernet(self.key)
         file.close()
     
-    def encrypt_to_bits(self, info=""):
+    def encrypt_to_bits(self, info="") -> str:
         """
-        :param info: information in string for encoding
+        :param str info: information in string for encoding
         :return: bit object for storage in DB
         """
         to_bit_message = info.encode()
