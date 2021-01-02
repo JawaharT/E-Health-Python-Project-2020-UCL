@@ -11,7 +11,7 @@ from exceptions import DBRecordError
 
 print_clean = Parser.print_clean
 delta = datetime.timedelta
-data_now = datetime.datetime.now().date()
+date_now = datetime.datetime.now().date()
 
 
 class Patient(User):
@@ -26,7 +26,7 @@ class Patient(User):
         while True:
             print("You're currently viewing main menu options for Patient {}.".format(self.username))
             option_selection = Parser.selection_parser(
-                options={"B": "book appointments", "I":"view /check in unattended appointment",
+                options={"B": "book appointments", "I": "view /check in unattended appointment",
                          "C": "cancel appiontment", "R": "review/rate appointments",
                          "--logout": "Logout"})
             if option_selection == "--logout":
@@ -48,8 +48,6 @@ class Patient(User):
                 elif r_selection == "B":
                     self.rate_appointment()
 
-
-
     def book_appointment_start(self):
         """
         choose a date -- choose a GP
@@ -57,51 +55,45 @@ class Patient(User):
         --give random number as bookingNo
         --move from available_time
         --insert in visit
-
         """
-        stage = 0
         while True:
-            while stage == 0:
-
-                result = SQLQuery(
-                    "SELECT  StaffID, Timeslot FROM available_time "
-                    "WHERE Timeslot >= ? AND Timeslot <= ? "
-                    "ORDER BY Timeslot"
-                    #"ORDER BY   DATE_FORMAT(Timeslot,'%Y-%m-%d %H:%i:%s')"
-                    #CONVERT(varchar(100), Timeslot, 120)
-                ).executeFetchAll(parameters=(data_now + delta(days=1), data_now + delta(days=15)))
-                    # "ORDER BY   DATE_FORMAT(Timeslot,'%Y-%m-%d %H:%i:%s')"
-                    # CONVERT(varchar(100), Timeslot, 120)
-                print(f"You are viewing all available appointments since: {data_now}")
-
-                if len(result) == 0:
-                    print(f"There are no available appointments. ")
-                    stage = 0
-                    input("Press Enter to continue...")
-                else:
-                    result_table = []
-                    for i in range(len(result)):
-                        result_table.append([i+1, str(result[i][0]), str(result[i][1])])
-
-
-                    print(tabulate(result_table, headers=["Pointer", "GP", "timeslot"]))
-
-                stage = 1
-            while stage == 1:
-                print(f"How would you like to choose? ")
-                booking_selection = Parser.selection_parser(options={"G": "select by GP number", "D": "select by date", "--back": "back"})
+            result = SQLQuery(
+                "SELECT firstName, lastName, Timeslot, available_time.StaffID FROM (available_time JOIN Users ON "
+                "available_time.StaffID = Users.ID) WHERE Timeslot >= ? AND Timeslot <= ? ORDER BY Timeslot"
+            ).fetch_all(parameters=(date_now + delta(days=1), date_now + delta(days=8)),
+                        decrypter=EncryptionHelper())
+            print("You are viewing all available appointments for the next week.")
+            if len(result) == 0:
+                print(f"There are no available appointments. ")
+                Parser.handle_input("Press Enter to continue...")
+            else:
+                result_table = []
+                for count, item in enumerate(result):
+                    result_table.append([count + 1, item[0], item[1], item[2], item[3]])
+                print(tabulate([result[0:4] for result in result_table], headers=["Pointer", "GP Name", "Last Name",
+                                                                                  "Timeslot"]))
+                print("How would you like to choose? ")
+                booking_selection = Parser.selection_parser(
+                    options={"E": "select earliest available appointment",
+                             "G": "select by GP", "D": "select by date", "--back": "back"})
+                if booking_selection == "E":
+                    if self.process_booking(result_table[0]):
+                        return True
                 if booking_selection == "D":
-                    self.book_appointment_date()
+                    if self.book_appointment_date():
+                        return True
                 elif booking_selection == "G":
-                    self.book_appointment_GP()
+                    if self.book_appointment_GP():
+                        return True
                 elif booking_selection == "--back":
-                    return
+                    return False
 
     def book_appointment_date(self):
         stage = 0
         while True:
             while stage == 0:
-                booking_selection = Parser.selection_parser(options={"E": "select the earliest one", "D": "select by date", "--back": "back"})
+                booking_selection = Parser.selection_parser(
+                    options={"E": "select the earliest one", "D": "select by date", "--back": "back"})
                 if booking_selection == "E":
                     stage = 1
                 elif booking_selection == "D":
@@ -116,12 +108,12 @@ class Patient(User):
                     "LIMIT 1 "
                     # "ORDER BY   DATE_FORMAT(Timeslot,'%Y-%m-%d %H:%i:%s')"
                     # CONVERT(varchar(100), Timeslot, 120)
-                ).executeFetchAll(parameters=(data_now + delta(days=1), data_now + delta(days=15)))
+                ).executeFetchAll(parameters=(date_now + delta(days=1), date_now + delta(days=15)))
 
-                #selected_row_raw=[]
-                selected_row_raw = [1,result[0][0],result[0][1]]
-                #print(selected_row_raw)
-                print(f"You are viewing early available since: {data_now}")
+                # selected_row_raw=[]
+                selected_row_raw = [1, result[0][0], result[0][1]]
+                # print(selected_row_raw)
+                print(f"You are viewing early available since: {date_now}")
                 # print(selected_row_raw)
                 print(tabulate([selected_row_raw], headers=["pointer", "GP", "timeslot"]))
                 stage = 3
@@ -148,7 +140,7 @@ class Patient(User):
                     result_table = []
 
                     for i in range(len(result)):
-                        result_table.append([i + 1, result[i][0],result[i][1]])
+                        result_table.append([i + 1, result[i][0], result[i][1]])
 
                     print(f"You are viewing all available appointment for: {selected_date}")
                     print(tabulate(result_table, headers=["Pointer", "GP", "timeslot"]))
@@ -159,12 +151,12 @@ class Patient(User):
                     if selected_appointment == '--back':
                         return False
 
-                    #selected_row = result_table[selected_appointment - 1]
+                    # selected_row = result_table[selected_appointment - 1]
                     selected_row_raw = result_table[selected_appointment - 1]
                     stage = 3
 
             while stage == 3:
-                self.book_appointment_end(selected_row_raw)
+                self.process_booking(selected_row_raw)
 
     def book_appointment_GP(self):
         stage = 0
@@ -176,13 +168,13 @@ class Patient(User):
                     "GP.ID = users.ID WHERE users.ID IN ( SELECT DISTINCT StaffID FROM available_time "
                     "WHERE Timeslot >= ? AND Timeslot <= ? )"
                 ).executeFetchAll(
-                    parameters=(data_now + delta(days=1), data_now + delta(days=15)))
+                    parameters=(date_now + delta(days=1), date_now + delta(days=15)))
 
                 gp_table = []
 
                 for i in range(len(gp_result)):
                     # gp_table.append(str(gp_result[i]))
-                    #print(EncryptionHelper().decryptMessage(gp_result[i][1]))
+                    # print(EncryptionHelper().decryptMessage(gp_result[i][1]))
                     gp_table.append([i + 1, EncryptionHelper().decryptMessage(gp_result[i][0]),
                                      str(gp_result[i][1]),
                                      EncryptionHelper().decryptMessage(gp_result[i][2]),
@@ -196,7 +188,7 @@ class Patient(User):
                     stage = 0
                     input("Press Enter to continue...")
                 else:
-                    print(f"You are viewing all available GP since: {data_now} ")
+                    print(f"You are viewing all available GP since: {date_now} ")
                     print(tabulate(gp_table,
                                    headers=["pointer", "lastname", "introduction", "clinicAddress", "clinicPostcode",
                                             "gender", "rating"]))
@@ -206,14 +198,14 @@ class Patient(User):
                     if selected_gp_pointer == '--back':
                         return False
 
-
                     selected_gp_row = gp_table[selected_gp_pointer - 1]
                     print(selected_gp_row[7])
                     # print(selected_gp)
                     appointment_result = SQLQuery(
                         "SELECT StaffID, Timeslot FROM available_time "
                         "WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ?",
-                    ).executeFetchAll(parameters=(selected_gp_row[7], data_now + delta(days=1), data_now + delta(days=15)))
+                    ).executeFetchAll(
+                        parameters=(selected_gp_row[7], date_now + delta(days=1), date_now + delta(days=15)))
 
                     appointment_table = []
                     appointment_table_raw = []
@@ -241,78 +233,51 @@ class Patient(User):
                     stage = 1
 
             while stage == 1:
-                self.book_appointment_end(selected_row_raw)
+                self.process_booking(selected_row_raw)
 
-    def book_appointment_end(self, selected_row_raw):
-        stage = 0
+    def process_booking(self, selected_row):
+        encrypt = EncryptionHelper().encrypt_to_bits
         while True:
-            while stage == 0:
-                print("This is time slot will be booked by you:")
-                # print(selected_row_raw)
-                print(tabulate([selected_row_raw], headers=["Pointer", "GP", "Timeslot"]))
+            Parser.print_clean("This is time slot will be booked by you:")
+            print("GP: {} {}".format(selected_row[1], selected_row[2]))
+            print("Timeslot: {}\n".format(selected_row[3]))
+            confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
+            # Confirm if user wants to delete slots
+            if confirm == "Y":
+                try:
+                    SQLQuery("BEGIN TRANSACTION; INSERT INTO Visit (NHSNo, StaffID, Timeslot, Confirmed, Attended) "
+                             f"VALUES ({self.ID}, '{selected_row[4]}', '{selected_row[3]}', 'P', 'F'); "
+                             f"DELETE FROM available_time WHERE StaffID = '{selected_row[4]}'"
+                             f" AND TIMESLOT = '{selected_row[3]}'; COMMIT"
+                             ).commit(multiple_queries=True)
+                    print("Booked successfully.")
+                    visit_result = SQLQuery("SELECT BookingNo, NHSNo, firstName, lastName, Timeslot FROM "
+                                            "(Visit JOIN Users ON VISIT.StaffID = Users.ID)"
+                                            "WHERE Timeslot = ? AND StaffID = ? "
+                                            ).fetch_all(parameters=(selected_row[3], selected_row[4]),
+                                                        decrypter=EncryptionHelper())
+                    booking_no = visit_result[0][0]
+                    print(tabulate(visit_result,
+                                   headers=["BookingNo", "NHSNo", "GP First Name", "Last Name", "Timeslot"]))
+                    Parser.handle_input("Press Enter to continue...")
+                except DBRecordError:
+                    print("Error encountered")
+                    Parser.handle_input("Press Enter to continue...")
+                    return False
+                info_input = encrypt(Parser.string_parser("Please enter your main complaint before the visit: "))
+                SQLQuery("UPDATE Visit SET PatientInfo = ? WHERE BookingNo = ? "
+                         ).commit((info_input, booking_no))
+                print("Your information have been recorded successfully!")
+                Parser.handle_input("Press Enter to continue...")
+                Parser.print_clean()
+                return True
+            else:
+                print("Booking cancelled.")
+                Parser.handle_input("Press Enter to continue...")
+                Parser.print_clean()
+                return False
 
-                confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
-                # Confirm if user wants to delete slots
-                if confirm == "Y":
-                    try:
-                        repeat_booking_num = 1
-                        while (repeat_booking_num):
-                            booking_no = random.randint(100000, 999999)
 
-                            visit_same_booking_no = SQLQuery(
-                                "SELECT bookingNo FROM visit WHERE bookingNo = ? ").executeFetchAll(parameters=(booking_no,))
-                            if len(visit_same_booking_no) == 0:
-
-                                break
-                            else:
-                                repeat_booking_num = 1
-
-                        print(selected_row_raw[1], selected_row_raw[2])
-
-                        visit_same_booking_num = SQLQuery(
-                            "SELECT StaffID, Timeslot FROM visit WHERE StaffID = ? AND Timeslot = ? ").executeFetchAll(
-                            parameters=(selected_row_raw[1], selected_row_raw[2]))
-                        if len(visit_same_booking_no) != 0:
-                            # repeat_timeslot_num = 0
-                            print("This time slot has been booked")
-                            return False
-                        else:
-
-                            SQLQuery("INSERT INTO visit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                                     ).executeCommit(
-                                (booking_no, self.ID, selected_row_raw[1], selected_row_raw[2], "", "F", "F", "", "", "0"))
-                            SQLQuery("DELETE FROM available_time WHERE StaffID = ? AND Timeslot = ?"
-                                     ).executeCommit((selected_row_raw[1], selected_row_raw[2]))
-
-                            print("booked successfully.")
-
-                            visit_result = SQLQuery("SELECT bookingNo, NHSNo, StaffID, Timeslot FROM visit "
-                                                    "WHERE bookingNo = ? "
-                                                    ).executeFetchAll(parameters=(booking_no,))
-
-                            print(tabulate(visit_result, headers=["bookingNo", "NHSNo", "GP", "Timeslot"]))
-
-                            stage = 1
-
-                            input("Press Enter to continue...")
-
-                    except DBRecordError:
-                        print("Error encountered")
-                        input("Press Enter to continue...")
-                if confirm == "N":
-                    print("book cancelled.")
-                    input("Press Enter to continue...")
-                    return self.main_menu()
-
-            while stage == 1:
-                print_clean()
-
-                info_input = Parser.string_parser("Please write description about your illness before the appointment: ")
-                SQLQuery(" UPDATE Visit SET PatientInfo = ? WHERE BookingNo = ? "
-                         ).executeCommit((info_input, booking_no))
-                Parser.print_clean("Your description have been recorded successfully!")
-                Parser.string_parser("Press Enter to continue...")
-                return self.main_menu()
 
     def check_in_appointment(self):
         """
@@ -327,7 +292,7 @@ class Patient(User):
                 patient_appointment_result = SQLQuery(
                     "SELECT bookingNo, NHSNo, StaffID, Timeslot, Confirmed FROM visit "
                     "WHERE NHSNo = ? AND Attended = ? ",
-                ).executeFetchAll(parameters=(self.ID,"F"))
+                ).executeFetchAll(parameters=(self.ID, "F"))
 
                 patient_confirmed_appointment_table = []
                 patient_unconfirmed_appointment_table = []
@@ -339,60 +304,63 @@ class Patient(User):
 
                     if patient_appointment_result[i][4] == "T":
                         patient_confirmed_appointment_table.append([i + 1, str(patient_appointment_result[i][0]),
-                                                             str(patient_appointment_result[i][1]),
-                                                             str(patient_appointment_result[i][2]),
-                                                             str(patient_appointment_result[i][3]),
-                                                             str(patient_appointment_result[i][4])])
+                                                                    str(patient_appointment_result[i][1]),
+                                                                    str(patient_appointment_result[i][2]),
+                                                                    str(patient_appointment_result[i][3]),
+                                                                    str(patient_appointment_result[i][4])])
 
                     elif patient_appointment_result[i][4] == "P":
                         patient_unconfirmed_appointment_table.append([j + 1, str(patient_appointment_result[i][0]),
-                                                                    str(patient_appointment_result[i][1]),
-                                                                    str(patient_appointment_result[i][2]),
-                                                                    str(patient_appointment_result[i][3]),
-                                                                    str(patient_appointment_result[i][4])])
+                                                                      str(patient_appointment_result[i][1]),
+                                                                      str(patient_appointment_result[i][2]),
+                                                                      str(patient_appointment_result[i][3]),
+                                                                      str(patient_appointment_result[i][4])])
                         j = j + 1
                     elif patient_appointment_result[i][4] == "F":
                         patient_rejected_appointment_table.append([r + 1, str(patient_appointment_result[i][0]),
-                                                                    str(patient_appointment_result[i][1]),
-                                                                    str(patient_appointment_result[i][2]),
-                                                                    str(patient_appointment_result[i][3]),
-                                                                    str(patient_appointment_result[i][4])])
+                                                                   str(patient_appointment_result[i][1]),
+                                                                   str(patient_appointment_result[i][2]),
+                                                                   str(patient_appointment_result[i][3]),
+                                                                   str(patient_appointment_result[i][4])])
                         r = r + 1
                     else:
                         print("error")
 
                 print(f"You are viewing all your booked appointments: ")
 
-                if len(patient_confirmed_appointment_table) == 0 and len(patient_unconfirmed_appointment_table) == 0\
-                    and len(patient_rejected_appointment_table) == 0:
+                if len(patient_confirmed_appointment_table) == 0 and len(patient_unconfirmed_appointment_table) == 0 \
+                        and len(patient_rejected_appointment_table) == 0:
                     print(f"You have not booked any appointment")
                     input("Press Enter to back...")
                     return
 
-                if len(patient_confirmed_appointment_table) != 0 :
+                if len(patient_confirmed_appointment_table) != 0:
                     print(f"These are appointments already confirmed by GP")
-                    print(tabulate(patient_confirmed_appointment_table, headers=["pointer","bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
+                    print(tabulate(patient_confirmed_appointment_table,
+                                   headers=["pointer", "bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
 
-                if len(patient_unconfirmed_appointment_table) != 0 :
+                if len(patient_unconfirmed_appointment_table) != 0:
                     print(f"These appointment are pending, please wait or change your appointment ")
-                    print(tabulate(patient_unconfirmed_appointment_table, headers=["pointer","bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
+                    print(tabulate(patient_unconfirmed_appointment_table,
+                                   headers=["pointer", "bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
 
-                if len(patient_rejected_appointment_table) != 0 :
+                if len(patient_rejected_appointment_table) != 0:
                     print(f"These appointment have been rejected by GP, please wait or change your appointment ")
-                    print(tabulate(patient_rejected_appointment_table, headers=["pointer","bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
+                    print(tabulate(patient_rejected_appointment_table,
+                                   headers=["pointer", "bookingNo", "NHSNo", "staffID", "timeslot", "confirmed"]))
 
                 option_selection = Parser.selection_parser(
-                        options={"I":"check in confirmed appointment","C": "change appointment","--back": "back"})
+                    options={"I": "check in confirmed appointment", "C": "change appointment", "--back": "back"})
                 if option_selection == "--back":
-                     return
+                    return
                 elif option_selection == "C":
-                     return
+                    return
                 elif option_selection == "I":
                     stage = 1
 
             while stage == 1:
 
-                if len(patient_confirmed_appointment_table) == 0 :
+                if len(patient_confirmed_appointment_table) == 0:
                     print(f"You don't have any unattended appointment")
                     input("Press Enter to back...")
                     return
@@ -403,7 +371,7 @@ class Patient(User):
                 print("please check in after your attending")
 
                 selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
-                                                                      (1, len(patient_confirmed_appointment_table)))
+                                                                 (1, len(patient_confirmed_appointment_table)))
 
                 if selected_appointment == '--back':
                     return
@@ -413,8 +381,8 @@ class Patient(User):
                 for row in patient_confirmed_appointment_table:
                     if row[0] in selected_appointment:
                         appointment_date = datetime.datetime.strptime(row[4], '%Y-%m-%d %H:%M:%S')
-                        if appointment_date <= datetime.datetime.now() :
-                            appointment_to_check_in.append([row[0],row[1],row[2],row[3],row[4]])
+                        if appointment_date <= datetime.datetime.now():
+                            appointment_to_check_in.append([row[0], row[1], row[2], row[3], row[4]])
                         else:
                             print("Sorry, you can not check in before your appointment")
                             print(f"check in for: {row[4]} failed")
@@ -464,17 +432,17 @@ class Patient(User):
                                "FROM visit  WHERE NHSNo = ? AND Timeslot >= ? "
                 all_valid_cancel = SQLQuery(query_string)
                 all_valid_cancel_result = all_valid_cancel.executeFetchAll(
-                    parameters=(self.ID,datetime.datetime.now() + datetime.timedelta(days=5)))
+                    parameters=(self.ID, datetime.datetime.now() + datetime.timedelta(days=5)))
                 cancel_table = []
                 cancel_table_raw = []
                 cancel_pointer = []
 
                 for i in range(len(all_valid_cancel_result)):
-                    cancel_table.append([i + 1, str(all_valid_cancel_result[i][0]),str(all_valid_cancel_result[i][1]),
-                                         str(all_valid_cancel_result[i][2]),str(all_valid_cancel_result[i][3]),
+                    cancel_table.append([i + 1, str(all_valid_cancel_result[i][0]), str(all_valid_cancel_result[i][1]),
+                                         str(all_valid_cancel_result[i][2]), str(all_valid_cancel_result[i][3]),
                                          str(all_valid_cancel_result[i][4])])
-                    cancel_table_raw.append([i + 1, all_valid_cancel_result[i][0],all_valid_cancel_result[i][1],
-                                             all_valid_cancel_result[i][2],all_valid_cancel_result[i][3],
+                    cancel_table_raw.append([i + 1, all_valid_cancel_result[i][0], all_valid_cancel_result[i][1],
+                                             all_valid_cancel_result[i][2], all_valid_cancel_result[i][3],
                                              all_valid_cancel_result[i][4]])
                     cancel_pointer.append(i + 1)
                 print(f"You are viewing all the appointments can be cancelled.")
@@ -485,32 +453,33 @@ class Patient(User):
                     stage = 1
 
             while stage == 1:
-                print(tabulate(cancel_table, headers = ["Pointer","BookingNo", "NHSNo",
-                                                        "StaffID", "Timeslot","PatientInfo"]))
+                print(tabulate(cancel_table, headers=["Pointer", "BookingNo", "NHSNo",
+                                                      "StaffID", "Timeslot", "PatientInfo"]))
                 selected_cancel_appointment = Parser.pick_pointer_parser("Select an appointment "
-                                                                       "to cancel by the Pointer.",
-                                                                       (1,len(cancel_table)))
+                                                                         "to cancel by the Pointer.",
+                                                                         (1, len(cancel_table)))
 
                 selected_row = cancel_table[selected_cancel_appointment - 1]
                 selected_row_raw = cancel_table_raw[selected_cancel_appointment - 1]
 
                 print("This is appointment you want to cancel:")
-                print(tabulate([selected_row],headers = ["Pointer","BookingNo", "NHSNo",
-                                                        "StaffID", "Timeslot","PatientInfo"]))
+                print(tabulate([selected_row], headers=["Pointer", "BookingNo", "NHSNo",
+                                                        "StaffID", "Timeslot", "PatientInfo"]))
 
-                confirmation = Parser.selection_parser(options= {"Y":"Confirm","N": "Go back and select again"})
+                confirmation = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
                 if confirmation == "Y":
                     SQLQuery("DELETE FROM visit WHERE BookingNo = ? "
-                             ).executeCommit(parameters = (selected_row_raw[1]))
+                             ).executeCommit(parameters=(selected_row_raw[1]))
                     SQLQuery("INSERT INTO available_time VALUES (?,?)"
-                             ).executeCommit(parameters = (selected_row_raw[3],selected_row_raw[4]))
+                             ).executeCommit(parameters=(selected_row_raw[3], selected_row_raw[4]))
                     print("Appointment is cancelled successfully.")
 
                     visit_result = SQLQuery("SELECT bookingNo, NHSNo, StaffID, Timeslot, PatientInfo FROM visit "
                                             "WHERE NHSNo = ? AND Timeslot >= ? "
-                                            ).executeFetchAll(parameters = (self.ID,datetime.datetime.now() + datetime.timedelta(days=5)))
+                                            ).executeFetchAll(
+                        parameters=(self.ID, datetime.datetime.now() + datetime.timedelta(days=5)))
 
-                    print(tabulate(visit_result, headers=["bookingNo", "NHSNo", "GP", "Timeslot","PatientInfo"]))
+                    print(tabulate(visit_result, headers=["bookingNo", "NHSNo", "GP", "Timeslot", "PatientInfo"]))
 
                 else:
                     Parser.print_clean()
@@ -564,17 +533,17 @@ class Patient(User):
                     ).executeFetchAll(parameters=(self.ID, "T"))
 
                     patient_attended_appointment_table = []
-                    #patient_unconfirmed_appointment_table_raw = []
-                    if len(patient_result) == 0 :
+                    # patient_unconfirmed_appointment_table_raw = []
+                    if len(patient_result) == 0:
                         print(f"You don't have any attended appointment")
                         input("Press Enter to back...")
                         return
                     else:
                         for i in range(len(patient_result)):
                             patient_attended_appointment_table.append([i + 1, str(patient_result[i][0]),
-                                                                            str(patient_result[i][1]),
-                                                                            str(patient_result[i][2]),
-                                                                            str(patient_result[i][3])])
+                                                                       str(patient_result[i][1]),
+                                                                       str(patient_result[i][2]),
+                                                                       str(patient_result[i][3])])
 
                         print("There are appointments attended by you:")
                         print(tabulate(patient_attended_appointment_table,
@@ -582,8 +551,9 @@ class Patient(User):
 
                         print("We think highly of your feelings, please give a rate to your GP")
 
-                        selected_rate_appointment = Parser.pick_pointer_parser("Select an appointment to rate by the Pointer.",
-                                                                                 (1, len(patient_attended_appointment_table)))
+                        selected_rate_appointment = Parser.pick_pointer_parser(
+                            "Select an appointment to rate by the Pointer.",
+                            (1, len(patient_attended_appointment_table)))
                         if selected_rate_appointment == "--back":
                             print_clean()
                             return
@@ -591,12 +561,13 @@ class Patient(User):
                         selected_row = patient_attended_appointment_table[selected_rate_appointment - 1]
 
                         print("This is the appointment you want to rate:")
-                        print(tabulate([selected_row], headers=["pointer", "bookingNo", "staffID", "timeslot", "rating"]))
+                        print(
+                            tabulate([selected_row], headers=["pointer", "bookingNo", "staffID", "timeslot", "rating"]))
 
                         rate_selection = Parser.selection_parser(options={"Y": "Rate", "N": "Go back"})
 
                         if rate_selection == "N":
-                                return
+                            return
                         elif rate_selection == "Y":
                             try:
                                 selected_rate = Parser.pick_pointer_parser("Select form 0 - 5 ", (0, 5))
@@ -605,23 +576,23 @@ class Patient(User):
                                          ).executeCommit((selected_rate, selected_row[1]))
 
                                 gp_rate_result = SQLQuery("SELECT Rating FROM visit WHERE StaffID = ? AND Attended = ?"
-                                         ).executeFetchAll(parameters=(selected_row[2],"T"))
+                                                          ).executeFetchAll(parameters=(selected_row[2], "T"))
 
                                 gp_rate_num = 0
 
-                                #print(gp_rate_result)
+                                # print(gp_rate_result)
                                 if gp_rate_result != 0:
                                     cont = 0
                                     for i in range(len(gp_rate_result)):
-                                        #print(type(gp_rate_result[i][0]))
+                                        # print(type(gp_rate_result[i][0]))
                                         if type(gp_rate_result[i][0]) is int:
-                                            #print(gp_rate_result[i][0])
+                                            # print(gp_rate_result[i][0])
                                             cont += 1
                                             gp_rate_num = gp_rate_num + gp_rate_result[i][0]
 
-                                    #print(cont)
-                                    gp_rate_average = round((gp_rate_num/cont),2)
-                                    #print(gp_rate_average)
+                                    # print(cont)
+                                    gp_rate_average = round((gp_rate_num / cont), 2)
+                                    # print(gp_rate_average)
                                     try:
 
                                         SQLQuery(" UPDATE GP SET Rating = ? WHERE ID = ? "
@@ -635,7 +606,7 @@ class Patient(User):
                                     gp_rate_num = selected_rate
                                     # print(gp_rate_num )
                                     SQLQuery(" UPDATE gp SET Rating = ? WHERE ID = ? "
-                                             ).executeCommit((gp_rate_num , selected_row[2]))
+                                             ).executeCommit((gp_rate_num, selected_row[2]))
                                     print("Your rate have been recorded successfully!")
 
                                 input("Press Enter to continue...")
@@ -643,6 +614,25 @@ class Patient(User):
                             except DBRecordError:
                                 print("Error encountered")
                                 input("Press Enter to continue...")
+
+    def first_login(self):
+        Parser.print_clean("Welcome Patient {}. This is your first login. ".format(self.username))
+        print("You need to input additional information before you can proceed.")
+        Parser.handle_input("Press Enter to continue...")
+        encrypt = EncryptionHelper().encrypt_to_bits
+        Parser.print_clean("Enter your gender: ")
+        gender = Parser.selection_parser(options={"M": "Male", "F": "Female", "N": "Do not disclose"})
+        info = encrypt(Parser.string_parser("Enter an intro paragraph about yourself: "))
+        notice = encrypt(Parser.string_parser("Enter any allergies or important medical history: "))
+        try:
+            SQLQuery("INSERT INTO Patient(NHSNo, Gender, Introduction, Notice) VALUES (?, "
+                     "?, ?, ?)").commit(parameters=(self.ID, gender, info, notice))
+            return True
+        except Exception as e:
+            print(e)
+            print("Database error")
+            return False
+
 
 if __name__ == "__main__":
     current_user = MenuHelper.login()

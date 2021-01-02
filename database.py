@@ -84,7 +84,7 @@ class SQLQuery(Database):
         else:
             return []
 
-    def commit(self, parameters=tuple()) -> list:
+    def commit(self, parameters=tuple(), multiple_queries=False) -> list:
         """
         :param tuple parameters: Parameters for the query
         :return: a list of list for the result array 
@@ -93,7 +93,10 @@ class SQLQuery(Database):
         """
         if self.create_connection():
             cur = self.conn.cursor()
-            self.execute_query(cur, parameters)
+            if not multiple_queries:
+                self.execute_query(cur, parameters)
+            else:
+                self.execute_multiple_query(cur)
             self.conn.commit()
             result = cur.lastrowid
             self.close_connection()
@@ -108,6 +111,14 @@ class SQLQuery(Database):
         """
         try:
             cursor.execute(self.query, parameters)
+        except sqlite3.DatabaseError as e:
+            print("Database disk image is malformed.", e)
+            from iohandler import Parser
+            Parser.user_quit()
+
+    def execute_multiple_query(self, cursor):
+        try:
+            cursor.executescript(self.query)
         except sqlite3.DatabaseError as e:
             print("Database disk image is malformed.", e)
             from iohandler import Parser

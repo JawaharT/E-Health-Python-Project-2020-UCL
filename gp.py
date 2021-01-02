@@ -479,7 +479,6 @@ class GP(User):
 
     def first_login(self):
         Parser.print_clean("Welcome GP {}. This is your first login. ".format(self.username))
-        print(self.ID)
         print("You need to input additional information before you can proceed.")
         Parser.handle_input("Press Enter to continue...")
         encrypt = EncryptionHelper().encrypt_to_bits
