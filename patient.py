@@ -6,7 +6,6 @@ from database import SQLQuery
 # import sys
 import time
 import datetime
-import random
 from exceptions import DBRecordError
 
 print_clean = Parser.print_clean
@@ -57,183 +56,104 @@ class Patient(User):
         --insert in visit
         """
         while True:
-            result = SQLQuery(
-                "SELECT firstName, lastName, Timeslot, available_time.StaffID FROM (available_time JOIN Users ON "
-                "available_time.StaffID = Users.ID) WHERE Timeslot >= ? AND Timeslot <= ? ORDER BY Timeslot"
-            ).fetch_all(parameters=(date_now + delta(days=1), date_now + delta(days=8)),
-                        decrypter=EncryptionHelper())
-            print("You are viewing all available appointments for the next week.")
-            if len(result) == 0:
-                print(f"There are no available appointments. ")
-                Parser.handle_input("Press Enter to continue...")
-            else:
-                result_table = []
-                for count, item in enumerate(result):
-                    result_table.append([count + 1, item[0], item[1], item[2], item[3]])
-                print(tabulate([result[0:4] for result in result_table], headers=["Pointer", "GP Name", "Last Name",
-                                                                                  "Timeslot"]))
-                print("How would you like to choose? ")
-                booking_selection = Parser.selection_parser(
-                    options={"E": "select earliest available appointment",
-                             "G": "select by GP", "D": "select by date", "--back": "back"})
-                if booking_selection == "E":
-                    if self.process_booking(result_table[0]):
-                        return True
-                if booking_selection == "D":
-                    if self.book_appointment_date():
-                        return True
-                elif booking_selection == "G":
-                    if self.book_appointment_GP():
-                        return True
-                elif booking_selection == "--back":
-                    return False
+            result_table = self.fetch_format_appointments(date_now + delta(days=1), 8)
+            Parser.print_clean("You are viewing all available appointments for the next week. To view appointments up "
+                               "to 2 weeks ahead, use 'select by date' or 'select by GP' options below")
+            if not result_table:
+                return False
+            print(tabulate([result[0:4] for result in result_table], headers=["Pointer", "GP Name", "Last Name",
+                                                                              "Timeslot"]))
+            print("How would you like to choose? ")
+            booking_selection = Parser.selection_parser(
+                options={"E": "select earliest available appointment",
+                         "G": "select by GP", "D": "select by date", "--back": "back"})
+            if booking_selection == "E":
+                if self.process_booking(result_table[0]):
+                    return True
+            if booking_selection == "D":
+                if self.book_appointment_date():
+                    return True
+            elif booking_selection == "G":
+                if self.book_appointment_gp():
+                    return True
+            elif booking_selection == "--back":
+                Parser.print_clean()
+                return False
+
+    @staticmethod
+    def fetch_format_appointments(selected_date, selected_delta=1, GP_ID='%'):
+        result = SQLQuery("SELECT firstName, lastName, Timeslot, available_time.StaffID FROM "
+                          "(available_time JOIN Users ON available_time.StaffID = Users.ID) WHERE "
+                          "available_time.StaffID LIKE ? AND Timeslot >= ? AND Timeslot <= ? ORDER BY Timeslot"
+                          ).fetch_all(parameters=(GP_ID, selected_date, selected_date + delta(days=selected_delta)),
+                                      decrypter=EncryptionHelper())
+        if len(result) == 0:
+            print(f"There are no available appointments matching the search criteria. ")
+            Parser.handle_input("Press Enter to continue.")
+            return False
+        result_table = []
+        for count, item in enumerate(result):
+            result_table.append([count + 1, item[0], item[1], item[2], item[3]])
+        return result_table
 
     def book_appointment_date(self):
-        stage = 0
         while True:
-            while stage == 0:
-                booking_selection = Parser.selection_parser(
-                    options={"E": "select the earliest one", "D": "select by date", "--back": "back"})
-                if booking_selection == "E":
-                    stage = 1
-                elif booking_selection == "D":
-                    stage = 2
-                elif booking_selection == "--back":
-                    return
-            while stage == 1:
-                result = SQLQuery(
-                    "SELECT  StaffID, Timeslot FROM available_time "
-                    "WHERE Timeslot >= ? AND Timeslot <= ? "
-                    "ORDER BY Timeslot "
-                    "LIMIT 1 "
-                    # "ORDER BY   DATE_FORMAT(Timeslot,'%Y-%m-%d %H:%i:%s')"
-                    # CONVERT(varchar(100), Timeslot, 120)
-                ).executeFetchAll(parameters=(date_now + delta(days=1), date_now + delta(days=15)))
+            selected_date = Parser.date_parser(question=f"Managing for Patient {self.username}.\n"
+                                                        "Select a Date:\n")
+            if selected_date == "--back":
+                print_clean()
+                return False
+            result_table = self.fetch_format_appointments(selected_date)
+            if not result_table:
+                continue
+            print(f"You are viewing all available appointments for: {selected_date}")
+            print(tabulate([result[0:4] for result in result_table], headers=["Pointer", "GP Name", "Last Name",
+                                                                              "Timeslot"]))
+            selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
+                                                             (1, len(result_table)), allow_multiple=False)
+            if selected_appointment == '--back':
+                return False
+            selected_row = result_table[selected_appointment - 1]
+            if self.process_booking(selected_row):
+                return True
 
-                # selected_row_raw=[]
-                selected_row_raw = [1, result[0][0], result[0][1]]
-                # print(selected_row_raw)
-                print(f"You are viewing early available since: {date_now}")
-                # print(selected_row_raw)
-                print(tabulate([selected_row_raw], headers=["pointer", "GP", "timeslot"]))
-                stage = 3
-            while stage == 2:
-                selected_date = Parser.date_parser(question=f"Managing for Patient {self.username}.\n"
-                                                            "Select a Date:\n")
-                if selected_date == "--back":
-                    print_clean()
-                    return
-
-                result = SQLQuery(
-                    "SELECT  StaffID, Timeslot FROM available_time "
-                    "WHERE Timeslot >= ? AND Timeslot <= ? "
-                    "ORDER BY Timeslot"
-                    # ORDER BY   DATE_FORMAT(Timeslot,'%Y-%m-%d %H:%i:%s')"
-                    # CONVERT(varchar(100), Timeslot, 120)
-                ).executeFetchAll(parameters=(selected_date, selected_date + delta(days=1)))
-
-                if len(result) == 0:
-                    print(f"There are no available appointments for this day. ")
-                    stage = 0
-                    input("Press Enter to continue.")
-                else:
-                    result_table = []
-
-                    for i in range(len(result)):
-                        result_table.append([i + 1, result[i][0], result[i][1]])
-
-                    print(f"You are viewing all available appointment for: {selected_date}")
-                    print(tabulate(result_table, headers=["Pointer", "GP", "timeslot"]))
-
-                    selected_appointment = Parser.pick_pointer_parser("Select an appointment by the Pointer.",
-                                                                      (1, len(result_table)))
-
-                    if selected_appointment == '--back':
-                        return False
-
-                    # selected_row = result_table[selected_appointment - 1]
-                    selected_row_raw = result_table[selected_appointment - 1]
-                    stage = 3
-
-            while stage == 3:
-                self.process_booking(selected_row_raw)
-
-    def book_appointment_GP(self):
-        stage = 0
+    def book_appointment_gp(self):
         while True:
-            while stage == 0:
-                gp_result = SQLQuery(
-                    "SELECT users.lastName, GP.Introduction, GP.ClinicAddress, GP.ClinicPostcode, GP.Gender, "
-                    "GP.Rating, users.ID FROM GP INNER JOIN users ON "
-                    "GP.ID = users.ID WHERE users.ID IN ( SELECT DISTINCT StaffID FROM available_time "
-                    "WHERE Timeslot >= ? AND Timeslot <= ? )"
-                ).executeFetchAll(
-                    parameters=(date_now + delta(days=1), date_now + delta(days=15)))
-
-                gp_table = []
-
-                for i in range(len(gp_result)):
-                    # gp_table.append(str(gp_result[i]))
-                    # print(EncryptionHelper().decryptMessage(gp_result[i][1]))
-                    gp_table.append([i + 1, EncryptionHelper().decryptMessage(gp_result[i][0]),
-                                     str(gp_result[i][1]),
-                                     EncryptionHelper().decryptMessage(gp_result[i][2]),
-                                     EncryptionHelper().decryptMessage(gp_result[i][3]),
-                                     str(gp_result[i][4]),
-                                     str(gp_result[i][5]),
-                                     str(gp_result[i][6])])
-
-                if len(gp_table) == 0:
-                    print(f"there is no GP yet.")
-                    stage = 0
-                    input("Press Enter to continue...")
-                else:
-                    print(f"You are viewing all available GP since: {date_now} ")
-                    print(tabulate(gp_table,
-                                   headers=["pointer", "lastname", "introduction", "clinicAddress", "clinicPostcode",
-                                            "gender", "rating"]))
-
-                    selected_gp_pointer = Parser.pick_pointer_parser("Select GP by the Pointer.",
-                                                                     (1, len(gp_table)))
-                    if selected_gp_pointer == '--back':
-                        return False
-
-                    selected_gp_row = gp_table[selected_gp_pointer - 1]
-                    print(selected_gp_row[7])
-                    # print(selected_gp)
-                    appointment_result = SQLQuery(
-                        "SELECT StaffID, Timeslot FROM available_time "
-                        "WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ?",
-                    ).executeFetchAll(
-                        parameters=(selected_gp_row[7], date_now + delta(days=1), date_now + delta(days=15)))
-
-                    appointment_table = []
-                    appointment_table_raw = []
-                    for i in range(len(appointment_result)):
-                        appointment_table.append([i + 1, str(appointment_result[i][0]), str(appointment_result[i][1])])
-                        appointment_table_raw.append([i + 1, appointment_result[i][0], appointment_result[i][1]])
-
-                    print(f"You are viewing your schedule for: {selected_gp_pointer}")
-
-                    if len(appointment_table) == 0:
-                        print(f"There are no available appointments for this GP yet. ")
-                        input("Press Enter to continue...")
-                        stage = 0
-                    else:
-                        print(tabulate(appointment_table, headers=["Pointer", "GP", "Timeslot"]))
-
-                    selected_appointment = Parser.pick_pointer_parser("Select an appointment by the Pointer.",
-                                                                      (1, len(appointment_table)))
-
-                    if selected_appointment == '--back':
-                        return False
-
-                    # selected_row = result_table[selected_appointment - 1]
-                    selected_row_raw = appointment_table[selected_appointment - 1]
-                    stage = 1
-
-            while stage == 1:
-                self.process_booking(selected_row_raw)
+            gp_result = SQLQuery("SELECT users.firstName, users.lastName, GP.Introduction, GP.ClinicAddress, "
+                                 "GP.ClinicPostcode, GP.Gender, GP.Rating, users.ID FROM (GP INNER JOIN users ON "
+                                 "GP.ID = users.ID) WHERE users.ID IN ( SELECT DISTINCT StaffID FROM available_time "
+                                 "WHERE Timeslot >= ? AND Timeslot <= ? )"
+                                 ).fetch_all(parameters=(date_now + delta(days=1), date_now + delta(days=15)),
+                                             decrypter=EncryptionHelper())
+            gp_table = []
+            for count, item in enumerate(gp_result):
+                gp_table.append([count + 1, item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7]])
+            if len(gp_table) == 0:
+                print("There are no GPs in the system yet.")
+                Parser.handle_input("Press Enter to continue...")
+                return False
+            Parser.print_clean(f"You are viewing all available GPs in 2 weeks from: {date_now} ")
+            print(tabulate([gp[0:8] for gp in gp_table], headers=["Pointer", "First Name", "Last Name", "Introduction",
+                                                                  "Clinic Address", "Clinic Postcode",
+                                                                  "Gender", "Rating"]))
+            selected_gp_pointer = Parser.list_number_parser("Select GP by the Pointer.",
+                                                            (1, len(gp_table)), allow_multiple=False)
+            if selected_gp_pointer == '--back':
+                return False
+            selected_gp = gp_table[selected_gp_pointer - 1][8]
+            result_table = self.fetch_format_appointments(date_now + delta(days=1), 15, selected_gp)
+            if not result_table:
+                continue
+            print(f"You are viewing appointments for the selected GP:")
+            print(tabulate([result[0:4] for result in result_table], headers=["Pointer", "GP First Name",
+                                                                              "Last Name", "Timeslot"]))
+            selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
+                                                             (1, len(result_table)), allow_multiple=False)
+            if selected_appointment == '--back':
+                return False
+            selected_row = result_table[selected_appointment - 1]
+            if self.process_booking(selected_row):
+                return True
 
     def process_booking(self, selected_row):
         encrypt = EncryptionHelper().encrypt_to_bits
@@ -277,14 +197,12 @@ class Patient(User):
                 Parser.print_clean()
                 return False
 
-
-
     def check_in_appointment(self):
         """
-        show all booking
-        if time later, allow to check in
-        change attend to T
-        """
+            show all booking
+            if time later, allow to check in
+            change attend to T
+            """
         stage = 0
         while True:
             while stage == 0:
@@ -421,10 +339,10 @@ class Patient(User):
 
     def cancel_appointment(self):
         """
-        bookings can be cancelled five days in advance
-        move from visit
-        insert in available time
-        """
+            bookings can be cancelled five days in advance
+            move from visit
+            insert in available time
+            """
         stage = 0
         while True:
             while stage == 0:
@@ -486,7 +404,6 @@ class Patient(User):
                     return
 
     def review_appointment(self):
-
         while True:
             record_viewer = Parser.selection_parser(
                 options={"A": "Review Appointments", "B": "Review Prescriptions",
