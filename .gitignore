@@ -1,4 +1,4 @@
-
+venv/
 venv/.DS_Store
 .idea/misc.xml
 __pycache__/databaseHelp.cpython-38.pyc
