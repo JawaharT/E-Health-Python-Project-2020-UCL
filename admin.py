@@ -274,6 +274,8 @@ class Admin(User):
             logger.debug("Unexpected database error")
             return False
 
+    def first_login(self):
+        return True
 
 if __name__ == "__main__":
     current_user = MenuHelper.login()
