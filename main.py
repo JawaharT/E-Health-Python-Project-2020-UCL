@@ -4,6 +4,7 @@ from encryption import EncryptionHelper, PasswordHelper
 from getpass import getpass
 from tabulate import tabulate
 from exceptions import DBRecordError
+from typing import Tuple
 
 # logging
 import logging
@@ -29,9 +30,10 @@ class MenuHelper:
     """
 
     @staticmethod
-    def login():
+    def login() -> Tuple[str, str]:
         """
         Login to a registered account.
+        :return: username, user account type
         """
         logger.debug("Entered Login Sequence")
         for i in range(4, -1, -1):
@@ -84,7 +86,7 @@ class MenuHelper:
             Parser.user_quit()
 
     @staticmethod
-    def register(admin=False):
+    def register(admin=False) -> bool:
         """
         Register a new GP or Patient Account.
         """
@@ -123,7 +125,8 @@ class MenuHelper:
         Parser.handle_input()
         return True
 
-    def get_check_user_input(self, parameter_name, user_group):
+    @staticmethod
+    def get_check_user_input(parameter_name, user_group) -> str:
         """
         :param str parameter_name: The name of the parameter for Admin to enter
         :param str user_group: Patient or GP
@@ -141,7 +144,8 @@ class MenuHelper:
                 Parser.print_clean("{0} approved.\n".format(parameter_name[0].upper() + parameter_name[1:]))
                 return parameter
 
-    def register_new_password(self):
+    @staticmethod
+    def register_new_password() -> str:
         """
         :return: Check for valid new password
         """
@@ -157,7 +161,7 @@ class MenuHelper:
                 return PasswordHelper.hash_pw(password)
 
     @staticmethod
-    def get_address():
+    def get_address() -> str:
         """
         :return: Encrypted First line of GP or Patient UK address
         """
@@ -165,7 +169,7 @@ class MenuHelper:
             Parser.string_parser("Please enter primary home address (one line): "))
 
     @staticmethod
-    def get_name(name_type):
+    def get_name(name_type) -> str:
         """
         :param str name_type: First/Last Name flag for user input
         :return: Encrypted new first/last name of user
@@ -174,7 +178,7 @@ class MenuHelper:
             "Please enter {0} name: ".format(name_type)))
 
     @staticmethod
-    def get_birthday():
+    def get_birthday() -> str:
         """
         :return: Encrypted User birthday
         """
@@ -182,7 +186,7 @@ class MenuHelper:
                                                                          allow_back=False, allow_past=True)))
 
     @staticmethod
-    def get_id():
+    def get_id() -> str:
         """
         :return: Valid user ID and type of user
         """
@@ -204,7 +208,7 @@ class MenuHelper:
                 return new_id, user_group
 
     @staticmethod
-    def valid_local_phone():
+    def valid_local_phone() -> str:
         """
         :return: return a valid UK phone number
         """
@@ -219,7 +223,7 @@ class MenuHelper:
                 Parser.print_clean("Invalid Phone Number. Please try again.\n")
 
     @staticmethod
-    def valid_postcode():
+    def valid_postcode() -> str:
         """
         :return: return a valid UK postcode
         """
@@ -232,11 +236,10 @@ class MenuHelper:
                 return EncryptionHelper().encrypt_to_bits(temp_postcode)
 
     @staticmethod
-    def dispatcher(username, user_type):
+    def dispatcher(username, user_type) -> None:
         """
         :param str username: Username of account
         :param str user_type: Type of account
-        :return: Main menu of Logged in user
         """
         logger.debug(f"Entered user session creation sequence with user: {username}; type {user_type}")
         if user_type == "Admin":
@@ -286,7 +289,7 @@ class User:
         self.birthday = self.user_data[9]
         self.login_count = self.user_data[10]
 
-    def handle_login_count(self):
+    def handle_login_count(self) -> bool:
         self.login_count += 1
         if self.login_count <= 1:
             if self.first_login():
@@ -298,14 +301,14 @@ class User:
             SQLQuery("UPDATE Users SET LoginCount = ? WHERE ID = ?").commit(parameters=(self.login_count, self.ID))
             return True
 
-    def print_hello(self):
+    def print_hello(self) -> bool:
         """
         Personalised logged in message to user.
         """
         Parser.print_clean(f"Login Successful. Hello {self.first_name}")
         return True
 
-    def print_information(self):
+    def print_information(self) -> bool:
         """
         Display all User information.
         """
