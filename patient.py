@@ -328,30 +328,28 @@ class Patient(User):
     def review_appointment(self):
         while True:
             record_viewer = Parser.selection_parser(
-                options={"A": "Review Appointments", "B": "Review Prescriptions",
+                options={"A": "Review past appointments", "B": "Review prescriptions",
                          "--back": "back"})
-
             if record_viewer == "--back":
                 Parser.print_clean("\n")
-                return
+                return False
+
             elif record_viewer == "A":
                 query_string = "SELECT visit.BookingNo, visit.NHSNo, users.firstName, users.lastName, " \
-                               "visit.Timeslot, visit.PatientInfo, visit.Confirmed, visit.Attended,visit.Rating " \
-                               "FROM visit INNER JOIN users ON " \
-                               "visit.NHSNo = users.ID WHERE visit.NHSNo = ? "
-                headers = ("BookingNo", "NHSNo", "Firstname", "Lastname", "Timeslot",
-                           "PatientInfo", "Confirmed", "Attended", "Rating")
-
+                               "visit.Timeslot, visit.PatientInfo, visit.Confirmed, visit.Attended, visit.Rating " \
+                               "FROM (visit INNER JOIN users ON visit.StaffID = users.ID) WHERE visit.NHSNo = ? "
+                headers = ("BookingNo", "NHSNo", "GP First Name", "Last", "Timeslot",
+                           "Patient Info", "Confirmed", "Attended", "Rating")
             else:
-                query_string = "SELECT prescription.BookingNo, users.ID, users.firstName, users.lastName, " \
-                               "visit.PatientInfo, visit.Diagnosis, visit.Notes, prescription.drugName, " \
+                query_string = "SELECT prescription.BookingNo, users.firstName, users.lastName, " \
+                               "visit.PatientInfo, visit.Diagnosis, prescription.drugName, " \
                                "prescription.quantity, prescription.Instructions " \
-                               "FROM (visit INNER JOIN users ON visit.NHSNo = users.ID) " \
+                               "FROM (visit INNER JOIN users ON visit.StaffID = users.ID) " \
                                "INNER JOIN prescription ON " \
                                "visit.BookingNo = prescription.BookingNo WHERE visit.NHSNo = ? "
 
-                headers = ("BookingNo", "NHSNo", "Firstname", "Lastname", "PatientInfo", "Diagnosis",
-                           "DrugName", "Quantity", "Instructions", "Notes")
+                headers = ("BookingNo", "GP Name", "Last Name", "Patient Info", "Diagnosis",
+                           "Drug Name", "Quantity", "Instructions", "Notes")
 
             query = SQLQuery(query_string)
             all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
@@ -362,97 +360,54 @@ class Patient(User):
                 print(tabulate(all_data, headers))
 
     def rate_appointment(self):
-        while True:
-            stage = 0
-            while True:
-                while stage == 0:
-                    patient_result = SQLQuery(
-                        "SELECT bookingNo, StaffID, Timeslot, Rating FROM visit "
-                        "WHERE NHSNo = ? AND Attended = ? ",
-                    ).fetch_all(parameters=(self.ID, "T"))
+        stage = 0
+        while stage == 0:
+            patient_result = SQLQuery("SELECT bookingNo, firstName, lastName, Timeslot, Rating, StaffID FROM (Visit "
+                                      "JOIN Users on Visit.StaffID = Users.ID) WHERE NHSNo = ? AND Attended = 'T' "
+                                      ).fetch_all(parameters=(self.ID,), decrypter=EncryptionHelper())
 
-                    patient_attended_appointment_table = []
-                    # patient_unconfirmed_appointment_table_raw = []
-                    if len(patient_result) == 0:
-                        print(f"You don't have any attended appointment")
-                        input("Press Enter to back...")
-                        return
-                    else:
-                        for i in range(len(patient_result)):
-                            patient_attended_appointment_table.append([i + 1, str(patient_result[i][0]),
-                                                                       str(patient_result[i][1]),
-                                                                       str(patient_result[i][2]),
-                                                                       str(patient_result[i][3])])
+            appointments_table = []
+            if not patient_result:
+                print(f"You don't have any attended appointment")
+                input("Press Enter to continue...")
+                return False
 
-                        print("There are appointments attended by you:")
-                        print(tabulate(patient_attended_appointment_table,
-                                       headers=["pointer", "bookingNo", "staffID", "timeslot", "rating"]))
+            for count, appt in enumerate(patient_result, 1):
+                appointments_table.append([count, appt[0], appt[1], appt[2], appt[3], appt[4], appt[5]])
 
-                        print("We think highly of your feelings, please give a rate to your GP")
+            Parser.print_clean("These are appointments you have attended:")
+            print(tabulate([appt[0:6] for appt in appointments_table],
+                           headers=["Pointer", "BookingNo", "GP Name", "Last Name", "Timeslot", "Rating"]))
+            print("Your opinion matters to us. Please take the time to rate your experience with our GP.")
 
-                        selected_rate_appointment = Parser.pick_pointer_parser(
-                            "Select an appointment to rate by the Pointer.",
-                            (1, len(patient_attended_appointment_table)))
-                        if selected_rate_appointment == "--back":
-                            print_clean()
-                            return
+            selected_appt = Parser.list_number_parser("Select an appointment to rate by the Pointer.",
+                                                      (1, len(appointments_table)), allow_multiple=False)
+            if selected_appt == "--back":
+                print_clean()
+                return False
 
-                        selected_row = patient_attended_appointment_table[selected_rate_appointment - 1]
+            selected_row = appointments_table[selected_appt - 1]
+            selected_rate = int(Parser.list_number_parser("Select a rating between 1-5. ", (1, 5))[0])
+            try:
+                current_rate = int(SQLQuery("SELECT Rating FROM GP WHERE ID = ?").fetch_all(parameters=(selected_row[6],))[0][0])
+                rate_count = int(SQLQuery("SELECT COUNT(Rating) FROM Visit WHERE StaffID = ?"
+                                      ).fetch_all(parameters=(selected_row[6],))[0][0])
+                print(current_rate)
+                print(rate_count)
+                if current_rate != 0:
+                    new_rate = round((((current_rate*rate_count) + selected_rate) / (rate_count + 1)), 2)
+                else:
+                    new_rate = selected_rate
 
-                        print("This is the appointment you want to rate:")
-                        print(
-                            tabulate([selected_row], headers=["pointer", "bookingNo", "staffID", "timeslot", "rating"]))
+                SQLQuery("UPDATE Visit SET Rating = ? WHERE BookingNo = ? ").commit((selected_rate, selected_row[1]))
+                SQLQuery("UPDATE GP SET Rating = ? WHERE ID = ? ").commit((new_rate, selected_row[6]))
+                print("Your rating has been recorded successfully!")
+                Parser.handle_input("Press Enter to continue...")
+                stage = 0
 
-                        rate_selection = Parser.selection_parser(options={"Y": "Rate", "N": "Go back"})
-
-                        if rate_selection == "N":
-                            return
-                        elif rate_selection == "Y":
-                            try:
-                                selected_rate = Parser.pick_pointer_parser("Select form 0 - 5 ", (0, 5))
-
-                                SQLQuery(" UPDATE Visit SET Rating = ? WHERE BookingNo = ? "
-                                         ).commit((selected_rate, selected_row[1]))
-
-                                gp_rate_result = SQLQuery("SELECT Rating FROM visit WHERE StaffID = ? AND Attended = ?"
-                                                          ).fetch_all(parameters=(selected_row[2], "T"))
-
-                                gp_rate_num = 0
-
-                                # print(gp_rate_result)
-                                if gp_rate_result != 0:
-                                    cont = 0
-                                    for i in range(len(gp_rate_result)):
-                                        # print(type(gp_rate_result[i][0]))
-                                        if type(gp_rate_result[i][0]) is int:
-                                            # print(gp_rate_result[i][0])
-                                            cont += 1
-                                            gp_rate_num = gp_rate_num + gp_rate_result[i][0]
-
-                                    # print(cont)
-                                    gp_rate_average = round((gp_rate_num / cont), 2)
-                                    # print(gp_rate_average)
-                                    try:
-
-                                        SQLQuery(" UPDATE GP SET Rating = ? WHERE ID = ? "
-                                                 ).commit((gp_rate_average, selected_row[2]))
-                                        print("Your rate have been recorded successfully!")
-                                    except DBRecordError:
-                                        print("Error encountered")
-                                        input("Press Enter to continue...")
-
-                                else:
-                                    gp_rate_num = selected_rate
-                                    # print(gp_rate_num )
-                                    SQLQuery(" UPDATE gp SET Rating = ? WHERE ID = ? "
-                                             ).executeCommit((gp_rate_num, selected_row[2]))
-                                    print("Your rate have been recorded successfully!")
-
-                                input("Press Enter to continue...")
-                                stage = 0
-                            except DBRecordError:
-                                print("Error encountered")
-                                input("Press Enter to continue...")
+            except DBRecordError:
+                print("Error encountered")
+                input("Press Enter to continue...")
 
     def first_login(self):
         Parser.print_clean("Welcome Patient {}. This is your first login. ".format(self.username))
