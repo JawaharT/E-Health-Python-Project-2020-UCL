@@ -224,3 +224,287 @@
 2021-01-03 13:17:14,527 - __main__ - main - DEBUG - Entered user session creation sequence with user: testGP; type GP
 2021-01-03 13:17:14,591 - __main__ - main - DEBUG - <class '__main__.User'> created using GP method
 2021-01-03 13:17:14,592 - __main__ - main - INFO - user: testGP; type GP: logged in
+2021-01-03 14:15:20,933 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:15:20,934 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:15:20,934 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:15:23,000 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:15:23,002 - __main__ - main - WARNING - User doesn't exist or invalid
+2021-01-03 14:15:23,014 - __main__ - main - DEBUG - Username attempt 2
+2021-01-03 14:15:24,978 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:15:24,980 - __main__ - main - WARNING - User doesn't exist or invalid
+2021-01-03 14:15:24,994 - __main__ - main - DEBUG - Username attempt 3
+2021-01-03 14:15:27,955 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:15:27,956 - __main__ - main - WARNING - User doesn't exist or invalid
+2021-01-03 14:15:27,968 - __main__ - main - DEBUG - Username attempt 4
+2021-01-03 14:19:32,424 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:19:32,424 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:19:32,424 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:19:34,390 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:20:39,540 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:20:39,541 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:20:39,541 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:20:41,521 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:20:41,537 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:20:44,130 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:21:50,217 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:21:50,218 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:21:50,219 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:21:52,280 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:21:52,296 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:21:54,331 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:21:54,449 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 14:21:54,449 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:26:39,428 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:26:39,429 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:26:39,429 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:26:41,915 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:26:41,930 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:26:44,819 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:26:44,929 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 14:26:44,929 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:39:01,997 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:39:01,998 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:39:01,998 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:39:04,126 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:39:04,135 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:39:06,268 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:39:06,376 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 14:39:06,376 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:39:59,435 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:39:59,435 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:39:59,435 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:40:01,651 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:40:01,667 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:40:03,830 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:40:03,899 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 14:40:03,899 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:40:36,844 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:40:36,845 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:40:36,845 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:40:38,764 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:40:38,779 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:40:40,861 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:40:40,933 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 14:40:40,933 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:41:49,905 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:41:49,906 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:41:49,906 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:41:52,226 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:41:52,244 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:41:54,652 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:41:54,718 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 14:41:54,719 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:42:54,707 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:42:54,708 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:42:54,708 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:42:56,702 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:42:56,718 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:42:58,923 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:42:58,971 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 14:42:58,971 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:43:50,698 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:43:50,699 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:43:50,699 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:43:52,718 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:43:52,734 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:43:54,917 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:43:54,990 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 14:43:54,990 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:44:48,304 - __main__ - main - DEBUG - Selected Login
+2021-01-03 14:44:48,316 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 14:44:48,317 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 14:44:50,451 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 14:44:50,468 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:44:52,526 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 14:44:52,596 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 14:44:52,596 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 15:03:07,449 - __main__ - main - DEBUG - Selected Login
+2021-01-03 15:03:07,450 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 15:03:07,450 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 15:03:10,104 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 15:03:10,123 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 15:03:12,199 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 15:03:12,271 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 15:03:12,271 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 15:03:28,953 - __main__ - main - DEBUG - Selected Login
+2021-01-03 15:03:28,953 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 15:03:28,953 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 15:03:31,462 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 15:03:31,479 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 15:03:36,332 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 15:03:36,397 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 15:03:36,397 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 15:04:54,547 - __main__ - main - DEBUG - Selected Login
+2021-01-03 15:04:54,548 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 15:04:54,548 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 15:04:57,010 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 15:04:57,025 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 15:04:59,424 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 15:04:59,492 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 15:04:59,492 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:20:13,437 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:20:13,439 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:20:13,439 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:20:16,575 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:20:16,590 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:20:18,704 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:20:18,817 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:20:18,818 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:25:40,586 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:25:40,587 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:25:40,587 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:25:43,165 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:25:43,181 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:25:45,736 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:25:45,845 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:25:45,845 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:26:08,091 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:26:08,092 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:26:08,092 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:26:10,785 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:26:10,811 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:26:12,933 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:26:13,000 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:26:13,000 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:32:34,816 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:32:34,818 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:32:34,818 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:32:37,448 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:32:37,465 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:32:39,840 - __main__ - main - WARNING - Password invalid
+2021-01-03 17:33:08,393 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:33:08,394 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:33:08,394 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:33:10,681 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:33:10,694 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:33:13,058 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:33:13,172 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:33:13,172 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:34:40,040 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:34:40,042 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:34:40,043 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:34:42,064 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:34:42,125 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:34:44,334 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:34:44,452 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:34:44,452 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:36:17,454 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:36:17,455 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:36:17,455 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:36:19,649 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:36:19,663 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:36:21,793 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:36:21,868 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:36:21,869 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:38:46,839 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:38:46,840 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:38:46,841 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:38:49,176 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:38:49,198 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:38:51,483 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:38:51,656 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:38:51,657 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:40:18,897 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:40:18,899 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:40:18,899 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:40:21,069 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:40:21,087 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:40:23,632 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:40:23,726 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:40:23,726 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:41:14,773 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:41:14,774 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:41:14,774 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:41:17,101 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:41:17,123 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:41:19,230 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:41:19,337 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:41:19,338 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:42:10,742 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:42:10,744 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:42:10,745 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:42:12,878 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:42:12,894 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:42:15,143 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:42:15,276 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:42:15,276 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:42:39,317 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:42:39,318 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:42:39,318 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:42:41,380 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:42:41,395 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:42:43,664 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:42:43,802 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:42:43,802 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:43:48,590 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:43:48,590 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:43:48,591 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:43:50,677 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:43:50,692 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:43:52,975 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:43:53,077 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:43:53,077 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:50:31,163 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:50:31,164 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:50:31,165 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:50:33,629 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:50:33,644 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:50:36,024 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:50:36,178 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:50:36,178 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:50:57,309 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:50:57,310 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:50:57,310 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:50:59,421 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:50:59,437 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:51:01,619 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:51:01,695 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:51:01,695 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:55:33,928 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:55:33,929 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:55:33,929 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:55:36,138 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:55:36,151 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:55:39,281 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:55:39,391 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:55:39,391 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:56:23,113 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:56:23,114 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:56:23,114 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:56:25,328 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:56:25,345 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:56:27,471 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:56:27,578 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:56:27,578 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:57:36,592 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:57:36,601 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:57:36,602 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:57:40,152 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:57:40,173 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:57:42,386 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:57:42,499 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:57:42,499 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:58:49,206 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:58:49,207 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:58:49,208 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:58:51,690 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:58:51,706 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:58:54,436 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:58:54,545 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:58:54,545 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:59:39,044 - __main__ - main - DEBUG - Selected Login
+2021-01-03 17:59:39,044 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 17:59:39,045 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 17:59:41,279 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 17:59:41,294 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:59:43,633 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 17:59:43,742 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 17:59:43,743 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 18:00:15,619 - __main__ - main - DEBUG - Selected Login
+2021-01-03 18:00:15,620 - __main__ - main - DEBUG - Entered Login Sequence
+2021-01-03 18:00:15,620 - __main__ - main - DEBUG - Username attempt 1
+2021-01-03 18:00:17,900 - __main__ - main - DEBUG - UserName Entered: testPatientNew
+2021-01-03 18:00:17,913 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 18:00:20,318 - __main__ - main - DEBUG - Entered user session creation sequence with user: testPatientNew; type Patient
+2021-01-03 18:00:20,389 - __main__ - main - DEBUG - <class '__main__.User'> created using Patient method
+2021-01-03 18:00:20,389 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in

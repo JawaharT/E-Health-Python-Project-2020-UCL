@@ -60,3 +60,73 @@
 2021-01-03 13:14:51,861 - __main__ - main - INFO - user: testGP; type GP: logged in
 2021-01-03 13:17:12,481 - __main__ - main - INFO - testGP, user valid
 2021-01-03 13:17:14,592 - __main__ - main - INFO - user: testGP; type GP: logged in
+2021-01-03 14:15:23,002 - __main__ - main - WARNING - User doesn't exist or invalid
+2021-01-03 14:15:24,980 - __main__ - main - WARNING - User doesn't exist or invalid
+2021-01-03 14:15:27,956 - __main__ - main - WARNING - User doesn't exist or invalid
+2021-01-03 14:20:41,537 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:21:52,296 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:21:54,449 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:26:41,930 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:26:44,929 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:39:04,135 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:39:06,376 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:40:01,667 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:40:03,899 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:40:38,779 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:40:40,933 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:41:52,244 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:41:54,719 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:42:56,718 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:42:58,971 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:43:52,734 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:43:54,990 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 14:44:50,468 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 14:44:52,596 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 15:03:10,123 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 15:03:12,271 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 15:03:31,479 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 15:03:36,397 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 15:04:57,025 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 15:04:59,492 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:20:16,590 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:20:18,818 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:25:43,181 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:25:45,845 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:26:10,811 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:26:13,000 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:32:37,465 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:32:39,840 - __main__ - main - WARNING - Password invalid
+2021-01-03 17:33:10,694 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:33:13,172 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:34:42,125 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:34:44,452 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:36:19,663 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:36:21,869 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:38:49,198 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:38:51,657 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:40:21,087 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:40:23,726 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:41:17,123 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:41:19,338 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:42:12,894 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:42:15,276 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:42:41,395 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:42:43,802 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:43:50,692 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:43:53,077 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:50:33,644 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:50:36,178 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:50:59,437 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:51:01,695 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:55:36,151 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:55:39,391 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:56:25,345 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:56:27,578 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:57:40,173 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:57:42,499 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:58:51,706 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:58:54,545 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 17:59:41,294 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 17:59:43,743 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
+2021-01-03 18:00:17,913 - __main__ - main - INFO - testPatientNew, user valid
+2021-01-03 18:00:20,389 - __main__ - main - INFO - user: testPatientNew; type Patient: logged in
