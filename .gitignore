@@ -1,10 +1,10 @@
 venv/
 log/
-venv/.DS_Store
-.idea/misc.xml
-__pycache__/databaseHelp.cpython-38.pyc
+venv/
+.idea/
+__pycache__/
 *.pyc
 .DS_Store
 *.pyc
 /log/
-.idea/
+/.idea/
