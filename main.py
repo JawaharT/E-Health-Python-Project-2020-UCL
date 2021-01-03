@@ -25,6 +25,7 @@ main_logger.addHandler(fh_debug)
 main_logger.addHandler(fh_info)
 main_logger.addHandler(fh_warning)
 
+
 class MenuHelper:
     """
     Helper class for initialising the main menu.
