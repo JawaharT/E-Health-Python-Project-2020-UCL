@@ -171,11 +171,12 @@ class Admin(User):
         while True:
             full_accounts_table, accounts_table = self.list_accounts(list_accounts)
             selected_user_number = Parser.selection_parser(options=full_accounts_table)
-            selected_user = full_accounts_table[selected_user_number]
-            if selected_user == "back":
+
+            if selected_user_number == "--back":
                 Parser.print_clean()
                 break
             else:
+                selected_user = full_accounts_table[selected_user_number]
                 logger.info("Edit " + account_types + " Users")
                 record_editor = Parser.selection_parser(
                     options={"A": "Update Password", "B": "Update Birthday",
@@ -243,10 +244,10 @@ class Admin(User):
         while True:
             all_deactivated_users_table, _ = self.list_accounts(all_deactivated_users_result)
             selected_user_number = Parser.selection_parser(options=all_deactivated_users_table)
-            selected_user = all_deactivated_users_table[selected_user_number]
-            if selected_user == "--back":
+            if selected_user_number == "--back":
                 return False
             else:
+                selected_user = all_deactivated_users_table[selected_user_number]
                 user_type, selected_user_id = SQLQuery("SELECT UserType, ID FROM Users WHERE username==?")\
                     .fetch_all(parameters=(selected_user,))
 
