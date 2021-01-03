@@ -1,14 +1,11 @@
-from iohandler import Parser
+import logging.handlers
+from getpass import getpass
+from typing import Tuple
+from tabulate import tabulate
 from database import SQLQuery
 from encryption import EncryptionHelper, PasswordHelper
-from getpass import getpass
-from tabulate import tabulate
 from exceptions import DBRecordError
-from typing import Tuple
-
-# logging
-import logging
-import logging.handlers
+from iohandler import Parser
 
 fh_info = logging.handlers.RotatingFileHandler('log/gp_system_info_log.log', maxBytes=1000000, backupCount=2)
 fh_info.setLevel(logging.INFO)  # change this If you need different level

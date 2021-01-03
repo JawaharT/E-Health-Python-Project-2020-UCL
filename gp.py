@@ -266,6 +266,7 @@ class GP(User):
                     stage = 0
                 else:
                     self.booking_transaction(rows[0], rows[1])
+                    stage = 0
 
     @staticmethod
     def print_select_bookings(bookings_result, message):
