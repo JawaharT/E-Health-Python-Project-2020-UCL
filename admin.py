@@ -225,7 +225,6 @@ class Admin(User):
         if len(all_deactivated_users_result) == 0:
             Parser.print_clean("For safety, you can only delete accounts which are currently deactivated. To remove "
                                "an active account, deactivate it first.")
-            print("No deactivated GPs available to delete.\n")
             return False
 
         # select a deactivated GP/Patient account to delete
@@ -236,12 +235,22 @@ class Admin(User):
             if selected_user == "--back":
                 return False
             else:
+                user_type = SQLQuery("SELECT UserType FROM Users WHERE username==?")\
+                    .fetch_all(parameters=(selected_user,))[0][0]
+                id = SQLQuery("SELECT ID FROM Users WHERE username==?").fetch_all(parameters=(selected_user,))[0][0]
+                if user_type == "GP":
+                    SQLQuery("DELETE FROM GP WHERE ID=:who").commit({"who": id})
+                    SQLQuery("DELETE FROM available_time WHERE StaffID=:who").commit({"who": id})
+                else:
+                    SQLQuery("DELETE FROM Patient WHERE NHSNo=:who").commit({"who": id})
+                    SQLQuery("DELETE FROM Visit WHERE NHSNo=:who").commit({"who": id})
+
                 logger.info("Selected GP/ Patient account to delete")
                 # delete query, make sure to delete all presence of that user
-                logger.info("Removed selected " + selected_user + " from Users table")
-                delete_query1 = SQLQuery("DELETE FROM Users WHERE username=:who")
-                delete_query1.commit({"who": selected_user})
-                print("GP {0} deleted from Users table.\n".format(selected_user))
+                logger.info("Removed selected " + selected_user + " from Users and other tables")
+                delete_query = SQLQuery("DELETE FROM Users WHERE username=:who")
+                delete_query.commit({"who": selected_user})
+                print("{0} {1} deleted from the necessary table.\n".format(user_type, selected_user))
                 Parser.print_clean()
                 return True
 
@@ -275,7 +284,11 @@ class Admin(User):
             return False
 
     def first_login(self):
+        """
+        Check for first login attempt
+        """
         return True
+
 
 if __name__ == "__main__":
     current_user = MenuHelper.login()
