@@ -7,3 +7,4 @@ __pycache__/databaseHelp.cpython-38.pyc
 .DS_Store
 *.pyc
 /log/
+.idea/
