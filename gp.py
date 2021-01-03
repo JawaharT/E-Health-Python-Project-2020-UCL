@@ -10,7 +10,7 @@ from exceptions import DBRecordError
 from patient import Patient
 # logging
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("main.GP")
 
 
 class GP(User):

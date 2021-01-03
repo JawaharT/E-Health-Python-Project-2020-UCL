@@ -23,7 +23,7 @@ fh_warning = logging.handlers.RotatingFileHandler('log/gp_system_warning_log.log
 fh_warning.setLevel(logging.WARNING)  # change this If you need different level
 fh_warning.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s'))
 
-main_logger = logging.getLogger(__name__)
+main_logger = logging.getLogger("main")
 main_logger.setLevel(logging.DEBUG)
 main_logger.addHandler(fh_debug)
 main_logger.addHandler(fh_info)
