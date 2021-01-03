@@ -32,7 +32,7 @@ class Parser:
                 Parser.print_clean("This is not a valid integer !")
 
     @staticmethod
-    def time_parser(question, limit_quarter_intervals=True, allow_back=True) -> object:
+    def time_parser(question, limit_quarter_intervals=True, allow_back=True) -> datetime:
         """
         Method to collect valid time input from user.
 
@@ -71,7 +71,7 @@ class Parser:
                 Parser.handle_input()
 
     @staticmethod
-    def date_parser(question, allow_back=True, allow_past=False) -> object:
+    def date_parser(question, allow_back=True, allow_past=False) -> datetime:
         """
         Method to collect valid date input from user.
 
@@ -213,11 +213,12 @@ class Parser:
     #             print("Invalid input! Either not an integer or out of range.")
 
     @staticmethod
-    def list_number_parser(question, full_num_range, allow_back=True, allow_multiple = True) -> Union[list, str]:
+    def list_number_parser(question, full_num_range, allow_back=True, allow_multiple=True) -> Union[list, str]:
         """
         Method to collect and process a range selection from user
 
         :param str question: Prompt for the user
+        :param bool allow_multiple: True allows user to input a selection like 1-5, 6-10 etc.
         :param tuple full_num_range: (a, b)-like tuple specifying upper and lower bounds of the range
         :param bool allow_back: Specific whether '--back' is an allowed input
         """

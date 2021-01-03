@@ -3,8 +3,6 @@ from main import User, MenuHelper
 from encryption import EncryptionHelper
 from iohandler import Parser
 from database import SQLQuery
-# import sys
-import time
 import datetime
 from exceptions import DBRecordError
 
@@ -210,7 +208,7 @@ class Patient(User):
                 patient_appointment_result = SQLQuery(
                     "SELECT bookingNo, NHSNo, StaffID, Timeslot, Confirmed FROM visit "
                     "WHERE NHSNo = ? AND Attended = ? ",
-                ).executeFetchAll(parameters=(self.ID, "F"))
+                ).fetch_all(parameters=(self.ID, "F"))
 
                 patient_confirmed_appointment_table = []
                 patient_unconfirmed_appointment_table = []
@@ -322,7 +320,7 @@ class Patient(User):
                         try:
                             for appointment in appointment_to_check_in:
                                 SQLQuery(" UPDATE Visit SET Attended = ? WHERE BookingNo = ? "
-                                         ).executeCommit(("T", appointment[1]))
+                                         ).commit(("T", appointment[1]))
 
                             print("check in successfully.")
                             input("Press Enter to continue...")
@@ -349,7 +347,7 @@ class Patient(User):
                 query_string = "SELECT BookingNo, NHSNo, StaffID, Timeslot, PatientInfo" \
                                "FROM visit  WHERE NHSNo = ? AND Timeslot >= ? "
                 all_valid_cancel = SQLQuery(query_string)
-                all_valid_cancel_result = all_valid_cancel.executeFetchAll(
+                all_valid_cancel_result = all_valid_cancel.fetch_all(
                     parameters=(self.ID, datetime.datetime.now() + datetime.timedelta(days=5)))
                 cancel_table = []
                 cancel_table_raw = []
@@ -387,14 +385,14 @@ class Patient(User):
                 confirmation = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
                 if confirmation == "Y":
                     SQLQuery("DELETE FROM visit WHERE BookingNo = ? "
-                             ).executeCommit(parameters=(selected_row_raw[1]))
+                             ).commit(parameters=(selected_row_raw[1]))
                     SQLQuery("INSERT INTO available_time VALUES (?,?)"
-                             ).executeCommit(parameters=(selected_row_raw[3], selected_row_raw[4]))
+                             ).commit(parameters=(selected_row_raw[3], selected_row_raw[4]))
                     print("Appointment is cancelled successfully.")
 
                     visit_result = SQLQuery("SELECT bookingNo, NHSNo, StaffID, Timeslot, PatientInfo FROM visit "
                                             "WHERE NHSNo = ? AND Timeslot >= ? "
-                                            ).executeFetchAll(
+                                            ).fetch_all(
                         parameters=(self.ID, datetime.datetime.now() + datetime.timedelta(days=5)))
 
                     print(tabulate(visit_result, headers=["bookingNo", "NHSNo", "GP", "Timeslot", "PatientInfo"]))
@@ -432,7 +430,7 @@ class Patient(User):
                            "DrugName", "Quantity", "Instructions", "Notes")
 
             query = SQLQuery(query_string)
-            all_data = query.executeFetchAll(decrypter=EncryptionHelper(), parameters=(self.ID,))
+            all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
 
             if len(list(all_data)) == 0:
                 Parser.print_clean("No records Available.\n")
@@ -447,7 +445,7 @@ class Patient(User):
                     patient_result = SQLQuery(
                         "SELECT bookingNo, StaffID, Timeslot, Rating FROM visit "
                         "WHERE NHSNo = ? AND Attended = ? ",
-                    ).executeFetchAll(parameters=(self.ID, "T"))
+                    ).fetch_all(parameters=(self.ID, "T"))
 
                     patient_attended_appointment_table = []
                     # patient_unconfirmed_appointment_table_raw = []
@@ -490,10 +488,10 @@ class Patient(User):
                                 selected_rate = Parser.pick_pointer_parser("Select form 0 - 5 ", (0, 5))
 
                                 SQLQuery(" UPDATE Visit SET Rating = ? WHERE BookingNo = ? "
-                                         ).executeCommit((selected_rate, selected_row[1]))
+                                         ).commit((selected_rate, selected_row[1]))
 
                                 gp_rate_result = SQLQuery("SELECT Rating FROM visit WHERE StaffID = ? AND Attended = ?"
-                                                          ).executeFetchAll(parameters=(selected_row[2], "T"))
+                                                          ).fetch_all(parameters=(selected_row[2], "T"))
 
                                 gp_rate_num = 0
 
@@ -513,7 +511,7 @@ class Patient(User):
                                     try:
 
                                         SQLQuery(" UPDATE GP SET Rating = ? WHERE ID = ? "
-                                                 ).executeCommit((gp_rate_average, selected_row[2]))
+                                                 ).commit((gp_rate_average, selected_row[2]))
                                         print("Your rate have been recorded successfully!")
                                     except DBRecordError:
                                         print("Error encountered")

@@ -1,7 +1,7 @@
 import sqlite3
 from sqlite3 import Error
+
 from encryption import EncryptionHelper, PasswordHelper
-import os
 
 
 class Database:
@@ -87,6 +87,7 @@ class SQLQuery(Database):
     def commit(self, parameters=tuple(), multiple_queries=False) -> list:
         """
         :param tuple parameters: Parameters for the query
+        :param bool multiple_queries: set true if executing a multi-statement query.
         :return: a list of list for the result array 
         execute and Commit Insert, Update and Delete query using the parameters and return the last row updated ID
         references: https://www.sqlitetutorial.net/sqlite-python/insert/ 
@@ -264,7 +265,6 @@ if __name__ == '__main__':
               "F"))
 
     Q2 = SQLQuery(" INSERT INTO visit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ")
-    EH = EncryptionHelper()
     Q2.commit(("1",
                "1929282829",
                "G01",
@@ -349,7 +349,6 @@ if __name__ == '__main__':
                "4"))
 
     Q4 = SQLQuery("INSERT INTO Patient VALUES (?, ?, ?, ?)")
-    EH = EncryptionHelper()
     Q4.commit(("1929282829",
                "F",
                "I am an accountant",
@@ -366,7 +365,6 @@ if __name__ == '__main__':
                "diabetes"))
 
     Q5 = SQLQuery("INSERT INTO prescription VALUES (?, ?, ?, ?)")
-    EH = EncryptionHelper()
     Q5.commit(("1",
                "Vitamin C",
                "60 pills",

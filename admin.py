@@ -1,11 +1,13 @@
+import logging
+from typing import Tuple
+
 from tabulate import tabulate
+
+from database import SQLQuery
 from encryption import EncryptionHelper
 from iohandler import Parser
-from database import SQLQuery
 from main import User, MenuHelper
-from typing import Union, Tuple
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -275,7 +277,12 @@ class Admin(User):
             return False
 
     def first_login(self):
+        """
+        Placeholder function to maintain consistent structure with Patient and GP classes
+        :return: True
+        """
         return True
+
 
 if __name__ == "__main__":
     current_user = MenuHelper.login()
