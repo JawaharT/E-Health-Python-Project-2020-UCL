@@ -25,8 +25,8 @@ class Patient(User):
         while True:
             print("You're currently viewing main menu options for Patient {}.".format(self.username))
             option_selection = Parser.selection_parser(
-                options={"B": "book appointments", "I": "view /check in unattended appointment",
-                         "C": "cancel appiontment", "R": "review/rate appointments",
+                options={"B": "book appointments", "I": "view upcoming appointments",
+                         "C": "cancel an appointment", "R": "review/rate appointments",
                          "--logout": "Logout"})
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
@@ -204,83 +204,82 @@ class Patient(User):
             change attend to T
             """
         stage = 0
-        while True:
-            while stage == 0:
-                appointments = SQLQuery("SELECT bookingNo, NHSNo, firstName, lastName, Timeslot, Confirmed, StaffID FR"
-                                        "OM (visit JOIN Users ON visit.StaffID = Users.ID) WHERE NHSNo = ? AND Attended"
-                                        " = ? AND Timeslot >= ? "
-                                        ).fetch_all(parameters=(self.ID, "F", dtime_now - delta(hours=1)),
-                                                    decrypter=EncryptionHelper())
+        while stage == 0:
+            appointments = SQLQuery("SELECT bookingNo, NHSNo, firstName, lastName, Timeslot, Confirmed, StaffID FR"
+                                    "OM (visit JOIN Users ON visit.StaffID = Users.ID) WHERE NHSNo = ? AND Attended"
+                                    " = ? AND Timeslot >= ? "
+                                    ).fetch_all(parameters=(self.ID, "F", dtime_now - delta(hours=1)),
+                                                decrypter=EncryptionHelper())
 
-                confirmed_appointments = list(enumerate([appt for appt in appointments if appt[5] == "T"], 1))
-                pending_appointments = list(enumerate([appt for appt in appointments if appt[5] == "P"], 1))
-                rejected_appointments = list(enumerate([appt for appt in appointments if appt[5] == "F"], 1))
-                Parser.print_clean("You are viewing all your booked appointments: ")
+            confirmed_appointments = list(enumerate([appt for appt in appointments if appt[5] == "T"], 1))
+            pending_appointments = list(enumerate([appt for appt in appointments if appt[5] == "P"], 1))
+            rejected_appointments = list(enumerate([appt for appt in appointments if appt[5] == "F"], 1))
+            Parser.print_clean("You are viewing all your booked appointments: ")
 
-                if not appointments:
-                    print("You have not booked any appointments.")
-                    Parser.handle_input()
-                    return False
+            if not appointments:
+                print("You have not booked any appointments.")
+                Parser.handle_input()
+                return False
 
-                if confirmed_appointments:
-                    print("Confirmed appointments:")
-                    print(tabulate([[count] + appointment[0:5] for count, appointment in confirmed_appointments],
-                                   headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
-                if pending_appointments:
-                    print("Pending appointments - wait for confirmation or change appointment:")
-                    print(tabulate([[count] + appointment[0:5] for count, appointment in pending_appointments],
-                                   headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
-                if rejected_appointments:
-                    print("Rejected appointments:")
-                    print(tabulate([[count] + appointment[0:5] for count, appointment in rejected_appointments],
-                                   headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
+            if confirmed_appointments:
+                print("Confirmed appointments:")
+                print(tabulate([[count] + appointment[0:5] for count, appointment in confirmed_appointments],
+                               headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
+            if pending_appointments:
+                print("Pending appointments - wait for confirmation or change appointment:")
+                print(tabulate([[count] + appointment[0:5] for count, appointment in pending_appointments],
+                               headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
+            if rejected_appointments:
+                print("Rejected appointments:")
+                print(tabulate([[count] + appointment[0:5] for count, appointment in rejected_appointments],
+                               headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
 
-                print("")
-                option_selection = Parser.selection_parser(
-                    options={"I": "check in confirmed appointment", "C": "change appointment", "--back": "back"})
-                if option_selection == "--back":
-                    return
-                elif option_selection == "C":
-                    return
-                elif option_selection == "I":
-                    stage = 1
+            print("")
+            option_selection = Parser.selection_parser(
+                options={"I": "check in confirmed appointment", "C": "change appointment", "--back": "back"})
+            if option_selection == "--back":
+                return
+            elif option_selection == "C":
+                return
+            elif option_selection == "I":
+                stage = 1
 
-            while stage == 1:
-                Parser.print_clean("You can only check in within an hour of a scheduled confirmed appointment.")
-                check_appt = list(enumerate([appt for appt in appointments if dtime_now - delta(hours=1) <=
-                                             strptime(appt[4], '%Y-%m-%d %H:%M:%S') <= dtime_now + delta(hours=1)], 1))
-                if not check_appt:
+        while stage == 1:
+            Parser.print_clean("You can only check in within an hour of a scheduled confirmed appointment.")
+            check_appt = list(enumerate([appt for appt in appointments if dtime_now - delta(hours=1) <=
+                                         strptime(appt[4], '%Y-%m-%d %H:%M:%S') <= dtime_now + delta(hours=1)], 1))
+            if not check_appt:
+                Parser.handle_input("Press Enter to continue...")
+                stage = 0
+                continue
+            print(tabulate([[count] + appointment[0:5] for count, appointment in check_appt],
+                           headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]), "\n")
+
+            selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
+                                                             (1, len(check_appt)), allow_multiple=False)
+            if selected_appointment == '--back':
+                stage = 0
+                continue
+            else:
+                appointment_check_in = check_appt[selected_appointment - 1][1]
+                print("This is the appointment you are checking in for: \n ")
+                print(tabulate([appointment_check_in[0:5]], headers=["BookingNo", "NHSNo", "GP Name",
+                                                                     "Last Name", "Timeslot"]), "\n")
+                confirm = Parser.selection_parser(options={"Y": "check-in", "N": "cancel check-in"})
+                if confirm == "Y":
+                    try:
+                        SQLQuery("UPDATE Visit SET Attended = 'T' WHERE BookingNo = ? "
+                                 ).commit((appointment_check_in[0],))
+                        print("You have been checked in successfully!.")
+                        Parser.handle_input("Press Enter to continue...")
+                        return True
+                    except DBRecordError:
+                        print("Error encountered")
+                        Parser.handle_input("Press Enter to continue...")
+                else:
+                    print("Removal cancelled.")
                     Parser.handle_input("Press Enter to continue...")
                     stage = 0
-                    continue
-                print(tabulate([[count] + appointment[0:5] for count, appointment in check_appt],
-                               headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]), "\n")
-
-                selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
-                                                                 (1, len(check_appt)), allow_multiple=False)
-                if selected_appointment == '--back':
-                    stage = 0
-                    continue
-                else:
-                    appointment_check_in = check_appt[selected_appointment - 1][1]
-                    print("This is the appointment you are checking in for: \n ")
-                    print(tabulate([appointment_check_in[0:5]], headers=["BookingNo", "NHSNo", "GP Name",
-                                                                         "Last Name", "Timeslot"]), "\n")
-                    confirm = Parser.selection_parser(options={"Y": "check-in", "N": "cancel check-in"})
-                    if confirm == "Y":
-                        try:
-                            SQLQuery("UPDATE Visit SET Attended = 'T' WHERE BookingNo = ? ").commit((appointment_check_in[0],))
-                            print("You have been checked in successfully!.")
-                            Parser.handle_input("Press Enter to continue...")
-                            return True
-                        # temporary exception
-                        except DBRecordError:
-                            print("Error encountered")
-                            Parser.handle_input("Press Enter to continue...")
-                    if confirm == "N":
-                        print("Removal cancelled.")
-                        input("Press Enter to continue...")
-                        stage = 0
 
     def cancel_appointment(self):
         """
@@ -289,64 +288,42 @@ class Patient(User):
             insert in available time
             """
         stage = 0
-        while True:
-            while stage == 0:
-                query_string = "SELECT BookingNo, NHSNo, StaffID, Timeslot, PatientInfo" \
-                               "FROM visit  WHERE NHSNo = ? AND Timeslot >= ? "
-                all_valid_cancel = SQLQuery(query_string)
-                all_valid_cancel_result = all_valid_cancel.fetch_all(
-                    parameters=(self.ID, datetime.datetime.now() + datetime.timedelta(days=5)))
-                cancel_table = []
-                cancel_table_raw = []
-                cancel_pointer = []
+        while stage == 0:
+            valid_cancel = SQLQuery("SELECT BookingNo, NHSNo, lastName, Timeslot, PatientInfo, StaffID FROM (visit "
+                                    "JOIN Users on visit.StaffID = Users.ID) WHERE NHSNo = ? AND Timeslot >= ?"
+                                    ).fetch_all(parameters=(self.ID, dtime_now + delta(days=5)),
+                                                decrypter=EncryptionHelper())
+            appointments_table = []
+            for count, appt in enumerate(valid_cancel, 1):
+                appointments_table.append([count, appt[0], appt[1], appt[2], appt[3], appt[4], appt[5]])
+            Parser.print_clean(f"You are viewing all the appointments can be cancelled.")
+            if not appointments_table:
+                print(f"No Appointments can be cancelled.\n")
+                return
+            else:
+                stage = 1
 
-                for i in range(len(all_valid_cancel_result)):
-                    cancel_table.append([i + 1, str(all_valid_cancel_result[i][0]), str(all_valid_cancel_result[i][1]),
-                                         str(all_valid_cancel_result[i][2]), str(all_valid_cancel_result[i][3]),
-                                         str(all_valid_cancel_result[i][4])])
-                    cancel_table_raw.append([i + 1, all_valid_cancel_result[i][0], all_valid_cancel_result[i][1],
-                                             all_valid_cancel_result[i][2], all_valid_cancel_result[i][3],
-                                             all_valid_cancel_result[i][4]])
-                    cancel_pointer.append(i + 1)
-                print(f"You are viewing all the appointments can be cancelled.")
-                if len(cancel_table) == 0:
-                    print(f"No Appointments can be cancelled.\n")
-                    return
-                else:
-                    stage = 1
+        while stage == 1:
+            print(tabulate([appt[0:6] for appt in appointments_table],
+                           headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Timeslot", "Patient Info"]))
+            selected_cancel_appointment = Parser.list_number_parser("Select an appointment to cancel by the Pointer.",
+                                                                    (1, len(appointments_table)), allow_multiple=False)
+            selected_row = appointments_table[selected_cancel_appointment - 1]
+            Parser.print_clean("This is appointment you want to cancel:")
+            print(tabulate([selected_row], headers=["Pointer", "BookingNo", "NHSNo", "Timeslot", "Patient Info"]))
+            confirmation = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
 
-            while stage == 1:
-                print(tabulate(cancel_table, headers=["Pointer", "BookingNo", "NHSNo",
-                                                      "StaffID", "Timeslot", "PatientInfo"]))
-                selected_cancel_appointment = Parser.pick_pointer_parser("Select an appointment "
-                                                                         "to cancel by the Pointer.",
-                                                                         (1, len(cancel_table)))
-
-                selected_row = cancel_table[selected_cancel_appointment - 1]
-                selected_row_raw = cancel_table_raw[selected_cancel_appointment - 1]
-
-                print("This is appointment you want to cancel:")
-                print(tabulate([selected_row], headers=["Pointer", "BookingNo", "NHSNo",
-                                                        "StaffID", "Timeslot", "PatientInfo"]))
-
-                confirmation = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
-                if confirmation == "Y":
-                    SQLQuery("DELETE FROM visit WHERE BookingNo = ? "
-                             ).commit(parameters=(selected_row_raw[1]))
-                    SQLQuery("INSERT INTO available_time VALUES (?,?)"
-                             ).commit(parameters=(selected_row_raw[3], selected_row_raw[4]))
+            if confirmation == "Y":
+                try:
+                    SQLQuery("DELETE FROM visit WHERE BookingNo = ?").commit(parameters=(selected_row[1],))
+                    SQLQuery("INSERT INTO available_time VALUES (?,?)").commit(parameters=(selected_row[6],
+                                                                                           selected_row[4]))
                     print("Appointment is cancelled successfully.")
-
-                    visit_result = SQLQuery("SELECT bookingNo, NHSNo, StaffID, Timeslot, PatientInfo FROM visit "
-                                            "WHERE NHSNo = ? AND Timeslot >= ? "
-                                            ).fetch_all(
-                        parameters=(self.ID, datetime.datetime.now() + datetime.timedelta(days=5)))
-
-                    print(tabulate(visit_result, headers=["bookingNo", "NHSNo", "GP", "Timeslot", "PatientInfo"]))
-
-                else:
-                    Parser.print_clean()
-                    return
+                except Exception as e:
+                    print("Database Error...", e)
+            else:
+                Parser.print_clean()
+                return
 
     def review_appointment(self):
         while True:

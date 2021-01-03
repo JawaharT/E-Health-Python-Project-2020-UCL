@@ -7,6 +7,10 @@ from encryption import EncryptionHelper, PasswordHelper
 from exceptions import DBRecordError
 from iohandler import Parser
 
+log_info = open('log/gp_system_info_log.log', 'a+')
+log_debug = open('log/gp_system_debug_log.log', 'a+')
+log_warning = open('log/gp_system_warning_log.log', 'a+')
+
 fh_info = logging.handlers.RotatingFileHandler('log/gp_system_info_log.log', maxBytes=1000000, backupCount=2)
 fh_info.setLevel(logging.INFO)  # change this If you need different level
 fh_info.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s'))
