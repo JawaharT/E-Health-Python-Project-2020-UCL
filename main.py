@@ -58,7 +58,7 @@ class MenuHelper:
                     main_logger.info(f"{try_username}, user valid")
                     break
             except DBRecordError:
-                logger.warning("User doesn't exist or invalid")
+                main_logger.warning("User doesn't exist or invalid")
                 Parser.print_clean(f"Invalid Username: {i} attempts remaining")
         else:
             Parser.print_clean("You've entered an incorrect username too many times.")
@@ -331,12 +331,9 @@ if __name__ == '__main__':
     # Exception handling if database not present/cannot connect
     # conn = create_connection("GPDB.db")
 
-
     import sqlite3
-
     try:
         from urllib.request import pathname2url
-
         database = 'file:{}?mode=rw'.format(pathname2url("GPDB.db"))
         conn = sqlite3.connect(database, uri=True)
     except sqlite3.OperationalError:
