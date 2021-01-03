@@ -171,11 +171,12 @@ class Admin(User):
         while True:
             full_accounts_table, accounts_table = self.list_accounts(list_accounts)
             selected_user_number = Parser.selection_parser(options=full_accounts_table)
-            selected_user = full_accounts_table[selected_user_number]
-            if selected_user == "back":
+
+            if selected_user_number == "--back":
                 Parser.print_clean()
                 break
             else:
+                selected_user = full_accounts_table[selected_user_number]
                 logger.info("Edit " + account_types + " Users")
                 record_editor = Parser.selection_parser(
                     options={"A": "Update Password", "B": "Update Birthday",
@@ -243,28 +244,27 @@ class Admin(User):
         while True:
             all_deactivated_users_table, _ = self.list_accounts(all_deactivated_users_result)
             selected_user_number = Parser.selection_parser(options=all_deactivated_users_table)
-            selected_user = all_deactivated_users_table[selected_user_number]
-            if selected_user == "--back":
+            if selected_user_number == "--back":
                 return False
             else:
-                user_type, selected_user_id = SQLQuery("SELECT UserType, ID FROM Users WHERE username==?")\
-                    .fetch_all(parameters=(selected_user,))
-
-                user_type, selected_user_id = user_type[0], selected_user_id[1]
-                print(user_type, selected_user_id)
+                selected_user = all_deactivated_users_table[selected_user_number]
+                user_type = SQLQuery("SELECT UserType FROM Users WHERE username==?")\
+                    .fetch_all(parameters=(selected_user,))[0][0]
+                selected_id = SQLQuery("SELECT ID FROM Users WHERE username==?")\
+                    .fetch_all(parameters=(selected_user,))[0][0]
                 if user_type == "GP":
-                    SQLQuery("DELETE FROM GP WHERE ID=?").commit(parameters=(selected_user_id,))
-                    SQLQuery("DELETE FROM available_time WHERE StaffID=?").commit(parameters=(selected_user_id,))
+                    SQLQuery("DELETE FROM GP WHERE ID=:who").commit({"who": selected_id})
+                    SQLQuery("DELETE FROM available_time WHERE StaffID=:who").commit({"who": selected_id})
                 else:
-                    SQLQuery("DELETE FROM Patient WHERE NHSNo=?").commit(parameters=(selected_user_id,))
-                    SQLQuery("DELETE FROM Visit WHERE NHSNo=?").commit(parameters=(selected_user_id,))
+                    SQLQuery("DELETE FROM Patient WHERE NHSNo=:who").commit({"who": selected_id})
+                    SQLQuery("DELETE FROM Visit WHERE NHSNo=:who").commit({"who": selected_id})
 
                 logger.info("Selected GP/ Patient account to delete")
                 # delete query, make sure to delete all presence of that user
                 logger.info("Removed selected " + selected_user + " from Users and other tables")
                 delete_query = SQLQuery("DELETE FROM Users WHERE username=?")
-                delete_query.commit(parameters=(selected_user_id,))
-                print("{0} {1} deleted from the necessary table.\n".format(user_type, selected_user))
+                delete_query.commit(parameters=(selected_user,))
+                print("{0} {1} deleted from the necessary tables.\n".format(user_type, selected_user))
                 Parser.print_clean()
                 return True
 
