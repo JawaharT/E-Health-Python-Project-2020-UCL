@@ -22,6 +22,11 @@ fh_warning = logging.handlers.RotatingFileHandler('log/gp_system_warning_log.log
 fh_warning.setLevel(logging.WARNING)  # change this If you need different level
 fh_warning.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s'))
 
+main_logger = logging.getLogger(__name__)
+main_logger.setLevel(logging.DEBUG)
+main_logger.addHandler(fh_debug)
+main_logger.addHandler(fh_info)
+main_logger.addHandler(fh_warning)
 
 class MenuHelper:
     """
@@ -35,14 +40,14 @@ class MenuHelper:
         Login to a registered account.
         :return: username, user account type
         """
-        logger.debug("Entered Login Sequence")
+        main_logger.debug("Entered Login Sequence")
         for i in range(4, -1, -1):
-            logger.debug(f"Username attempt {5 - i}")
+            main_logger.debug(f"Username attempt {5 - i}")
             # limit to 5 username attempts
             try:
                 # trying to get username
                 try_username = Parser.string_parser("Please enter your username: ")
-                logger.debug(f"UserName Entered: {try_username}")
+                main_logger.debug(f"UserName Entered: {try_username}")
                 # retrieving the user if exist to compare to PW
                 username_query = SQLQuery("SELECT username, passCode, Deactivated, UserType FROM Users "
                                           "WHERE username == ?").fetch_all(parameters=(try_username,))
@@ -53,14 +58,14 @@ class MenuHelper:
                     login_array = username_query[0]
                     user_type = login_array[3]
                     Parser.print_clean("Username validated.")
-                    logger.info(f"{try_username}, user valid")
+                    main_logger.info(f"{try_username}, user valid")
                     break
             except DBRecordError:
                 logger.warning("User doesn't exist or invalid")
                 Parser.print_clean(f"Invalid Username: {i} attempts remaining")
         else:
             Parser.print_clean("You've entered an incorrect username too many times.")
-            logger.critical("Too many failed Username attempts")
+            main_logger.critical("Too many failed Username attempts")
             Parser.user_quit()
         for i in range(4, -1, -1):
             try:
@@ -71,18 +76,18 @@ class MenuHelper:
                     Parser.print_clean("Password correct!")
                     if login_array[2] == "T":
                         Parser.print_clean("Your account is deactivated. Please contact the system administrator. ")
-                        logger.critical(f"{username}, user deactivated, quitting.")
+                        main_logger.critical(f"{username}, user deactivated, quitting.")
                         Parser.user_quit()
                     else:
                         return {"username": username, "user_type": user_type}
                 else:
                     raise DBRecordError
             except DBRecordError:
-                logger.warning("Password invalid")
+                main_logger.warning("Password invalid")
                 Parser.print_clean(f"Invalid Password: {i} attempts remaining")
         else:
             Parser.print_clean("You've entered an incorrect password too many times.")
-            logger.critical("Too many failed Password attempts")
+            main_logger.critical("Too many failed Password attempts")
             Parser.user_quit()
 
     @staticmethod
@@ -241,21 +246,21 @@ class MenuHelper:
         :param str username: Username of account
         :param str user_type: Type of account
         """
-        logger.debug(f"Entered user session creation sequence with user: {username}; type {user_type}")
+        main_logger.debug(f"Entered user session creation sequence with user: {username}; type {user_type}")
         if user_type == "Admin":
             from admin import Admin
             user = Admin(username)
             # this line is to make sure tat it entered the correct route
-            logger.debug(f"{User} created using {user_type} method")
+            main_logger.debug(f"{User} created using {user_type} method")
         elif user_type == "GP":
             from gp import GP
             user = GP(username)
-            logger.debug(f"{User} created using {user_type} method")
+            main_logger.debug(f"{User} created using {user_type} method")
         else:
             from patient import Patient
             user = Patient(username)
-            logger.debug(f"{User} created using {user_type} method")
-        logger.info(f"user: {username}; type {user_type}: logged in")
+            main_logger.debug(f"{User} created using {user_type} method")
+        main_logger.info(f"user: {username}; type {user_type}: logged in")
         if not user.handle_login_count():
             print("Error handling login.")
             Parser.user_quit()
@@ -329,11 +334,7 @@ if __name__ == '__main__':
     # Exception handling if database not present/cannot connect
     # conn = create_connection("GPDB.db")
 
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(fh_debug)
-    logger.addHandler(fh_info)
-    logger.addHandler(fh_warning)
+
     import sqlite3
 
     try:
@@ -350,7 +351,7 @@ if __name__ == '__main__':
         option_selection = Parser.selection_parser(options={"R": "register", "L": "login", "--quit": "quit"})
 
         if option_selection == 'L':
-            logger.debug("Selected Login")
+            main_logger.debug("Selected Login")
             current_user = MenuHelper.login()
             MenuHelper.dispatcher(current_user["username"], current_user["user_type"])
         else:

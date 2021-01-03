@@ -6,7 +6,8 @@ import time
 import datetime
 from main import User, MenuHelper
 from exceptions import DBRecordError
-
+#for helping patient book appointment
+from patient import Patient
 # logging
 import logging
 logger = logging.getLogger(__name__)
@@ -23,7 +24,8 @@ class GP(User):
         """
         logger.info("logged in as GP")
         while True:
-            print("You're currently viewing main menu options for GP {}.".format(self.username))
+            Parser.print_clean("You're currently viewing main menu options for GP {}.".format(self.username))
+            self.print_information()
             option_selection = Parser.selection_parser(
                 options={"A": "View/Edit availability", "M": "Manage bookings", "V": "View/Start appointment",
                          "--logout": "Logout"})
@@ -74,7 +76,7 @@ class GP(User):
             Parser.print_clean()
             # Retrieving availability from the database
             availability_result = SQLQuery(
-                "SELECT StaffID, Timeslot FROM available_time WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ?",
+                "SELECT StaffID, Timeslot FROM available_time WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ? ORDER BY Timeslot",
             ).fetch_all(parameters=(self.ID, selected_date, selected_date + datetime.timedelta(days=1)))
             # Creating two corresponding tables for the fetched data - one for SQL manipulation, one for display
             availability_table_raw = []
@@ -225,7 +227,7 @@ class GP(User):
                     bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                                "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                                                "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Confirmed = "
-                                               "'P'").fetch_all(EncryptionHelper(), parameters=(self.ID,))
+                                               "'P' ORDER BY visit.Timeslot ASC").fetch_all(EncryptionHelper(), parameters=(self.ID,))
                     message = "with status 'pending'."
                     stage = 1
                 elif option_selection == "D":
@@ -238,13 +240,27 @@ class GP(User):
                             "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                             "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                             "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ?"
-                            " AND visit.Timeslot <= ?"
+                            " AND visit.Timeslot <= ? ORDER BY visit.Timeslot ASC"
                         ).fetch_all(EncryptionHelper(), (self.ID, selected_date,
                                                          selected_date + datetime.timedelta(
                                                              days=1)))
                         message = f"for: {selected_date.strftime('%Y-%m-%d')}"
                         stage = 1
             while stage == 1:
+                if option_selection == "P":
+                    bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
+                                               "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
+                                               "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Confirmed = "
+                                               "'P' ORDER BY visit.Timeslot ASC").fetch_all(EncryptionHelper(), parameters=(self.ID,))
+                elif option_selection == "D":
+                    bookings_result = SQLQuery(
+                            "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
+                            "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
+                            "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ?"
+                            " AND visit.Timeslot <= ? ORDER BY visit.Timeslot ASC"
+                        ).fetch_all(EncryptionHelper(), (self.ID, selected_date,
+                                                         selected_date + datetime.timedelta(
+                                                             days=1)))
                 rows = GP.print_select_bookings(bookings_result, message)
                 if not rows:
                     stage = 0
@@ -350,7 +366,7 @@ class GP(User):
                 bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                            "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                                            "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ? AND "
-                                           "visit.Timeslot <= ? AND visit.Confirmed = 'T' ").fetch_all(
+                                           "visit.Timeslot <= ? AND visit.Confirmed = 'T' ORDER BY visit.Timeslot ASC").fetch_all(
                     decrypter=EncryptionHelper(),
                     parameters=(self.ID, selected_date, selected_date + datetime.timedelta(days=1)))
                 message = f"for {selected_date.strftime('%Y-%m-%d')} (confirmed)."
@@ -377,7 +393,7 @@ class GP(User):
         while True:
             booking_information = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                            "users.lastName, visit.Confirmed, users.birthday, users.phoneNo, "
-                                           "users.HomeAddress, users.postcode, visit.diagnosis, visit.notes FROM visit "
+                                           "users.HomeAddress, users.postcode, visit.diagnosis, visit.notes, users.username FROM visit "
                                            "INNER JOIN users ON visit.NHSNo = users.ID WHERE visit.BookingNo = ? "
                                            ).fetch_all(decrypter=EncryptionHelper(), parameters=(booking_no,))
             print(tabulate([booking_information[0][:-3]],
@@ -390,7 +406,7 @@ class GP(User):
             print(booking_information[0][11])
             print("\n-------------")
             parser_result = SQLQuery("SELECT PrescriptionNumber, drugName, quantity, instructions FROM prescription "
-                                     "WHERE BookingNo = ? "
+                                     "WHERE BookingNo = ? ORDER BY PrescriptionNumber"
                                      ).fetch_all(decrypter=EncryptionHelper(), parameters=(booking_no,))
             if parser_result:
                 print(tabulate(parser_result,
@@ -401,7 +417,7 @@ class GP(User):
 
             # Parser.print_clean() #this one seems to be wrong
             user_input = Parser.selection_parser(
-                options={"D": "Edit diagnosis", "N": "Add notes", "P": "Edit prescriptions",
+                options={"D": "Edit diagnosis", "N": "Add notes", "P": "Edit prescriptions", "B":"Book followup appointment",
                          "--back": "go back to previous page"})
             if user_input == "--back":
                 return
@@ -476,6 +492,20 @@ class GP(User):
                         # input("Press Enter to continue...")
                         Parser.handle_input()
                         break
+            elif user_input == "B":
+                patient_username = booking_information[0][-1]
+                patient_object = Patient(patient_username)
+                logger.info(f"GP trying to book appiontment for patient :{patient_username}")
+                booking_result = patient_object.book_appointment_start()
+                if booking_result == True:
+                    print("booking successful")
+                    logger.info(f"The booking is successful")
+                else:
+                    print("booking failed")
+                    logger.warning(f"The booking failed or canceled")
+                input("Press enter to continue")
+                Parser.print_clean()
+                del patient_object
 
     def first_login(self):
         Parser.print_clean("Welcome GP {}. This is your first login. ".format(self.username))
