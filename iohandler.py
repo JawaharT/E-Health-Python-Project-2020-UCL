@@ -177,8 +177,8 @@ class Parser:
                 for key in options:
                     print(f"Enter '{key}' to {options[key]}")
                 # result = input().strip()
-                result = Parser.handle_input(input_question="").strip()
-                if result == "--quit":
+                result = Parser.handle_input(input_question="").strip().upper()
+                if result == "--QUIT":
                     Parser.user_quit()
                 if result not in options:
                     raise ValueError
