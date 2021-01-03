@@ -174,43 +174,27 @@ class Parser:
         while True:
             try:
                 print("Please select from the following options:")
+                if "--back" in options.keys():
+                    del options["--back"]
+                    options["--BACK"] = "back"
+                elif "--logout" in options.keys():
+                    del options["--logout"]
+                    options["--LOGOUT"] = "logout"
+
                 for key in options:
                     print(f"Enter '{key}' to {options[key]}")
-                # result = input().strip()
+
                 result = Parser.handle_input(input_question="").strip().upper()
+
                 if result == "--QUIT":
                     Parser.user_quit()
                 if result not in options:
                     raise ValueError
+                if any(result == option for option in ["--BACK", "--LOGOUT"]):
+                    result = result.lower()
                 return result
             except ValueError:
                 Parser.print_clean("Invalid Input!\n")
-
-    # @staticmethod
-    # def pick_pointer_parser(question, num_range, allow_back=True) -> Union[list, int]:
-    #     """
-    #     Method to collect and process a range selection from user
-    #
-    #     :param str question: Prompt for the user
-    #     :param tuple full_num_range: (a, b)-like tuple specifying upper and lower bounds of the range
-    #     :param bool allow_back: Specific whether '--back' is an allowed input
-    #     """
-    #     while True:
-    #         try:
-    #             print(question)
-    #
-    #             if allow_back:
-    #                 print("Or enter '--back' to go back to previous page")
-    #                 input_string = input()
-    #             if allow_back and input_string == '--back':
-    #                 return input_string
-    #             else:
-    #                 result = int(input_string)
-    #                 if not min(num_range) <= result <= max(num_range):
-    #                     raise ValueError
-    #                 return result
-    #         except ValueError:
-    #             print("Invalid input! Either not an integer or out of range.")
 
     @staticmethod
     def list_number_parser(question, full_num_range, allow_back=True, allow_multiple=True) -> Union[list, str]:
