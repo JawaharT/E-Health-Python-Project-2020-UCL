@@ -60,14 +60,21 @@ class Admin(User):
                 query_string = "SELECT * FROM prescription"
                 headers = ("BookingNo", "DrugName", "Quantity", "Instructions")
             else:
-                query_string = "SELECT ID, Username, Deactivated, birthday, firstName, lastName, phoneNo, " \
-                               "HomeAddress, postCode FROM USERS WHERE UserType == ?"
                 headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
                 if record_viewer == "A":
                     user_type = "Patient"
+                    query_string = "SELECT u.ID, u.Username, u.Deactivated, u.birthday, u.firstName, u.lastName, " \
+                                   "u.phoneNo, u.HomeAddress, u.postCode, p.Gender, p.Introduction, p.Notice FROM " \
+                                   "USERS u, Patient p WHERE (p.NHSNo=u.ID) AND (u.UserType == ?)"
+                    headers += ("Gender", "Introduction", "Notice")
                 else:
                     user_type = "GP"
+                    query_string = "SELECT u.ID, u.Username, u.Deactivated, u.birthday, u.firstName, u.lastName, " \
+                                   "u.phoneNo, u.HomeAddress, u.postCode, g.Gender, g.ClinicAddress, " \
+                                   "g.ClinicPostcode, g.Speciality, g.Introduction FROM USERS u, GP g " \
+                                   "WHERE (g.ID=u.ID) AND (u.UserType == ?)"
+                    headers += ("Gender", "Clinic Address", "Clinic Postcode", "Speciality", "Introduction")
                 parameters = (user_type,)
 
             logger.info("Selected table to view")
@@ -76,7 +83,6 @@ class Admin(User):
             if len(list(all_data)) == 0:
                 logger.info("No Records to show")
                 Parser.print_clean("No records Available.\n")
-                # input("Press Enter to continue...")
                 Parser.handle_input()
                 continue
 
@@ -84,7 +90,7 @@ class Admin(User):
 
             # Paging records
             start, step = 0, 2
-            end = len(all_data) if len(all_data) % 2 == 0 else len(all_data) + 1
+            end = len(all_data)+1 if len(all_data) % 2 == 0 else len(all_data)
 
             for page_length in range(start, end, step):
                 logger.info("Shown Page: " + str((page_length+2)/2))
@@ -110,7 +116,7 @@ class Admin(User):
             logger.info("Option to edit records")
             if record_viewer == "A" or record_viewer == "B":
                 user_input = Parser.selection_parser(
-                    options={"A": "Proceed to editing the records", "--back": "back"})
+                    options={"A": "Proceed to editing records", "--back": "back"})
                 if user_input == "A" and user_type == "Patient":
                     self.edit_gp_patient("Patient")
                 elif user_input == "A" and user_type == "GP":
@@ -118,7 +124,6 @@ class Admin(User):
                 else:
                     continue
             else:
-                # input("Press Enter to continue...")
                 Parser.handle_input()
 
     @staticmethod
@@ -128,7 +133,6 @@ class Admin(User):
         """
         Parser.print_clean("You are now adding a new account as administrator. The new record will be automatically "
                            "activated.")
-        # input("Press Enter to continue...")
         Parser.handle_input()
         MenuHelper().register(admin=True)
 
@@ -224,7 +228,7 @@ class Admin(User):
 
         if len(all_deactivated_users_result) == 0:
             Parser.print_clean("For safety, you can only delete accounts which are currently deactivated. To remove "
-                               "an active account, deactivate it first.")
+                               "an active account, deactivate it first.\n")
             return False
 
         # select a deactivated GP/Patient account to delete
