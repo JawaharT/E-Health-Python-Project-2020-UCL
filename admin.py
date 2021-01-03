@@ -3,7 +3,7 @@ from encryption import EncryptionHelper
 from iohandler import Parser
 from database import SQLQuery
 from main import User, MenuHelper
-from typing import Union, Tuple
+from typing import Tuple
 
 import logging
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class Admin(User):
         """
         logger.info("logged in as Admin")
         while True:
-            print("You're currently viewing main menu options for Admin {}.".format(self.username))
+            print("You're currently viewing main menu options for Admin {0}.".format(self.username))
             user_input = Parser.selection_parser(
                 options={"A": "View Records", "B": "Add New GP or Patient", "C": "Edit GP or Patient",
                          "D": "Delete Existing GP or Patient", "--logout": "logout"})
@@ -43,12 +43,16 @@ class Admin(User):
             record_viewer = Parser.selection_parser(
                 options={"A": "View Patients", "B": "View GPs",
                          "C": "View Available Timeslots", "D": "View Patient Appointments",
-                         "E": "View Patient Prescriptions", "--back": "back"})
+                         "E": "View Patient Prescriptions", "P": "View Pending Records", "--back": "back"})
 
-            parameters = ()
+            parameters, headers, query_string, user_type = (), (), "", ""
             if record_viewer == "--back":
                 Parser.print_clean()
                 return
+            elif record_viewer == "P":
+                query_string = "SELECT ID, username FROM USERS WHERE (LoginCount == 0) AND ((UserType == 'GP') " \
+                               "OR (UserType == 'Patient'))"
+                headers = ("ID", "Username")
             elif record_viewer == "C":
                 query_string = "SELECT * FROM available_time"
                 headers = ("StaffID", "Timeslot")
@@ -60,20 +64,24 @@ class Admin(User):
                 query_string = "SELECT * FROM prescription"
                 headers = ("BookingNo", "DrugName", "Quantity", "Instructions")
             else:
+                print("This table will display accounts that have been activated and logged into, "
+                      "if pending records required, please go back and select P.\n")
+
                 headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
                 if record_viewer == "A":
                     user_type = "Patient"
                     query_string = "SELECT u.ID, u.Username, u.Deactivated, u.birthday, u.firstName, u.lastName, " \
                                    "u.phoneNo, u.HomeAddress, u.postCode, p.Gender, p.Introduction, p.Notice FROM " \
-                                   "USERS u, Patient p WHERE (p.NHSNo=u.ID) AND (u.UserType == ?)"
+                                   "USERS u, Patient p WHERE (p.NHSNo=u.ID) AND (u.UserType == ?) " \
+                                   "AND (u.LoginCount >= 1)"
                     headers += ("Gender", "Introduction", "Notice")
                 else:
                     user_type = "GP"
                     query_string = "SELECT u.ID, u.Username, u.Deactivated, u.birthday, u.firstName, u.lastName, " \
                                    "u.phoneNo, u.HomeAddress, u.postCode, g.Gender, g.ClinicAddress, " \
                                    "g.ClinicPostcode, g.Speciality, g.Introduction FROM USERS u, GP g " \
-                                   "WHERE (g.ID=u.ID) AND (u.UserType == ?)"
+                                   "WHERE (g.ID=u.ID) AND (u.UserType == ?) AND (u.LoginCount >= 1)"
                     headers += ("Gender", "Clinic Address", "Clinic Postcode", "Speciality", "Introduction")
                 parameters = (user_type,)
 
@@ -114,7 +122,7 @@ class Admin(User):
             print("Completed operation.\n")
 
             logger.info("Option to edit records")
-            if record_viewer == "A" or record_viewer == "B":
+            if any(record_viewer == option for option in ["A", "B", "P"]):
                 user_input = Parser.selection_parser(
                     options={"A": "Proceed to editing records", "--back": "back"})
                 if user_input == "A" and user_type == "Patient":
@@ -239,21 +247,23 @@ class Admin(User):
             if selected_user == "--back":
                 return False
             else:
-                user_type = SQLQuery("SELECT UserType FROM Users WHERE username==?")\
-                    .fetch_all(parameters=(selected_user,))[0][0]
-                id = SQLQuery("SELECT ID FROM Users WHERE username==?").fetch_all(parameters=(selected_user,))[0][0]
+                user_type, selected_user_id = SQLQuery("SELECT UserType, ID FROM Users WHERE username==?")\
+                    .fetch_all(parameters=(selected_user,))
+
+                user_type, selected_user_id = user_type[0], selected_user_id[1]
+                print(user_type, selected_user_id)
                 if user_type == "GP":
-                    SQLQuery("DELETE FROM GP WHERE ID=:who").commit({"who": id})
-                    SQLQuery("DELETE FROM available_time WHERE StaffID=:who").commit({"who": id})
+                    SQLQuery("DELETE FROM GP WHERE ID=?").commit(parameters=(selected_user_id,))
+                    SQLQuery("DELETE FROM available_time WHERE StaffID=?").commit(parameters=(selected_user_id,))
                 else:
-                    SQLQuery("DELETE FROM Patient WHERE NHSNo=:who").commit({"who": id})
-                    SQLQuery("DELETE FROM Visit WHERE NHSNo=:who").commit({"who": id})
+                    SQLQuery("DELETE FROM Patient WHERE NHSNo=?").commit(parameters=(selected_user_id,))
+                    SQLQuery("DELETE FROM Visit WHERE NHSNo=?").commit(parameters=(selected_user_id,))
 
                 logger.info("Selected GP/ Patient account to delete")
                 # delete query, make sure to delete all presence of that user
                 logger.info("Removed selected " + selected_user + " from Users and other tables")
-                delete_query = SQLQuery("DELETE FROM Users WHERE username=:who")
-                delete_query.commit({"who": selected_user})
+                delete_query = SQLQuery("DELETE FROM Users WHERE username=?")
+                delete_query.commit(parameters=(selected_user_id,))
                 print("{0} {1} deleted from the necessary table.\n".format(user_type, selected_user))
                 Parser.print_clean()
                 return True
@@ -292,9 +302,3 @@ class Admin(User):
         Check for first login attempt
         """
         return True
-
-
-if __name__ == "__main__":
-    current_user = MenuHelper.login()
-    MenuHelper.dispatcher(current_user["username"], current_user["user_type"])
-    Admin(current_user).main_menu()
