@@ -1,9 +1,9 @@
-from tabulate import tabulate
 from encryption import EncryptionHelper
 from iohandler import Parser
 from database import SQLQuery
 from main import User, MenuHelper
 from typing import Tuple
+from iohandler import Paging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -67,22 +67,22 @@ class Admin(User):
                 print("This table will display accounts that have been activated and logged into, "
                       "if pending records required, please go back and select P.\n")
 
-                headers = ("ID", "Username", "Deactivated", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
+                headers = ("Username", "Birthday", "First Name", "Last Name", "PhoneNo", "Address",
                            "Postcode")
                 if record_viewer == "A":
                     user_type = "Patient"
-                    query_string = "SELECT u.ID, u.Username, u.Deactivated, u.birthday, u.firstName, u.lastName, " \
+                    query_string = "SELECT u.Username, u.birthday, u.firstName, u.lastName, " \
                                    "u.phoneNo, u.HomeAddress, u.postCode, p.Gender, p.Introduction, p.Notice FROM " \
                                    "USERS u, Patient p WHERE (p.NHSNo=u.ID) AND (u.UserType == ?) " \
                                    "AND (u.LoginCount >= 1)"
                     headers += ("Gender", "Introduction", "Notice")
                 else:
                     user_type = "GP"
-                    query_string = "SELECT u.ID, u.Username, u.Deactivated, u.birthday, u.firstName, u.lastName, " \
-                                   "u.phoneNo, u.HomeAddress, u.postCode, g.Gender, g.ClinicAddress, " \
-                                   "g.ClinicPostcode, g.Speciality, g.Introduction FROM USERS u, GP g " \
+                    query_string = "SELECT u.Username, u.birthday, u.firstName, u.lastName, " \
+                                   "u.phoneNo, u.HomeAddress, u.postCode, " \
+                                   "g.Speciality, g.Introduction FROM USERS u, GP g " \
                                    "WHERE (g.ID=u.ID) AND (u.UserType == ?) AND (u.LoginCount >= 1)"
-                    headers += ("Gender", "Clinic Address", "Clinic Postcode", "Speciality", "Introduction")
+                    headers += ("Speciality", "Introduction")
                 parameters = (user_type,)
 
             logger.info("Selected table to view")
@@ -95,30 +95,7 @@ class Admin(User):
                 continue
 
             logger.info("Show existing records to admin through pages")
-
-            # Paging records
-            start, step = 0, 2
-            end = len(all_data)+1 if len(all_data) % 2 == 0 else len(all_data)
-
-            for page_length in range(start, end, step):
-                logger.info("Shown Page: " + str((page_length+2)/2))
-                for row in all_data[page_length: page_length+2]:
-                    current = []
-                    for index, title in enumerate(headers):
-                        current.append((title + ":", row[index]))
-                    print(tabulate(current))
-
-                if page_length+2 >= end:
-                    break
-
-                user_input = Parser.selection_parser(
-                    options={"A": "Proceed to next page", "B": "Continue to next part"})
-
-                if user_input == "A":
-                    continue
-                else:
-                    break
-
+            Paging.show_page(1, all_data, 2, len(headers), headers)
             print("Completed operation.\n")
 
             logger.info("Option to edit records")
@@ -248,10 +225,9 @@ class Admin(User):
                 return False
             else:
                 selected_user = all_deactivated_users_table[selected_user_number]
-                user_type = SQLQuery("SELECT UserType FROM Users WHERE username==?")\
-                    .fetch_all(parameters=(selected_user,))[0][0]
-                selected_id = SQLQuery("SELECT ID FROM Users WHERE username==?")\
-                    .fetch_all(parameters=(selected_user,))[0][0]
+                query = SQLQuery("SELECT UserType, ID FROM Users WHERE username==?")\
+                    .fetch_all(parameters=(selected_user,))
+                user_type, selected_id = query[0][0], query[0][1]
                 if user_type == "GP":
                     SQLQuery("DELETE FROM GP WHERE ID=:who").commit({"who": selected_id})
                     SQLQuery("DELETE FROM available_time WHERE StaffID=:who").commit({"who": selected_id})
