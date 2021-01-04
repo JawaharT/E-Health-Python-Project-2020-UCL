@@ -75,7 +75,6 @@ class Patient(User):
 
             headersholder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
             result_index = 4
-
             Paging.show_page(1, result_table, 5, result_index, headersholder)
 
             print("How would you like to choose? ")
@@ -106,9 +105,7 @@ class Patient(User):
             logger.info("There are no available appointments matching the search criteria.")
             Parser.handle_input("Press Enter to continue.")
             return False
-        result_table = []
-        for count, item in enumerate(result):
-            result_table.append([count + 1, item[0], item[1], item[2], item[3]])
+        result_table = Paging.give_pointer(result)
         return result_table
 
     def book_appointment_date(self):
@@ -122,8 +119,10 @@ class Patient(User):
             if not result_table:
                 continue
             print(f"You are viewing all available appointments for: {selected_date}")
-            print(tabulate([result[0:4] for result in result_table], headers=["Pointer", "GP Name", "Last Name",
-                                                                              "Timeslot"]))
+            headersholder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
+            result_index = 4
+            Paging.show_page(1, result_table, 5, result_index, headersholder)
+                                                                             "Timeslot"]))
             selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
                                                              (1, len(result_table)), allow_multiple=False)
             if selected_appointment == '--back':
@@ -140,17 +139,22 @@ class Patient(User):
                                  "WHERE Timeslot >= ? AND Timeslot <= ? )"
                                  ).fetch_all(parameters=(date_now + delta(days=1), date_now + delta(days=15)),
                                              decrypter=EncryptionHelper())
-            gp_table = []
-            for count, item in enumerate(gp_result):
-                gp_table.append([count + 1, item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7]])
-            if len(gp_table) == 0:
+            
+            if len(gp_result) == 0:
                 logger.info("There are no GPs in the system yet.")
                 Parser.handle_input("Press Enter to continue...")
                 return False
-            Parser.print_clean(f"You are viewing all available GPs in 2 weeks from: {date_now} ")
-            print(tabulate([gp[0:8] for gp in gp_table], headers=["Pointer", "First Name", "Last Name", "Introduction",
-                                                                  "Clinic Address", "Clinic Postcode",
-                                                                  "Gender", "Rating"]))
+            gp_table = Paging.give_pointer(gp_result)
+            print(f"You are viewing all available GPs in 2 weeks from: {date_now} ")
+            if not gp_table:
+                return False
+
+            headersholder = ["Pointer", "First Name", "Last Name",
+                             "Introduction", "Clinic Address",
+                             "Clinic Postcode", "Gender", "Rating"]
+            result_index = 8
+            Paging.show_page(1, gp_table, 5, result_index, headersholder)
+
             selected_gp_pointer = Parser.list_number_parser("Select GP by the Pointer.",
                                                             (1, len(gp_table)), allow_multiple=False)
             if selected_gp_pointer == '--back':
@@ -160,8 +164,11 @@ class Patient(User):
             if not result_table:
                 continue
             logger.info("You are viewing appointments for the selected GP:")
-            print(tabulate([result[0:4] for result in result_table], headers=["Pointer", "GP First Name",
-                                                                              "Last Name", "Timeslot"]))
+            print(f"You are viewing appointments for the selected GP:")
+
+            headersholder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
+            result_index = 4
+            Paging.show_page(1, result_table, 5, result_index, headersholder)                                                               
             selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
                                                              (1, len(result_table)), allow_multiple=False)
             if selected_appointment == '--back':
@@ -194,8 +201,8 @@ class Patient(User):
                                                         decrypter=EncryptionHelper())
                     booking_no = visit_result[0][0]
                     logger.info("View your appointments")
-                    print(tabulate(visit_result,
-                                   headers=["BookingNo", "NHSNo", "GP First Name", "Last Name", "Timeslot"]))
+                    headersholder = ["BookingNo", "NHSNo", "GP First Name", "Last Name", "Timeslot"]
+                    Paging.better_form(visit_result )
                     Parser.handle_input("Press Enter to continue...")
                 except DBRecordError:
                     print("Error encountered")
@@ -229,9 +236,10 @@ class Patient(User):
                                     ).fetch_all(parameters=(self.ID, "F", dtime_now - delta(hours=1)),
                                                 decrypter=EncryptionHelper())
 
-            confirmed_appointments = list(enumerate([appt for appt in appointments if appt[5] == "T"], 1))
-            pending_appointments = list(enumerate([appt for appt in appointments if appt[5] == "P"], 1))
-            rejected_appointments = list(enumerate([appt for appt in appointments if appt[5] == "F"], 1))
+            confirmed_appointments = list(appt[0:5] for appt in appointments if appt[5] == "T")
+            pending_appointments = list(appt[0:5] for appt in appointments if appt[5] == "P")
+            rejected_appointments = list(appt[0:5] for appt in appointments if appt[5] == "F")
+
             Parser.print_clean("You are viewing all your booked appointments: ")
 
             if not appointments:
@@ -242,19 +250,16 @@ class Patient(User):
             if confirmed_appointments:
                 logger.info("Viewing your confirmed appointments")
                 print("Confirmed appointments:")
-                print(tabulate([[count] + appointment[0:5] for count, appointment in confirmed_appointments],
-                               headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
+                Paging.better_form(Paging.give_pointer(confirmed_appointments), headersholder)
+
             if pending_appointments:
                 logger.info("Viewing your pending appointment")
                 print("Pending appointments - wait for confirmation or change appointment:")
-                print(tabulate([[count] + appointment[0:5] for count, appointment in pending_appointments],
-                               headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
+                Paging.better_form(Paging.give_pointer(pending_appointments), headersholder)
             if rejected_appointments:
                 logger.info("Viewing your rejected appointments")
                 print("Rejected appointments:")
-                print(tabulate([[count] + appointment[0:5] for count, appointment in rejected_appointments],
-                               headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
-
+                Paging.better_form(Paging.give_pointer(rejected_appointments), headersholder)
             print("")
             option_selection = Parser.selection_parser(
                 options={"I": "check in confirmed appointment", "C": "change appointment", "--back": "back"})
@@ -273,8 +278,8 @@ class Patient(User):
                 Parser.handle_input("Press Enter to continue...")
                 stage = 0
                 continue
-            print(tabulate([[count] + appointment[0:5] for count, appointment in check_appt],
-                           headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]), "\n")
+            headersholder = ["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
+            Paging.better_form(Paging.give_pointer(check_appt), headersholder)
 
             selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
                                                              (1, len(check_appt)), allow_multiple=False)
@@ -284,8 +289,9 @@ class Patient(User):
             else:
                 appointment_check_in = check_appt[selected_appointment - 1][1]
                 print("This is the appointment you are checking in for: \n ")
-                print(tabulate([appointment_check_in[0:5]], headers=["BookingNo", "NHSNo", "GP Name",
-                                                                     "Last Name", "Timeslot"]), "\n")
+                headersholder = ["BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
+                Paging.better_form([appointment_check_in[0:5]], headersholder)
+
                 confirm = Parser.selection_parser(options={"Y": "check-in", "N": "cancel check-in"})
                 if confirm == "Y":
                     try:
@@ -315,24 +321,25 @@ class Patient(User):
                                     "JOIN Users on visit.StaffID = Users.ID) WHERE NHSNo = ? AND Timeslot >= ?"
                                     ).fetch_all(parameters=(self.ID, dtime_now + delta(days=5)),
                                                 decrypter=EncryptionHelper())
-            appointments_table = []
-            for count, appt in enumerate(valid_cancel, 1):
-                appointments_table.append([count, appt[0], appt[1], appt[2], appt[3], appt[4], appt[5]])
-            Parser.print_clean("You are viewing all the appointments can be cancelled.")
+            appointments_table = Paging.give_pointer(valid_cancel)
+            Parser.print_clean(f"You are viewing all the appointments can be cancelled.")
+            
             if not appointments_table:
                 logger.info("There are no Appointments can be cancelled.")
+                print(f"No Appointments can be cancelled.\n")
                 return
             else:
                 stage = 1
 
         while stage == 1:
-            print(tabulate([appt[0:6] for appt in appointments_table],
-                           headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Timeslot", "Patient Info"]))
+            headersholder =["Pointer", "BookingNo", "NHSNo", "GP Name", "Timeslot", "Patient Info"]
+            Paging.better_form([appt[0:6] for appt in appointments_table], headersholder)
+
             selected_cancel_appointment = Parser.list_number_parser("Select an appointment to cancel by the Pointer.",
                                                                     (1, len(appointments_table)), allow_multiple=False)
             selected_row = appointments_table[selected_cancel_appointment - 1]
             Parser.print_clean("This is appointment you want to cancel:")
-            print(tabulate([selected_row], headers=["Pointer", "BookingNo", "NHSNo", "Timeslot", "Patient Info"]))
+            Paging.better_form(Paging.give_pointer([selected_row]), headersholder)
             confirmation = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
 
             if confirmation == "Y":
@@ -382,8 +389,8 @@ class Patient(User):
                 appointments_table.append([count, appt[0], appt[1], appt[2], appt[3], appt[4], appt[5]])
 
             Parser.print_clean("These are appointments you have attended:")
-            print(tabulate([appt[0:6] for appt in appointments_table],
-                           headers=["Pointer", "BookingNo", "GP Name", "Last Name", "Timeslot", "Rating"]))
+            headers = ["Pointer", "BookingNo", "GP Name", "Last Name", "Timeslot", "Rating"]
+            Paging.better_form([appt[0:6] for appt in appointments_table], headers)
             print("Your opinion matters to us. Please take the time to rate your experience with our GP.")
 
             selected_appt = Parser.list_number_parser("Select an appointment to rate by the Pointer.",
@@ -408,6 +415,7 @@ class Patient(User):
                 SQLQuery("UPDATE Visit SET Rating = ? WHERE BookingNo = ? ").commit((selected_rate, selected_row[1]))
                 SQLQuery("UPDATE GP SET Rating = ? WHERE ID = ? ").commit((new_rate, selected_row[6]))
                 logger.info("Your rating has been recorded successfully!")
+                print("Your rating has been recorded successfully!")
                 Parser.handle_input("Press Enter to continue...")
                 stage = 0
 
