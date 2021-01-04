@@ -1,11 +1,12 @@
 from tabulate import tabulate
 from main import User, MenuHelper
 from encryption import EncryptionHelper
-from iohandler import Parser
-from iohandler import Paging
+from iohandler import Parser, Paging
 from database import SQLQuery
 import datetime
 from exceptions import DBRecordError
+import logging
+logger = logging.getLogger("main.Patient")
 
 print_clean = Parser.print_clean
 delta = datetime.timedelta
@@ -18,11 +19,11 @@ class Patient(User):
     """
     patient Class with navigation options and various functionalities.
     """
-
     def main_menu(self) -> None:
         """
         Main Menu for Patient-type users.
         """
+        logger.info("logged in as Patient")
         while True:
             print("You're currently viewing main menu options for Patient {}.".format(self.username))
             option_selection = Parser.selection_parser(
@@ -31,23 +32,30 @@ class Patient(User):
                          "V": "view your prescriptions", "--logout": "Logout"})
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
+                logger.info("User Logged Out")
                 print_clean("Logging you out...")
                 Parser.user_quit()
             elif option_selection == "B":
+                logger.info("Patient booking appointments")
                 self.book_appointment_start()
             elif option_selection == "I":
+                logger.info("Patient checking in himself")
                 self.check_in_appointment()
             elif option_selection == "C":
+                logger.info("Patient cancelling appointments")
                 self.cancel_appointment()
             elif option_selection == "R":
                 r_selection = Parser.selection_parser(options={"A": "review", "B": "rate", "--back": "back"})
                 if r_selection == "--back":
                     continue
                 elif r_selection == "A":
+                    logger.info("Patient reviewing his appointments")
                     self.review_appointment()
                 elif r_selection == "B":
+                    logger.info("Patient rating his appointments")
                     self.rate_appointment()
             elif option_selection == "V":
+                logger.info("Patient reviewing his prescriptions")
                 self.review_prescriptions()
 
     def book_appointment_start(self):
@@ -95,7 +103,7 @@ class Patient(User):
                           ).fetch_all(parameters=(gp_id, selected_date, selected_date + delta(days=selected_delta)),
                                       decrypter=EncryptionHelper())
         if len(result) == 0:
-            print(f"There are no available appointments matching the search criteria. ")
+            logger.info("There are no available appointments matching the search criteria.")
             Parser.handle_input("Press Enter to continue.")
             return False
         result_table = []
@@ -136,7 +144,7 @@ class Patient(User):
             for count, item in enumerate(gp_result):
                 gp_table.append([count + 1, item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7]])
             if len(gp_table) == 0:
-                print("There are no GPs in the system yet.")
+                logger.info("There are no GPs in the system yet.")
                 Parser.handle_input("Press Enter to continue...")
                 return False
             Parser.print_clean(f"You are viewing all available GPs in 2 weeks from: {date_now} ")
@@ -151,7 +159,7 @@ class Patient(User):
             result_table = self.fetch_format_appointments(date_now + delta(days=1), 15, selected_gp)
             if not result_table:
                 continue
-            print(f"You are viewing appointments for the selected GP:")
+            logger.info("You are viewing appointments for the selected GP:")
             print(tabulate([result[0:4] for result in result_table], headers=["Pointer", "GP First Name",
                                                                               "Last Name", "Timeslot"]))
             selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
@@ -178,17 +186,20 @@ class Patient(User):
                              f" AND TIMESLOT = '{selected_row[3]}'; COMMIT"
                              ).commit(multiple_queries=True)
                     print("Booked successfully.")
+                    logger.info("Appointment is booked Successfully")
                     visit_result = SQLQuery("SELECT BookingNo, NHSNo, firstName, lastName, Timeslot FROM "
                                             "(Visit JOIN Users ON VISIT.StaffID = Users.ID)"
                                             "WHERE Timeslot = ? AND StaffID = ? "
                                             ).fetch_all(parameters=(selected_row[3], selected_row[4]),
                                                         decrypter=EncryptionHelper())
                     booking_no = visit_result[0][0]
+                    logger.info("View your appointments")
                     print(tabulate(visit_result,
                                    headers=["BookingNo", "NHSNo", "GP First Name", "Last Name", "Timeslot"]))
                     Parser.handle_input("Press Enter to continue...")
                 except DBRecordError:
                     print("Error encountered")
+                    logger.warning("Error in DB")
                     Parser.handle_input("Press Enter to continue...")
                     return False
                 info_input = encrypt(Parser.string_parser("Please enter your notes for GP before the visit: "))
@@ -224,19 +235,22 @@ class Patient(User):
             Parser.print_clean("You are viewing all your booked appointments: ")
 
             if not appointments:
-                print("You have not booked any appointments.")
+                logger.info("You have not booked any appointments.")
                 Parser.handle_input()
                 return False
 
             if confirmed_appointments:
+                logger.info("Viewing your confirmed appointments")
                 print("Confirmed appointments:")
                 print(tabulate([[count] + appointment[0:5] for count, appointment in confirmed_appointments],
                                headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
             if pending_appointments:
+                logger.info("Viewing your pending appointment")
                 print("Pending appointments - wait for confirmation or change appointment:")
                 print(tabulate([[count] + appointment[0:5] for count, appointment in pending_appointments],
                                headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
             if rejected_appointments:
+                logger.info("Viewing your rejected appointments")
                 print("Rejected appointments:")
                 print(tabulate([[count] + appointment[0:5] for count, appointment in rejected_appointments],
                                headers=["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]))
@@ -282,6 +296,7 @@ class Patient(User):
                         return True
                     except DBRecordError:
                         print("Error encountered")
+                        logger.warning("Error in DB")
                         Parser.handle_input("Press Enter to continue...")
                 else:
                     print("Removal cancelled.")
@@ -305,7 +320,7 @@ class Patient(User):
                 appointments_table.append([count, appt[0], appt[1], appt[2], appt[3], appt[4], appt[5]])
             Parser.print_clean("You are viewing all the appointments can be cancelled.")
             if not appointments_table:
-                print("There are no Appointments can be cancelled.\n")
+                logger.info("There are no Appointments can be cancelled.")
                 return
             else:
                 stage = 1
@@ -328,9 +343,11 @@ class Patient(User):
                     print("Appointment is cancelled successfully.")
                 except Exception as e:
                     print("Database Error...", e)
+                    logger.warning("Error in DB")
             else:
-                Parser.print_clean()
-                return
+                print("Cancel failed")
+                Parser.handle_input("Press Enter to continue...")
+                stage = 0
 
     def review_appointment(self):
         while True:
@@ -343,8 +360,9 @@ class Patient(User):
             all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
 
             if len(list(all_data)) == 0:
-                Parser.print_clean("No Appointments Available.\n")
+                logger.info("No Appointments Available.")
             else:
+                logger.info("View all your appointments")
                 print(tabulate(all_data, headers))
 
     def rate_appointment(self):
@@ -356,7 +374,7 @@ class Patient(User):
 
             appointments_table = []
             if not patient_result:
-                print(f"You don't have any attended appointment")
+                logger.info("You don't have any attended appointment")
                 input("Press Enter to continue...")
                 return False
 
@@ -389,12 +407,13 @@ class Patient(User):
 
                 SQLQuery("UPDATE Visit SET Rating = ? WHERE BookingNo = ? ").commit((selected_rate, selected_row[1]))
                 SQLQuery("UPDATE GP SET Rating = ? WHERE ID = ? ").commit((new_rate, selected_row[6]))
-                print("Your rating has been recorded successfully!")
+                logger.info("Your rating has been recorded successfully!")
                 Parser.handle_input("Press Enter to continue...")
                 stage = 0
 
             except DBRecordError:
                 print("Error encountered")
+                logger.warning("Error in DB")
                 input("Press Enter to continue...")
 
     def review_prescriptions(self):
@@ -412,8 +431,9 @@ class Patient(User):
             all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
 
             if len(list(all_data)) == 0:
-                Parser.print_clean("No Prescriptions Available.\n")
+                logger.info("No Prescriptions Available.")
             else:
+                logger.info("View all your prescriptions")
                 print(tabulate(all_data, headers))
 
     def first_login(self):
