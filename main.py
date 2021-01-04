@@ -97,12 +97,13 @@ class MenuHelper:
         """
         Register a new GP or Patient Account.
         """
+
         new_id, user_group = MenuHelper.get_id()
         if not new_id or not user_group:
             return False
 
         menu_helper = MenuHelper()
-        username = menu_helper.get_check_user_input("username", user_group)
+        username = menu_helper.get_check_username(user_group)
         password = menu_helper.register_new_password()
         birthday = menu_helper.get_birthday()
         Parser.print_clean("\n")
@@ -127,28 +128,26 @@ class MenuHelper:
 
         Parser.print_clean("Successfully added account!")
         if not admin:
-            print("Contact the administrator for activation. ")
-        # input("Press Enter to continue...")
+            print("If any incorrect details entered and for activation, contact an administrator.")
         Parser.handle_input()
         return True
 
     @staticmethod
-    def get_check_user_input(parameter_name, user_group) -> str:
+    def get_check_username(user_group) -> str:
         """
-        :param str parameter_name: The name of the parameter for Admin to enter
         :param str user_group: Patient or GP
         :return: New unique Username that is not currently being used
         """
         while True:
-            parameter = Parser.string_parser("Please enter {0} of {1}: ".format(parameter_name, user_group))
+            parameter = Parser.string_parser("Please enter username of {0}: ".format(user_group))
             # check if it exists in table, if it does ask again
-            exists_query = SQLQuery("SELECT 1 FROM Users WHERE {0} = '{1}'".format(parameter_name, parameter)) \
+            exists_query = SQLQuery("SELECT 1 FROM Users WHERE username = '{0}'".format(parameter)) \
                 .fetch_all()
             if exists_query or (parameter == ""):
-                Parser.print_clean("{0} already exists. Please choose another.\n".format(parameter_name))
+                Parser.print_clean("username already exists. Please choose another.\n")
                 continue
             else:
-                Parser.print_clean("{0} approved.\n".format(parameter_name[0].upper() + parameter_name[1:]))
+                Parser.print_clean("username approved.\n")
                 return parameter
 
     @staticmethod
@@ -334,14 +333,15 @@ if __name__ == '__main__':
     """Main Program starts here."""
 
     # Exception handling if database not present/cannot connect
-    # conn = create_connection("GPDB.db")
-
     import sqlite3
     try:
+        main_logger.debug("Connecting to database...")
         from urllib.request import pathname2url
         database = 'file:{}?mode=rw'.format(pathname2url("GPDB.db"))
         conn = sqlite3.connect(database, uri=True)
+        main_logger.debug("Connected to database")
     except sqlite3.OperationalError:
+        main_logger.debug("Nonexistent Database present")
         Parser.print_clean("Database does not exist.")
         Parser.user_quit()
 
@@ -354,5 +354,6 @@ if __name__ == '__main__':
             current_user = MenuHelper.login()
             MenuHelper.dispatcher(current_user["username"], current_user["user_type"])
         else:
+            main_logger.debug("New user registration started")
             result = MenuHelper.register()
             Parser.user_quit()
