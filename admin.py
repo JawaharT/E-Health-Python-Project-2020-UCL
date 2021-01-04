@@ -1,12 +1,11 @@
 from encryption import EncryptionHelper
-from iohandler import Parser
+from iohandler import Parser, Paging
 from database import SQLQuery
 from main import User, MenuHelper
 from typing import Tuple
-from iohandler import Paging
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("main.Admin")
 
 
 class Admin(User):
@@ -26,12 +25,16 @@ class Admin(User):
                 logger.info("User Logged Out")
                 Parser.user_quit()
             elif user_input == "A":
+                logger.info("Admin viewing records")
                 self.view_records()
             elif user_input == "B":
+                logger.info("Admin adding new patient/GP")
                 self.add_gp_patient()
             elif user_input == "C":
+                logger.info("Admin editing existing patient/GP")
                 self.edit_gp_patient()
             else:
+                logger.info("Admin deletion of account that has been deactivated")
                 self.delete_gp_patient()
 
     def view_records(self) -> None:
@@ -103,8 +106,10 @@ class Admin(User):
                 user_input = Parser.selection_parser(
                     options={"A": "Proceed to editing records", "--back": "back"})
                 if user_input == "A" and user_type == "Patient":
+                    logger.info("Editing Patient record")
                     self.edit_gp_patient("Patient")
                 elif user_input == "A" and user_type == "GP":
+                    logger.info("Editing GP record")
                     self.edit_gp_patient("GP")
                 else:
                     continue
@@ -126,6 +131,7 @@ class Admin(User):
         Edit existing GP or Patient Record
         """
         # show all GPs and Patients
+        logger.info("Display GP/Patient or both types of accounts")
         if account_types == "all":
             list_accounts = list(SQLQuery("SELECT username FROM Users WHERE UserType = 'GP' or "
                                           "UserType = 'Patient'").fetch_all())
@@ -141,6 +147,7 @@ class Admin(User):
             return
 
         if len(list_accounts) == 0:
+            logger.info("No accounts exist to show")
             Parser.print_clean("No user accounts matching the search criteria... Please add before coming back.\n")
             return
 
@@ -228,6 +235,11 @@ class Admin(User):
                 query = SQLQuery("SELECT UserType, ID FROM Users WHERE username==?")\
                     .fetch_all(parameters=(selected_user,))
                 user_type, selected_id = query[0][0], query[0][1]
+
+                logger.info("Selected GP/ Patient account to delete")
+                # delete query, make sure to delete all presence of that user
+                logger.info("Removed selected " + selected_user + " from Users and other tables")
+
                 if user_type == "GP":
                     SQLQuery("DELETE FROM GP WHERE ID=:who").commit({"who": selected_id})
                     SQLQuery("DELETE FROM available_time WHERE StaffID=:who").commit({"who": selected_id})
@@ -235,9 +247,6 @@ class Admin(User):
                     SQLQuery("DELETE FROM Patient WHERE NHSNo=:who").commit({"who": selected_id})
                     SQLQuery("DELETE FROM Visit WHERE NHSNo=:who").commit({"who": selected_id})
 
-                logger.info("Selected GP/ Patient account to delete")
-                # delete query, make sure to delete all presence of that user
-                logger.info("Removed selected " + selected_user + " from Users and other tables")
                 delete_query = SQLQuery("DELETE FROM Users WHERE username=?")
                 delete_query.commit(parameters=(selected_user,))
                 print("{0} {1} deleted from the necessary tables.\n".format(user_type, selected_user))
@@ -264,12 +273,13 @@ class Admin(User):
         :param str parameter: Current table column admin is changing
         :param str new_parameter_value: New value to change within the table column of the currently selected user
         """
+        from sqlite3 import DatabaseError
         try:
             SQLQuery("UPDATE Users SET {0} = ? WHERE username = ?".format(parameter)).commit((new_parameter_value,
                                                                                               selected_user))
             logger.info("Updated record in database")
             return True
-        except Exception:
+        except DatabaseError:
             logger.debug("Unexpected database error")
             return False
 
