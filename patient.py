@@ -73,9 +73,9 @@ class Patient(User):
             if not result_table:
                 return False
 
-            headersholder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
+            headers_holder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
             result_index = 4
-            Paging.show_page(1, result_table, 5, result_index, headersholder)
+            Paging.show_page(1, result_table, 5, result_index, headers_holder)
 
             print("How would you like to choose? ")
             booking_selection = Parser.selection_parser(
@@ -126,9 +126,9 @@ class Patient(User):
             if not result_table:
                 continue
             print(f"You are viewing all available appointments for: {selected_date}")
-            headersholder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
+            headers_holder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
             result_index = 4
-            Paging.show_page(1, result_table, 5, result_index, headersholder)
+            Paging.show_page(1, result_table, 5, result_index, headers_holder)
 
             selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
                                                              (1, len(result_table)), allow_multiple=False)
@@ -161,11 +161,11 @@ class Patient(User):
             if not gp_table:
                 return False
 
-            headersholder = ["Pointer", "First Name", "Last Name",
+            headers_holder = ["Pointer", "First Name", "Last Name",
                              "Introduction", "Clinic Address",
                              "Clinic Postcode", "Gender", "Rating"]
             result_index = 8
-            Paging.show_page(1, gp_table, 5, result_index, headersholder)
+            Paging.show_page(1, gp_table, 5, result_index, headers_holder)
 
             selected_gp_pointer = Parser.list_number_parser("Select GP by the Pointer.",
                                                             (1, len(gp_table)), allow_multiple=False)
@@ -179,9 +179,9 @@ class Patient(User):
             logger.info("You are viewing appointments for the selected GP:")
             print(f"You are viewing appointments for the selected GP:")
 
-            headersholder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
+            headers_holder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
             result_index = 4
-            Paging.show_page(1, result_table, 5, result_index, headersholder)                                                               
+            Paging.show_page(1, result_table, 5, result_index, headers_holder)
             selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
                                                              (1, len(result_table)), allow_multiple=False)
             if selected_appointment == '--back':
@@ -219,7 +219,7 @@ class Patient(User):
                                                         decrypter=EncryptionHelper())
                     booking_no = visit_result[0][0]
                     logger.info("View your appointments")
-                    headersholder = ["BookingNo", "NHSNo", "GP First Name", "Last Name", "Timeslot"]
+                    headers_holder = ["BookingNo", "NHSNo", "GP First Name", "Last Name", "Timeslot"]
                     Paging.better_form(visit_result )
                     Parser.handle_input("Press Enter to continue...")
                 except DBRecordError:
@@ -269,16 +269,16 @@ class Patient(User):
             if confirmed_appointments:
                 logger.info("Viewing your confirmed appointments")
                 print("Confirmed appointments:")
-                Paging.better_form(Paging.give_pointer(confirmed_appointments), headersholder)
+                Paging.better_form(Paging.give_pointer(confirmed_appointments), headers_holder)
 
             if pending_appointments:
                 logger.info("Viewing your pending appointment")
                 print("Pending appointments - wait for confirmation or change appointment:")
-                Paging.better_form(Paging.give_pointer(pending_appointments), headersholder)
+                Paging.better_form(Paging.give_pointer(pending_appointments), headers_holder)
             if rejected_appointments:
                 logger.info("Viewing your rejected appointments")
                 print("Rejected appointments:")
-                Paging.better_form(Paging.give_pointer(rejected_appointments), headersholder)
+                Paging.better_form(Paging.give_pointer(rejected_appointments), headers_holder)
             print("")
             option_selection = Parser.selection_parser(
                 options={"I": "check in confirmed appointment", "C": "change appointment", "--back": "back"})
@@ -297,8 +297,8 @@ class Patient(User):
                 Parser.handle_input("Press Enter to continue...")
                 stage = 0
                 continue
-            headersholder = ["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
-            Paging.better_form(Paging.give_pointer(check_appt), headersholder)
+            headers_holder = ["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
+            Paging.better_form(Paging.give_pointer(check_appt), headers_holder)
 
             selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
                                                              (1, len(check_appt)), allow_multiple=False)
@@ -308,8 +308,8 @@ class Patient(User):
             else:
                 appointment_check_in = check_appt[selected_appointment - 1][1]
                 print("This is the appointment you are checking in for: \n ")
-                headersholder = ["BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
-                Paging.better_form([appointment_check_in[0:5]], headersholder)
+                headers_holder = ["BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
+                Paging.better_form([appointment_check_in[0:5]], headers_holder)
 
                 confirm = Parser.selection_parser(options={"Y": "check-in", "N": "cancel check-in"})
                 if confirm == "Y":
@@ -352,14 +352,14 @@ class Patient(User):
                 stage = 1
 
         while stage == 1:
-            headersholder =["Pointer", "BookingNo", "NHSNo", "GP Name", "Timeslot", "Patient Info"]
-            Paging.better_form([appt[0:6] for appt in appointments_table], headersholder)
+            headers_holder =["Pointer", "BookingNo", "NHSNo", "GP Name", "Timeslot", "Patient Info"]
+            Paging.better_form([appt[0:6] for appt in appointments_table], headers_holder)
 
             selected_cancel_appointment = Parser.list_number_parser("Select an appointment to cancel by the Pointer.",
                                                                     (1, len(appointments_table)), allow_multiple=False)
             selected_row = appointments_table[selected_cancel_appointment - 1]
             Parser.print_clean("This is appointment you want to cancel:")
-            Paging.better_form(Paging.give_pointer([selected_row]), headersholder)
+            Paging.better_form(Paging.give_pointer([selected_row]), headers_holder)
             confirmation = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
 
             if confirmation == "Y":
