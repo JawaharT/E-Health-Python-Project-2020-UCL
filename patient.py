@@ -412,10 +412,9 @@ class Patient(User):
             all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
 
             if len(list(all_data)) == 0:
-                Parser.print_clean("No records Available.\n")
+                Parser.print_clean("No Prescriptions Available.\n")
             else:
                 print(tabulate(all_data, headers))
-
 
     def first_login(self):
         Parser.print_clean("Welcome Patient {}. This is your first login. ".format(self.username))
