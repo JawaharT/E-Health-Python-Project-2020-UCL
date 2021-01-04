@@ -5,6 +5,8 @@ from typing import Union
 from exceptions import *
 from tabulate import tabulate
 import os
+import csv
+import re
 
 
 class Parser:
@@ -304,6 +306,43 @@ class Parser:
                 return input(input_question)
             except KeyboardInterrupt:
                 continue
+
+    @staticmethod
+    def translator_parser(question) -> str:
+        """
+        transfer latin abbreviations into readable form
+        """
+        while True:
+            try:
+                Parser.print_clean(question)
+                input_string = Parser.handle_input(input_question="")
+                result = input_string.split(" ")
+                i = 0
+                for words in result:
+                    filename = "E:\E-Health-Python-Project-2020-UCL\\abbreviation.txt"
+                    access_mode = "r"
+                    with open(filename,access_mode) as csvfile:
+                        fetched_data = csv.reader(csvfile, delimiter="=")
+                        words = re.sub('[^a-zA-Z0-9-_.]', '', words)
+                        for row in fetched_data:
+                            if words.upper() == row[0]:
+                                result[i] = row[1]
+                        csvfile.close()
+                    i = i + 1
+                print(' '.join(result))
+            except KeyboardInterrupt:
+                continue
+
+
+
+
+
+
+
+
+
+
+
 
 class Paging:
     """
