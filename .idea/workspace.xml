@@ -28,7 +28,7 @@
   <component name="ChangeListManager">
     <list default="true" id="6a4cfd94-3cef-4724-ab47-65d697ca0487" name="Default Changelist" comment="Further changes to Patient">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/abbreviation.txt" beforeDir="false" afterPath="$PROJECT_DIR$/abbreviation.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/patient.py" beforeDir="false" afterPath="$PROJECT_DIR$/patient.py" afterDir="false" />
     </list>
     <list id="1d22392a-88a9-4a7b-a161-0f0aded2c85a" name="Fixing selection parser" comment="Fixing selection parser">
       <changelist_data name="patryk-wloch" email="p.wloch@ucl.ac.uk" date="1609678861000" />
