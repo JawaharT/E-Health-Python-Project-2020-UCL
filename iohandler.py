@@ -32,7 +32,7 @@ class Parser:
                     result = int(input_string)
                     return result
             except (ValueError, TypeError) as e:
-                Parser.print_clean("This is not a valid integer !")
+                Parser.print_clean("This is not a valid integer !", e)
 
     @staticmethod
     def time_parser(question, limit_quarter_intervals=True, allow_back=True) -> datetime:
@@ -124,7 +124,7 @@ class Parser:
                 else:
                     raise ValueError
             except (ValueError, TypeError) as e:
-                Parser.print_clean("This is not a valid NHS Number!")
+                Parser.print_clean("This is not a valid NHS Number!", e)
 
     @staticmethod
     def admin_no_parser(question="Please input admin Staff Number") -> str:
@@ -144,7 +144,7 @@ class Parser:
                     raise ValueError
                 return result
             except (ValueError, TypeError) as e:
-                Parser.print_clean("Invalid Admin number, format required: A########!")
+                Parser.print_clean("Invalid Admin number, format required: A########!", e)
 
     @staticmethod
     def gp_no_parser(question="Please input GP Staff Number") -> str:
@@ -164,7 +164,7 @@ class Parser:
                     raise ValueError
                 return result
             except (ValueError, TypeError) as e:
-                print("Invalid GP number, format required: G########!")
+                print("Invalid GP number, format required: G########!", e)
 
     @staticmethod
     def selection_parser(options={"--back": "back"}) -> str:
@@ -188,7 +188,6 @@ class Parser:
                     print(f"Enter '{key}' to {options[key]}")
 
                 result = Parser.handle_input(input_question="").strip().upper()
-
                 if result == "--QUIT":
                     Parser.user_quit()
                 if result not in options:
@@ -308,9 +307,11 @@ class Parser:
                 continue
 
     @staticmethod
-    def translator_parser(question) -> str:
+    def translator_parser(question) -> None:
         """
-        transfer latin abbreviations into readable form
+        transfer latin abbreviations into readable form.
+
+        :param str question: Prompt for user
         """
         while True:
             try:
@@ -319,29 +320,19 @@ class Parser:
                 result = input_string.split(" ")
                 i = 0
                 for words in result:
-                    filename = "E:\E-Health-Python-Project-2020-UCL\\abbreviation.txt"
+                    filename = "abbreviation.txt"
                     access_mode = "r"
-                    with open(filename,access_mode) as csvfile:
-                        fetched_data = csv.reader(csvfile, delimiter="=")
+                    with open(filename, access_mode) as csv_file:
+                        fetched_data = csv.reader(csv_file, delimiter="=")
                         words = re.sub('[^a-zA-Z0-9-_.]', '', words)
                         for row in fetched_data:
                             if words.upper() == row[0]:
                                 result[i] = row[1]
-                        csvfile.close()
+                        csv_file.close()
                     i = i + 1
                 print(' '.join(result))
             except KeyboardInterrupt:
                 continue
-
-
-
-
-
-
-
-
-
-
 
 
 class Paging:
@@ -350,40 +341,48 @@ class Paging:
     """
 
     @staticmethod
-    def show_page(page, all_data_table, step, index, headersholder):
+    def show_page(page, all_data_table, step, index, headers_holder):
+        """
+        Consistent paging method.
+
+        :param int page: Number of pages to show user at once
+        :param list all_data_table: all queried data from SQLQuery
+        :param int step: Maximum number of records to show in one page
+        :param int index: length of table columns
+        :param list headers_holder: list of header (column) titles in table
+        """
         if step == 0:
             print("step must > 0")
         else:
             end = len(all_data_table)/step + 1 if len(all_data_table) % step != 0 else len(all_data_table)/step
-            #for page_length in range(start, end, step):
             start = 0 + (page-1)*step
             stop = start + step
             current = []
             for row in all_data_table[start: stop]:
-                # print(row)
                 current.append(row[0:index])
 
-            print(tabulate(current, headers = headersholder,
+            print(tabulate(current, headers=headers_holder,
                            tablefmt="fancy_grid",
                            numalign="left"))
             print("Page: - " + str(page) + " - ")
 
             user_input = Parser.selection_parser(
-                options={"A": "--> Proceed to next page", "B": "<-- back to previous page", "C": "Continue to next part"})
+                options={"A": "--> Proceed to next page", "B": "<-- back to previous page",
+                         "C": "Continue to next part"})
             if user_input == "A":
                 page += 1
                 if page > end:
                     print("already the last page")
-                    Paging.show_page(page - 1, all_data_table, step, index, headersholder)
+                    Paging.show_page(page - 1, all_data_table, step, index, headers_holder)
                 else:
-                    Paging.show_page(page , all_data_table, step, index, headersholder)
+                    Paging.show_page(page, all_data_table, step, index, headers_holder)
 
             elif user_input == "B":
                 page -= 1
                 if page == 0:
                     print("already the first page")
-                    Paging.show_page(page + 1, all_data_table, step, index, headersholder)
+                    Paging.show_page(page + 1, all_data_table, step, index, headers_holder)
                 else:
-                    Paging.show_page(page, all_data_table, step, index, headersholder)
+                    Paging.show_page(page, all_data_table, step, index, headers_holder)
             else:
                 return
