@@ -5,7 +5,8 @@ from typing import Union
 from exceptions import *
 from tabulate import tabulate
 import os
-
+import csv
+import re
 
 class Parser:
     """
@@ -30,7 +31,7 @@ class Parser:
                     result = int(input_string)
                     return result
             except (ValueError, TypeError) as e:
-                Parser.print_clean("This is not a valid integer !")
+                Parser.print_clean("This is not a valid integer !", e)
 
     @staticmethod
     def time_parser(question, limit_quarter_intervals=True, allow_back=True) -> datetime:
@@ -122,7 +123,7 @@ class Parser:
                 else:
                     raise ValueError
             except (ValueError, TypeError) as e:
-                Parser.print_clean("This is not a valid NHS Number!")
+                Parser.print_clean("This is not a valid NHS Number!", e)
 
     @staticmethod
     def admin_no_parser(question="Please input admin Staff Number") -> str:
@@ -142,7 +143,7 @@ class Parser:
                     raise ValueError
                 return result
             except (ValueError, TypeError) as e:
-                Parser.print_clean("Invalid Admin number, format required: A########!")
+                Parser.print_clean("Invalid Admin number, format required: A########!", e)
 
     @staticmethod
     def gp_no_parser(question="Please input GP Staff Number") -> str:
@@ -162,7 +163,7 @@ class Parser:
                     raise ValueError
                 return result
             except (ValueError, TypeError) as e:
-                print("Invalid GP number, format required: G########!")
+                print("Invalid GP number, format required: G########!", e)
 
     @staticmethod
     def selection_parser(options={"--back": "back"}) -> str:
@@ -305,9 +306,37 @@ class Parser:
             except KeyboardInterrupt:
                 continue
 
+    @staticmethod
+    def translator_parser(question) -> None:
+        """
+        transfer latin abbreviations into readable form.
+        :param str question: Prompt for user
+        """
+        while True:
+            try:
+                Parser.print_clean(question)
+                input_string = Parser.handle_input(input_question="")
+                result = input_string.split(" ")
+                i = 0
+                for words in result:
+                    filename = "abbreviation.txt"
+                    access_mode = "r"
+                    with open(filename, access_mode) as csv_file:
+                        fetched_data = csv.reader(csv_file, delimiter="=")
+                        words = re.sub('[^a-zA-Z0-9-_.]', '', words)
+                        for row in fetched_data:
+                            if words.upper() == row[0]:
+                                result[i] = row[1]
+                        csv_file.close()
+                    i = i + 1
+                print(' '.join(result))
+            except KeyboardInterrupt:
+                continue
+
+
 class Paging:
     """
-    Help show page
+    Help with print and pointer
     """
 
     @staticmethod
