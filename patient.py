@@ -129,7 +129,7 @@ class Patient(User):
             headersholder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
             result_index = 4
             Paging.show_page(1, result_table, 5, result_index, headersholder)
-                                                                             "Timeslot"]))
+
             selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
                                                              (1, len(result_table)), allow_multiple=False)
             if selected_appointment == '--back':
@@ -150,16 +150,9 @@ class Patient(User):
                                  "WHERE Timeslot >= ? AND Timeslot <= ? )"
                                  ).fetch_all(parameters=(date_now + delta(days=1), date_now + delta(days=15)),
                                              decrypter=EncryptionHelper())
-<<<<<<< HEAD
-            
-            if len(gp_result) == 0:
-=======
-            gp_table = []
-            for count, item in enumerate(gp_result):
-                gp_table.append([count + 1, item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7]])
+
             if len(gp_table) == 0:
                 print("There are no GPs in the system yet.")
->>>>>>> abb3289e0d637816f4e9ba5e661652a69f13d477
                 logger.info("There are no GPs in the system yet.")
                 Parser.handle_input("Press Enter to continue...")
                 return False
