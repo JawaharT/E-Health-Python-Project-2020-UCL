@@ -2,6 +2,7 @@ from tabulate import tabulate
 from main import User, MenuHelper
 from encryption import EncryptionHelper
 from iohandler import Parser
+from iohandler import Paging
 from database import SQLQuery
 import datetime
 from exceptions import DBRecordError
@@ -57,12 +58,18 @@ class Patient(User):
         """
         while True:
             result_table = self.fetch_format_appointments(date_now + delta(days=1), 8)
-            Parser.print_clean("You are viewing all available appointments for the next week. To view appointments up "
+            print("You are viewing all available appointments for the next week. To view appointments up "
                                "to 2 weeks ahead, use 'select by date' or 'select by GP' options below")
             if not result_table:
                 return False
-            print(tabulate([result[0:4] for result in result_table], headers=["Pointer", "GP Name", "Last Name",
-                                                                              "Timeslot"]))
+
+
+            headersholder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
+            result_index = 4
+
+            Paging.show_page(1, result_table, 5, result_index, headersholder)
+
+
             print("How would you like to choose? ")
             booking_selection = Parser.selection_parser(
                 options={"E": "select earliest available appointment",

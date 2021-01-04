@@ -3,6 +3,7 @@ import datetime
 import sys
 from typing import Union
 from exceptions import *
+from tabulate import tabulate
 import os
 
 
@@ -303,3 +304,47 @@ class Parser:
                 return input(input_question)
             except KeyboardInterrupt:
                 continue
+
+class Paging:
+    """
+    Help show page
+    """
+
+    @staticmethod
+    def show_page(page, all_data_table, step, index, headersholder):
+        if step == 0:
+            print("step must > 0")
+        else:
+            end = len(all_data_table)/step + 1 if len(all_data_table) % step != 0 else len(all_data_table)/step
+            #for page_length in range(start, end, step):
+            start = 0 + (page-1)*step
+            stop = start + step
+            current = []
+            for row in all_data_table[start: stop]:
+                # print(row)
+                current.append(row[0:index])
+
+            print(tabulate(current, headers = headersholder,
+                           tablefmt="fancy_grid",
+                           numalign="left"))
+            print("Page: - " + str(page) + " - ")
+
+            user_input = Parser.selection_parser(
+                options={"A": "--> Proceed to next page", "B": "<-- back to previous page", "C": "Continue to next part"})
+            if user_input == "A":
+                page += 1
+                if page > end:
+                    print("already the last page")
+                    Paging.show_page(page - 1, all_data_table, step, index, headersholder)
+                else:
+                    Paging.show_page(page , all_data_table, step, index, headersholder)
+
+            elif user_input == "B":
+                page -= 1
+                if page == 0:
+                    print("already the first page")
+                    Paging.show_page(page + 1, all_data_table, step, index, headersholder)
+                else:
+                    Paging.show_page(page, all_data_table, step, index, headersholder)
+            else:
+                return
