@@ -28,7 +28,7 @@ class Patient(User):
             option_selection = Parser.selection_parser(
                 options={"B": "book appointments", "I": "view upcoming appointments",
                          "C": "cancel an appointment", "R": "review/rate appointments",
-                         "--logout": "Logout"})
+                         "V": "view your prescriptions", "--logout": "Logout"})
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
                 print_clean("Logging you out...")
@@ -47,6 +47,8 @@ class Patient(User):
                     self.review_appointment()
                 elif r_selection == "B":
                     self.rate_appointment()
+            elif option_selection == "V":
+                self.review_prescriptions()
 
     def book_appointment_start(self):
         """
@@ -59,16 +61,14 @@ class Patient(User):
         while True:
             result_table = self.fetch_format_appointments(date_now + delta(days=1), 8)
             print("You are viewing all available appointments for the next week. To view appointments up "
-                               "to 2 weeks ahead, use 'select by date' or 'select by GP' options below")
+                  "to 2 weeks ahead, use 'select by date' or 'select by GP' options below")
             if not result_table:
                 return False
-
 
             headersholder = ["Pointer", "GP Name", "Last Name", "Timeslot"]
             result_index = 4
 
             Paging.show_page(1, result_table, 5, result_index, headersholder)
-
 
             print("How would you like to choose? ")
             booking_selection = Parser.selection_parser(
@@ -88,11 +88,11 @@ class Patient(User):
                 return False
 
     @staticmethod
-    def fetch_format_appointments(selected_date, selected_delta=1, GP_ID='%'):
+    def fetch_format_appointments(selected_date, selected_delta=1, gp_id='%'):
         result = SQLQuery("SELECT firstName, lastName, Timeslot, available_time.StaffID FROM "
                           "(available_time JOIN Users ON available_time.StaffID = Users.ID) WHERE "
                           "available_time.StaffID LIKE ? AND Timeslot >= ? AND Timeslot <= ? ORDER BY Timeslot"
-                          ).fetch_all(parameters=(GP_ID, selected_date, selected_date + delta(days=selected_delta)),
+                          ).fetch_all(parameters=(gp_id, selected_date, selected_date + delta(days=selected_delta)),
                                       decrypter=EncryptionHelper())
         if len(result) == 0:
             print(f"There are no available appointments matching the search criteria. ")
@@ -303,9 +303,9 @@ class Patient(User):
             appointments_table = []
             for count, appt in enumerate(valid_cancel, 1):
                 appointments_table.append([count, appt[0], appt[1], appt[2], appt[3], appt[4], appt[5]])
-            Parser.print_clean(f"You are viewing all the appointments can be cancelled.")
+            Parser.print_clean("You are viewing all the appointments can be cancelled.")
             if not appointments_table:
-                print(f"No Appointments can be cancelled.\n")
+                print("There are no Appointments can be cancelled.\n")
                 return
             else:
                 stage = 1
@@ -334,35 +334,16 @@ class Patient(User):
 
     def review_appointment(self):
         while True:
-            record_viewer = Parser.selection_parser(
-                options={"A": "Review past appointments", "B": "Review prescriptions",
-                         "--back": "back"})
-            if record_viewer == "--back":
-                Parser.print_clean("\n")
-                return False
-
-            elif record_viewer == "A":
-                query_string = "SELECT visit.BookingNo, visit.NHSNo, users.firstName, users.lastName, " \
-                               "visit.Timeslot, visit.PatientInfo, visit.Confirmed, visit.Attended, visit.Rating " \
-                               "FROM (visit INNER JOIN users ON visit.StaffID = users.ID) WHERE visit.NHSNo = ? "
-                headers = ("BookingNo", "NHSNo", "GP First Name", "Last", "Timeslot",
-                           "Patient Info", "Confirmed", "Attended", "Rating")
-            else:
-                query_string = "SELECT prescription.BookingNo, users.firstName, users.lastName, " \
-                               "visit.PatientInfo, visit.Diagnosis, prescription.drugName, " \
-                               "prescription.quantity, prescription.Instructions " \
-                               "FROM (visit INNER JOIN users ON visit.StaffID = users.ID) " \
-                               "INNER JOIN prescription ON " \
-                               "visit.BookingNo = prescription.BookingNo WHERE visit.NHSNo = ? "
-
-                headers = ("BookingNo", "GP Name", "Last Name", "Patient Info", "Diagnosis",
-                           "Drug Name", "Quantity", "Instructions", "Notes")
-
+            query_string = "SELECT visit.BookingNo, visit.NHSNo, users.firstName, users.lastName, " \
+                            "visit.Timeslot, visit.PatientInfo, visit.Confirmed, visit.Attended, visit.Rating " \
+                            "FROM (visit INNER JOIN users ON visit.StaffID = users.ID) WHERE visit.NHSNo = ? "
+            headers = ("BookingNo", "NHSNo", "GP First Name", "Last", "Timeslot",
+                       "Patient Info", "Confirmed", "Attended", "Rating")
             query = SQLQuery(query_string)
             all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
 
             if len(list(all_data)) == 0:
-                Parser.print_clean("No records Available.\n")
+                Parser.print_clean("No Appointments Available.\n")
             else:
                 print(tabulate(all_data, headers))
 
@@ -415,6 +396,26 @@ class Patient(User):
             except DBRecordError:
                 print("Error encountered")
                 input("Press Enter to continue...")
+
+    def review_prescriptions(self):
+        while True:
+            query_string = "SELECT prescription.BookingNo, users.firstName, users.lastName, " \
+                       "visit.PatientInfo, visit.Diagnosis, prescription.drugName, " \
+                       "prescription.quantity, prescription.Instructions " \
+                       "FROM (visit INNER JOIN users ON visit.StaffID = users.ID) " \
+                       "INNER JOIN prescription ON " \
+                       "visit.BookingNo = prescription.BookingNo WHERE visit.NHSNo = ? "
+
+            headers = ("BookingNo", "GP Name", "Last Name", "Patient Info", "Diagnosis",
+                       "Drug Name", "Quantity", "Instructions", "Notes")
+            query = SQLQuery(query_string)
+            all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
+
+            if len(list(all_data)) == 0:
+                Parser.print_clean("No records Available.\n")
+            else:
+                print(tabulate(all_data, headers))
+
 
     def first_login(self):
         Parser.print_clean("Welcome Patient {}. This is your first login. ".format(self.username))
