@@ -5,8 +5,6 @@ from typing import Union
 from exceptions import *
 from tabulate import tabulate
 import os
-import csv
-import re
 
 
 class Parser:
@@ -32,7 +30,7 @@ class Parser:
                     result = int(input_string)
                     return result
             except (ValueError, TypeError) as e:
-                Parser.print_clean("This is not a valid integer !", e)
+                Parser.print_clean("This is not a valid integer !")
 
     @staticmethod
     def time_parser(question, limit_quarter_intervals=True, allow_back=True) -> datetime:
@@ -124,7 +122,7 @@ class Parser:
                 else:
                     raise ValueError
             except (ValueError, TypeError) as e:
-                Parser.print_clean("This is not a valid NHS Number!", e)
+                Parser.print_clean("This is not a valid NHS Number!")
 
     @staticmethod
     def admin_no_parser(question="Please input admin Staff Number") -> str:
@@ -144,7 +142,7 @@ class Parser:
                     raise ValueError
                 return result
             except (ValueError, TypeError) as e:
-                Parser.print_clean("Invalid Admin number, format required: A########!", e)
+                Parser.print_clean("Invalid Admin number, format required: A########!")
 
     @staticmethod
     def gp_no_parser(question="Please input GP Staff Number") -> str:
@@ -164,7 +162,7 @@ class Parser:
                     raise ValueError
                 return result
             except (ValueError, TypeError) as e:
-                print("Invalid GP number, format required: G########!", e)
+                print("Invalid GP number, format required: G########!")
 
     @staticmethod
     def selection_parser(options={"--back": "back"}) -> str:
@@ -188,6 +186,7 @@ class Parser:
                     print(f"Enter '{key}' to {options[key]}")
 
                 result = Parser.handle_input(input_question="").strip().upper()
+
                 if result == "--QUIT":
                     Parser.user_quit()
                 if result not in options:
@@ -306,35 +305,6 @@ class Parser:
             except KeyboardInterrupt:
                 continue
 
-    @staticmethod
-    def translator_parser(question) -> None:
-        """
-        transfer latin abbreviations into readable form.
-
-        :param str question: Prompt for user
-        """
-        while True:
-            try:
-                Parser.print_clean(question)
-                input_string = Parser.handle_input(input_question="")
-                result = input_string.split(" ")
-                i = 0
-                for words in result:
-                    filename = "abbreviation.txt"
-                    access_mode = "r"
-                    with open(filename, access_mode) as csv_file:
-                        fetched_data = csv.reader(csv_file, delimiter="=")
-                        words = re.sub('[^a-zA-Z0-9-_.]', '', words)
-                        for row in fetched_data:
-                            if words.upper() == row[0]:
-                                result[i] = row[1]
-                        csv_file.close()
-                    i = i + 1
-                print(' '.join(result))
-            except KeyboardInterrupt:
-                continue
-
-
 class Paging:
     """
     Help show page
@@ -343,41 +313,43 @@ class Paging:
     @staticmethod
     def show_page(page, all_data_table, step, index, headers_holder):
         """
-        Consistent paging method.
+        Method to show data in pages, must choose C to leave pages
 
-        :param int page: Number of pages to show user at once
-        :param list all_data_table: all queried data from SQLQuery
-        :param int step: Maximum number of records to show in one page
-        :param int index: length of table columns
-        :param list headers_holder: list of header (column) titles in table
+        :param int page: page index
+        :param list all_data_table: lists of data list, all data before divided into pages, can be result of SQL.
+        :param int step: the number of data lists will show in a page
+        :param int index: help to use only part of data in one list, order matters
+                          for example,data in one list like [1,name, timeslot, StaffID], index = 3 to hide StaffID 
+        :param list headers_holder: a list of table columns' name
+
         """
         if step == 0:
             print("step must > 0")
         else:
             end = len(all_data_table)/step + 1 if len(all_data_table) % step != 0 else len(all_data_table)/step
+            #for page_length in range(start, end, step):
             start = 0 + (page-1)*step
             stop = start + step
             current = []
             for row in all_data_table[start: stop]:
+                # print(row)
                 current.append(row[0:index])
 
-            print(tabulate(current, headers=headers_holder,
+            print(tabulate(current, headers = headers_holder,
                            tablefmt="fancy_grid",
                            numalign="left"))
             print("Page: - " + str(page) + " - ")
 
             user_input = Parser.selection_parser(
-                options={"A": "--> Proceed to next page", "B": "<-- back to previous page",
-                         "C": "Continue to next part"})
-            if user_input == "A":
+                options={"A": " <-- back to previous page ", "D": " --> Proceed to next page ", "C": "Continue to next part"})
+            if user_input == "D":
                 page += 1
                 if page > end:
                     print("already the last page")
                     Paging.show_page(page - 1, all_data_table, step, index, headers_holder)
                 else:
-                    Paging.show_page(page, all_data_table, step, index, headers_holder)
-
-            elif user_input == "B":
+                    Paging.show_page(page , all_data_table, step, index, headers_holder)
+            elif user_input == "A":
                 page -= 1
                 if page == 0:
                     print("already the first page")
@@ -386,3 +358,35 @@ class Paging:
                     Paging.show_page(page, all_data_table, step, index, headers_holder)
             else:
                 return
+
+
+    @staticmethod
+    def give_pointer(result):
+        """
+        Method to add pointer for each line.
+
+        :param list result: list to add pointer
+
+        """
+        result_table = []
+        table_list = []
+        for count, item in enumerate(result):
+            #print(count, item)
+            table_list = [count + 1]
+            table_list.extend(item)
+            result_table.append(table_list)
+        return result_table
+
+
+    @staticmethod
+    def better_form(data, headers_holder):
+        """
+        Method to print table.
+
+        :param list data: data to print
+        :param list headers_holder: a list of table columns' name
+
+        """
+        #print(data)
+        print(tabulate(data, headers= headers_holder, tablefmt="fancy_grid", numalign="left"))
+        return
