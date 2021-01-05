@@ -5,7 +5,6 @@ from typing import Union
 from exceptions import *
 from tabulate import tabulate
 import os
-import csv
 
 
 class Parser:

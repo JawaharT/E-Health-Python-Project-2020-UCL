@@ -171,8 +171,8 @@ class Patient(User):
                 return False
 
             headers_holder = ["Pointer", "First Name", "Last Name",
-                             "Introduction", "Clinic Address",
-                             "Clinic Postcode", "Gender", "Rating"]
+                              "Introduction", "Clinic Address",
+                              "Clinic Postcode", "Gender", "Rating"]
             result_index = 8
             Paging.show_page(1, gp_table, 5, result_index, headers_holder)
 
@@ -569,7 +569,7 @@ class Patient(User):
             query_string = "SELECT BookingNo, drugName, quantity, Instructions " \
                            "FROM prescription " \
                            "WHERE BookingNo = ? "
-            #headers_holder = ["BookingNo", "Diagnosis", "Notes", "Drug Name", "PatientInfo"]
+            # headers_holder = ["BookingNo", "Diagnosis", "Notes", "Drug Name", "PatientInfo"]
             query = SQLQuery(query_string)
             prescription_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingNo,))
 
