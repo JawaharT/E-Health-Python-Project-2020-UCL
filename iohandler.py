@@ -6,7 +6,7 @@ from exceptions import *
 from tabulate import tabulate
 import os
 import csv
-import re
+
 
 class Parser:
     """
@@ -312,20 +312,19 @@ class Parser:
         transfer latin abbreviations into readable form.
         :param str question: Prompt for user
         """
-
         csv_file = "abbreviation.txt"
         with open(csv_file, "r") as csv_file:
             data = csv.reader(csv_file, delimiter="=")
             data_dict = {}
             for row in data:
-                data_dict[row[0]] = row[1]
+                if row[0] != "" or row[1] != "":
+                    data_dict[row[0]] = row[1]
             csv_file.close()
 
-        # print(data_dict)
+        print(data_dict)
         while True:
-            Parser.print_clean(question)
-            input_string = Parser.handle_input(input_question="").upper()
-            if input_string in data_dict.keys():
+            input_string = Parser.string_parser(question).upper()
+            if (input_string in data_dict.keys()) and (input_string != ""):
                 print(input_string + " translates to: " + data_dict[input_string])
                 break
             elif input_string == "--BACK":
@@ -378,7 +377,6 @@ class Paging:
             print("step must > 0")
         else:
             end = len(all_data_table)/step + 1 if len(all_data_table) % step != 0 else len(all_data_table)/step
-            #for page_length in range(start, end, step):
             start = 0 + (page-1)*step
             stop = start + step
             current = []
@@ -386,20 +384,21 @@ class Paging:
                 # print(row)
                 current.append(row[0:index])
 
-            print(tabulate(current, headers = headers_holder,
+            print(tabulate(current, headers=headers_holder,
                            tablefmt="fancy_grid",
                            numalign="left"))
             print("Page: - " + str(page) + " - ")
 
             user_input = Parser.selection_parser(
-                options={"A": " <-- back to previous page ", "D": " --> Proceed to next page ", "C": "Continue to next part"})
+                options={"A": " <-- back to previous page ", "D": " --> Proceed to next page ",
+                         "C": "Continue to next part"})
             if user_input == "D":
                 page += 1
                 if page > end:
                     print("already the last page")
                     Paging.show_page(page - 1, all_data_table, step, index, headers_holder)
                 else:
-                    Paging.show_page(page , all_data_table, step, index, headers_holder)
+                    Paging.show_page(page, all_data_table, step, index, headers_holder)
             elif user_input == "A":
                 page -= 1
                 if page == 0:
@@ -410,7 +409,6 @@ class Paging:
             else:
                 return
 
-
     @staticmethod
     def give_pointer(result):
         """
@@ -420,14 +418,11 @@ class Paging:
 
         """
         result_table = []
-        table_list = []
         for count, item in enumerate(result):
-            #print(count, item)
             table_list = [count + 1]
             table_list.extend(item)
             result_table.append(table_list)
         return result_table
-
 
     @staticmethod
     def better_form(data, headers_holder):
@@ -436,8 +431,6 @@ class Paging:
 
         :param list data: data to print
         :param list headers_holder: a list of table columns' name
-
         """
-        #print(data)
-        print(tabulate(data, headers= headers_holder, tablefmt="fancy_grid", numalign="left"))
+        print(tabulate(data, headers=headers_holder, tablefmt="fancy_grid", numalign="left"))
         return
