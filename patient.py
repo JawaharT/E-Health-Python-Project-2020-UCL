@@ -414,7 +414,7 @@ class Patient(User):
                 Parser.handle_input("Press Enter to continue...")
                 return False
 
-            headers_holder = ["Pointer", "BookingNo", "Timeslot", "GP FirstName", "PatientInfo", "Confirmed"]
+            headers_holder = ["Pointer", "BookingNo", "Timeslot", "GP FirstName", "PatientInfo"]
 
             option_selection = Parser.selection_parser(
                 options={"A": "View all attended appointments", "U": "view all unattended appointments",
@@ -430,7 +430,7 @@ class Patient(User):
                 else:
                     logger.info("Viewing your unattended appointments")
                     print("Please do not miss your appointment")
-                    Paging.better_form(Paging.give_pointer(unattended_appointments), headers_holder)
+                    Paging.better_form(Paging.give_pointer([appt[0:4] for appt in unattended_appointments]), headers_holder)
 
             elif option_selection == "A":
                 if len(attended_appointments) == 0:
@@ -444,37 +444,29 @@ class Patient(User):
         while stage == 1:
             logger.info("Viewing your attended appointments")
             print("attended appointments:")
-            Paging.better_form(Paging.give_pointer(attended_appointments), headers_holder)
+            show_attended_appointments = Paging.give_pointer([appt[0:4] for appt in attended_appointments])
+            Paging.better_form(show_attended_appointments, headers_holder)
+
             selected_appt = Parser.list_number_parser("Select an appointment to view your prescription.",
-                                                      (1, len(attended_appointments)), allow_multiple=False)
-            selected_row = attended_appointments[selected_appt - 1]
-            Parser.print_clean("Choose the appointments you want to see the prescription:")
-            Paging.better_form(Paging.give_pointer([selected_row]), headers_holder)
+                                                      (1, len(show_attended_appointments)), allow_multiple=False)
+            selected_row = show_attended_appointments[int(selected_appt) - 1]
+            Parser.print_clean("This is the appointment you have chosen:")
+
+            Paging.better_form([selected_row], headers_holder)
             option_selection = Parser.selection_parser(options={"Y": "view the prescription",
-                                                                "N": "Go back and select attended appointments again",
-                                                                "--back": "Go back and view all appointments"})
-            if option_selection == "--back":
+                                                                "N": "Go back and select attended appointments again"
+                                                                })
+            if option_selection == "N":
                 print("Return and select the type of your appointments again")
                 Parser.handle_input("Press Enter to continue...")
                 stage = 0
 
             elif option_selection == "Y":
                 try:
-                    prescription = SQLQuery("SELECT BookingNo, Diagnosis, drugName, quantity, Instructions "
-                                            "FROM visit JOIN prescription ON visit.BookingNo = prescription.BookingNo "
-                                            "WHERE visit.BookingNo = ? "
-                                            ).fetch_all(parameters=(selected_row[1]), decrypter=EncryptionHelper())
-                    Parser.print_clean("You are viewing the prescription: ")
+                    print(selected_row[1])
+                    selected_bookingNo = selected_row[1]
 
-                    if not prescription:
-                        print("This appointment do not have prescription")
-                        logger.info("No prescription shows.")
-                        Parser.handle_input("Press Enter to continue...")
-                        return False
-
-                    headers_holder = ["Pointer", "BookingNo", "Diagnosis", "drugName", "quantity", "Instructions"]
-                    print("This is your prescription.")
-                    Paging.better_form(Paging.give_pointer(prescription), headers_holder)
+                    self.review_prescriptions(selected_bookingNo)
 
                 except Exception as e:
                     print("Database Error...", e)
