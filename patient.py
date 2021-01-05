@@ -161,12 +161,13 @@ class Patient(User):
                                  ).fetch_all(parameters=(date_now + delta(days=1), date_now + delta(days=15)),
                                              decrypter=EncryptionHelper())
 
+            gp_table = Paging.give_pointer(gp_result)
             if len(gp_table) == 0:
                 print("There are no GPs in the system yet.")
                 logger.info("There are no GPs in the system yet.")
                 Parser.handle_input("Press Enter to continue...")
                 return False
-            gp_table = Paging.give_pointer(gp_result)
+
             print(f"You are viewing all available GPs in 2 weeks from: {date_now} ")
             if not gp_table:
                 return False
@@ -230,7 +231,7 @@ class Patient(User):
                     booking_no = visit_result[0][0]
                     logger.info("View your appointments")
                     headers_holder = ["BookingNo", "NHSNo", "GP First Name", "Last Name", "Timeslot"]
-                    Paging.better_form(visit_result,headers_holder)
+                    Paging.better_form(visit_result, headers_holder)
                     Parser.handle_input("Press Enter to continue...")
                 except DBRecordError:
                     print("Error encountered")
@@ -365,7 +366,7 @@ class Patient(User):
                 stage = 1
 
         while stage == 1:
-            headers_holder =["Pointer", "BookingNo", "NHSNo", "GP Name", "Timeslot", "Patient Info"]
+            headers_holder = ["Pointer", "BookingNo", "NHSNo", "GP Name", "Timeslot", "Patient Info"]
             Paging.better_form([appt[0:6] for appt in appointments_table], headers_holder)
             logger.info("Select an appointment you want to cancel")
             selected_cancel_appointment = Parser.list_number_parser("Select an appointment to cancel by the Pointer.",
@@ -463,9 +464,9 @@ class Patient(User):
 
             elif option_selection == "Y":
                 try:
-                    print(selected_row[1])
-                    selected_bookingNo = selected_row[1]
 
+                    #print(selected_row[1])
+                    selected_bookingNo = selected_row[1]
                     self.review_prescriptions(selected_bookingNo)
 
                 except Exception as e:
@@ -485,7 +486,7 @@ class Patient(User):
             patient_result = SQLQuery("SELECT bookingNo, firstName, lastName, Timeslot, Rating, StaffID FROM (Visit "
                                       "JOIN Users on Visit.StaffID = Users.ID) WHERE NHSNo = ? AND Attended = 'T' "
                                       ).fetch_all(parameters=(self.ID,), decrypter=EncryptionHelper())
-            appointments_table = []
+            # appointments_table = []
             if not patient_result:
                 print("You don't have any attended appointment")
                 logger.info("You don't have any attended appointment")
@@ -547,7 +548,7 @@ class Patient(User):
                 print(f"Your have rated already! you give {selected_row[2]} {selected_row[3]} a rate of {given_rate}")
                 Parser.handle_input("Press Enter to continue...")
 
-    def review_prescriptions(self, selected_bookingNo):
+    def review_prescriptions(self, selected_bookingno):
         """
         review selected prescriptions
         """
@@ -558,14 +559,14 @@ class Patient(User):
 
             headers_holder = ["BookingNo", "Diagnosis", "Notes", "PatientInfo"]
             query = SQLQuery(query_string)
-            visit_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingNo,self.ID))
+            visit_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingno, self.ID))
 
             query_string = "SELECT BookingNo, drugName, quantity, Instructions " \
                            "FROM prescription " \
                            "WHERE BookingNo = ? "
             # headers_holder = ["BookingNo", "Diagnosis", "Notes", "Drug Name", "PatientInfo"]
             query = SQLQuery(query_string)
-            prescription_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingNo,))
+            prescription_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingno,))
 
             if len(list(visit_data)) == 0:
                 Parser.print_clean("No such bookingNo.")
