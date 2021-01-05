@@ -321,7 +321,6 @@ class Parser:
                     data_dict[row[0]] = row[1]
             csv_file.close()
 
-        print(data_dict)
         while True:
             input_string = Parser.string_parser(question).upper()
             if (input_string in data_dict.keys()) and (input_string != ""):
