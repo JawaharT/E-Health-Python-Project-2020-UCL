@@ -75,6 +75,7 @@ class Patient(User):
         --move from available_time
         --insert in visit
         """
+        logger.info("Start booking an appointment")
         while True:
             result_table = self.fetch_format_appointments(date_now + delta(days=1), 8)
             print("You are viewing all available appointments for the next week. To view appointments up "
@@ -116,7 +117,7 @@ class Patient(User):
         if len(result) == 0:
             print("There are no available appointments matching the search criteria.")
             logger.info("There are no available appointments matching the search criteria.")
-            Parser.handle_input("Press Enter to continue.")
+            Parser.handle_input("Press Enter to continue...")
             return False
         result_table = Paging.give_pointer(result)
         return result_table
@@ -266,13 +267,13 @@ class Patient(User):
             confirmed_appointments = list(appt[0:5] for appt in appointments if appt[5] == "T")
             pending_appointments = list(appt[0:5] for appt in appointments if appt[5] == "P")
             rejected_appointments = list(appt[0:5] for appt in appointments if appt[5] == "F")
-
+            logger.info("You are viewing all your booked appointments: ")
             Parser.print_clean("You are viewing all your booked appointments: ")
 
             if not appointments:
                 print("You have not booked any appointments.")
                 logger.info("You have not booked any appointments.")
-                Parser.handle_input()
+                Parser.handle_input("Press Enter to continue...")
                 return False
 
             headers_holder = ["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
@@ -310,7 +311,7 @@ class Patient(User):
                 continue
             headers_holder = ["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
             Paging.better_form(Paging.give_pointer(check_appt), headers_holder)
-
+            logger.info("Select an appointment you want to check in")
             selected_appointment = Parser.list_number_parser("Select an appointment by the Pointer.",
                                                              (1, len(check_appt)), allow_multiple=False)
             if selected_appointment == '--back':
@@ -328,6 +329,7 @@ class Patient(User):
                         SQLQuery("UPDATE Visit SET Attended = 'T' WHERE BookingNo = ? "
                                  ).commit((appointment_check_in[0],))
                         print("You have been checked in successfully!.")
+                        logger.info("Patient check in successfully")
                         Parser.handle_input("Press Enter to continue...")
                         return True
                     except DBRecordError:
@@ -365,7 +367,7 @@ class Patient(User):
         while stage == 1:
             headers_holder =["Pointer", "BookingNo", "NHSNo", "GP Name", "Timeslot", "Patient Info"]
             Paging.better_form([appt[0:6] for appt in appointments_table], headers_holder)
-
+            logger.info("Select an appointment you want to cancel")
             selected_cancel_appointment = Parser.list_number_parser("Select an appointment to cancel by the Pointer.",
                                                                     (1, len(appointments_table)), allow_multiple=False)
             selected_row = appointments_table[selected_cancel_appointment - 1]
@@ -379,6 +381,7 @@ class Patient(User):
                     SQLQuery("INSERT INTO available_time VALUES (?,?)").commit(parameters=(selected_row[6],
                                                                                            selected_row[4]))
                     print("Appointment is cancelled successfully.")
+                    logger.info("Appointments cancelled successfully")
                 except Exception as e:
                     print("Database Error...", e)
                     logger.warning("Error in DB")
@@ -408,7 +411,7 @@ class Patient(User):
             if not appointments:
                 print("You have no appointments")
                 logger.info("You have no appointments.")
-                Parser.handle_input()
+                Parser.handle_input("Press Enter to continue...")
                 return False
 
             headers_holder = ["Pointer", "BookingNo", "Timeslot", "GP FirstName", "PatientInfo", "Confirmed"]
@@ -422,7 +425,7 @@ class Patient(User):
                 if len(unattended_appointments) == 0:
                     print("You have no unattended bookings")
                     logger.info("You have no unattended bookings.")
-                    Parser.handle_input()
+                    Parser.handle_input("Press Enter to continue...")
                     return False
                 else:
                     logger.info("Viewing your unattended appointments")
@@ -433,7 +436,7 @@ class Patient(User):
                 if len(attended_appointments) == 0:
                     print("You have no attended bookings")
                     logger.info("You have no attended bookings.")
-                    Parser.handle_input()
+                    Parser.handle_input("Press Enter to continue...")
                     return False
                 else:
                     stage = 1
@@ -466,7 +469,7 @@ class Patient(User):
                     if not prescription:
                         print("This appointment do not have prescription")
                         logger.info("No prescription shows.")
-                        Parser.handle_input()
+                        Parser.handle_input("Press Enter to continue...")
                         return False
 
                     headers_holder = ["Pointer", "BookingNo", "Diagnosis", "drugName", "quantity", "Instructions"]
@@ -490,12 +493,11 @@ class Patient(User):
             patient_result = SQLQuery("SELECT bookingNo, firstName, lastName, Timeslot, Rating, StaffID FROM (Visit "
                                       "JOIN Users on Visit.StaffID = Users.ID) WHERE NHSNo = ? AND Attended = 'T' "
                                       ).fetch_all(parameters=(self.ID,), decrypter=EncryptionHelper())
-
             appointments_table = []
             if not patient_result:
                 print("You don't have any attended appointment")
                 logger.info("You don't have any attended appointment")
-                input("Press Enter to continue...")
+                Parser.handle_input("Press Enter to continue...")
                 return False
 
             # for count, appt in enumerate(patient_result, 1):
@@ -507,7 +509,7 @@ class Patient(User):
             headers = ["Pointer", "BookingNo", "GP Name", "Last Name", "Timeslot"]
             Paging.better_form([appt[0:5] for appt in appointments_table], headers)
             print("Your opinion matters to us. Please take the time to rate your experience with our GP.")
-
+            logger.info("rate your appointment")
             selected_appt = Parser.list_number_parser("Select an appointment to rate by the Pointer.",
                                                       (1, len(appointments_table)), allow_multiple=False)
             if selected_appt == "--back":
@@ -545,13 +547,13 @@ class Patient(User):
                 except DBRecordError:
                     print("Error encountered")
                     logger.warning("Error in DB")
-                    input("Press Enter to continue...")
+                    Parser.handle_input("Press Enter to continue...")
             else:
 
                 given_rate = int(SQLQuery("SELECT Rating FROM Visit WHERE BookingNo = ? "
                                           ).fetch_all(parameters=(selected_row[1],))[0][0])
                 print(f"Your have rated already! you give {selected_row[2]} {selected_row[3]} a rate of {given_rate}")
-                input("Press Enter to continue...")
+                Parser.handle_input("Press Enter to continue...")
 
     def review_prescriptions(self, selected_bookingNo):
         """
@@ -575,6 +577,7 @@ class Patient(User):
 
             if len(list(visit_data)) == 0:
                 Parser.print_clean("No such bookingNo.")
+                logger.info("No such bookingNo.")
                 Parser.handle_input("Press Enter to continue...")
                 Parser.print_clean()
                 return True
