@@ -355,12 +355,14 @@ class Patient(User):
                                     ).fetch_all(parameters=(self.ID, dtime_now + delta(days=5)),
                                                 decrypter=EncryptionHelper())
             appointments_table = Paging.give_pointer(valid_cancel)
-            Parser.print_clean("You are viewing all the appointments can be cancelled.")
-            
+            Parser.print_clean("You are viewing all the appointments can be cancelled.\n"
+                               "you can only cancel your appointments 5 days before them,if you really can not attend, "
+                               "please contact your GP by (phone) to let him or her reject this appointment")
+
+
             if not appointments_table:
                 print("There are no Appointments can be cancelled.")
                 logger.info("There are no Appointments can be cancelled.")
-                print(f"No Appointments can be cancelled.\n")
                 return
             else:
                 stage = 1
@@ -378,9 +380,11 @@ class Patient(User):
 
             if confirmation == "Y":
                 try:
-                    SQLQuery("DELETE FROM visit WHERE BookingNo = ?").commit(parameters=(selected_row[1],))
-                    SQLQuery("INSERT INTO available_time VALUES (?,?)").commit(parameters=(selected_row[6],
-                                                                                           selected_row[4]))
+                    SQLQuery(f"BEGIN TRANSACTION; DELETE FROM visit WHERE BookingNo = {selected_row[1]}; "
+                             f"INSERT INTO available_time (StaffID,Timeslot) VALUES ({selected_row[6]},{selected_row[4]}; "
+                             f"COMMIT "
+                             ).commit(multiple_queries=True)
+
                     print("Appointment is cancelled successfully.")
                     logger.info("Appointments cancelled successfully")
                 except Exception as e:
@@ -400,13 +404,13 @@ class Patient(User):
         """
         stage = 0
         while stage == 0:
-            appointments = SQLQuery("SELECT bookingNo, Timeslot, firstName, PatientInfo, Confirmed, Attended, "
-                                    "NHSNo, StaffID "
-                                    "FROM (visit JOIN Users ON visit.StaffID = Users.ID) WHERE NHSNo = ?"
-                                    ).fetch_all(parameters=(self.ID,), decrypter=EncryptionHelper())
+            appointments = SQLQuery(" SELECT V.bookingNo, V.Timeslot, U.firstName, V.PatientInfo, V.Attended "
+                                    " FROM (visit as V JOIN Users as U ON V.StaffID = U.ID) WHERE V.NHSNo = ? "
+                                    " AND V.Confirmed = 'T' AND V.Timeslot <= ?  "
+                                    ).fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID, dtime_now))
 
-            attended_appointments = list(appt[0:5] for appt in appointments if appt[5] == "T")
-            unattended_appointments = list(appt[0:5] for appt in appointments if appt[5] == "F")
+            attended_appointments = list(appt[0:4] for appt in appointments if appt[4] == "T")
+            unattended_appointments = list(appt[0:4] for appt in appointments if appt[4] == "F")
             Parser.print_clean("You are viewing all your appointments: ")
 
             if not appointments:
