@@ -1,15 +1,16 @@
 from tabulate import tabulate
 from encryption import EncryptionHelper
-from iohandler import Parser
+from iohandler import Parser, Paging
 from database import SQLQuery
 import time
 import datetime
 from main import User, MenuHelper
 from exceptions import DBRecordError
-#for helping patient book appointment
+# for helping patient book appointment
 from patient import Patient
 # logging
 import logging
+
 logger = logging.getLogger("main.GP")
 
 
@@ -56,14 +57,13 @@ class GP(User):
                 Parser.print_clean()
                 return
             elif option_selection == "A":
-                availability_result = SQLQuery("SELECT Timeslot FROM available_time WHERE StaffId = ?"
-                                               ).fetch_all(parameters=(self.ID,))
+                availability_result = Paging.give_pointer(SQLQuery("SELECT Timeslot FROM available_time WHERE StaffId "
+                                                                   "= ? ").fetch_all(parameters=(self.ID,)))
                 if len(availability_result) == 0:
                     print("You have no current availability recorded in the system.")
                 else:
                     print(f"Viewing current availability for GP {self.username}")
-                    for slot in availability_result:
-                        print(slot[0])
+                    Paging.show_page(1, availability_result, 10, 2, ["Pointer", "Timeslot"])
                 # input("Press Enter to continue...")
                 Parser.handle_input()
                 continue
@@ -76,32 +76,27 @@ class GP(User):
             Parser.print_clean()
             # Retrieving availability from the database
             availability_result = SQLQuery(
-                "SELECT StaffID, Timeslot FROM available_time WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ? ORDER BY Timeslot",
+                "SELECT Timeslot FROM available_time WHERE StaffID = ? AND Timeslot >= ? AND Timeslot <= ? "
+                "ORDER BY Timeslot",
             ).fetch_all(parameters=(self.ID, selected_date, selected_date + datetime.timedelta(days=1)))
             # Creating two corresponding tables for the fetched data - one for SQL manipulation, one for display
-            availability_table_raw = []
-            availability_table = []
-            for i in range(len(availability_result)):
-                availability_table.append([i + 1, str(availability_result[i][1])])
-                availability_table_raw.append([i + 1, availability_result[i][1]])
+            availability_table = Paging.give_pointer(availability_result)
             Parser.print_clean(f"You are viewing your schedule for: {selected_date}")
             options = {"A": "add availability"}
             if len(availability_table) == 0:
                 Parser.print_clean(f"You have no availability for this day yet.\n")
             else:
-                print(tabulate(availability_table, headers=["Pointer", "Timeslot"]))
+                Paging.show_page(1, availability_table, 10, 2, ["Pointer", "Timeslot"])
                 options["R"] = "remove availability"
-
             options["--back"] = "back to previous page"
-            option_selection = Parser.selection_parser(
-                options=options)
+            option_selection = Parser.selection_parser(options=options)
             if option_selection == "A":
                 # selected_date is passed as argument rather than an instance variable for safety
                 # (selected_date is used as a variable name across many methods)
                 self.add_availability(selected_date)
             elif (option_selection == "R") and (len(availability_table) >= 1):
                 # the same applies to the availability table
-                self.remove_availability(availability_table_raw)
+                self.remove_availability(availability_table)
 
     def remove_availability(self, availability_table) -> bool:
         """
@@ -122,15 +117,15 @@ class GP(User):
                 if row[0] in selected_entry:
                     slots_to_remove.append(row[1])
             print("These time slot will be removed and made unavailable for future bookings:")
-            for slot in slots_to_remove:
-                print(slot)
+            slots_to_remove = Paging.give_pointer(slots_to_remove)
+            Paging.show_page(1, slots_to_remove, 10, 2, ["Pointer", "Timeslot"])
             confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
             # Confirm if user wants to delete slots
             if confirm == "Y":
                 try:
                     for slot in slots_to_remove:
                         SQLQuery("DELETE FROM available_time WHERE StaffID = ? AND Timeslot = ?"
-                                 ).commit((self.ID, slot))
+                                 ).commit((self.ID, slot[1]))
                     print("Slots removed successfully.")
                     logger.info("Removed timeslot, DB transaction completed")
                     # input("Press Enter to continue...")
@@ -182,14 +177,14 @@ class GP(User):
                 while temporary_time < selected_end:
                     slots_to_add.append(temporary_time)
                     temporary_time = temporary_time + datetime.timedelta(minutes=15)
+                slots_to_add = Paging.give_pointer(slots_to_add)
                 print("You have chosen to add the following slots: ")
-                for slot in slots_to_add:
-                    print(slot)
+                Paging.show_page(1, slots_to_add, 10, 2, ["Pointer", "Timeslot"])
                 confirm = Parser.selection_parser(options={"Y": "Confirm", "N": "Go back and select again"})
                 if confirm == "Y":
                     try:
                         for slot in slots_to_add:
-                            SQLQuery("INSERT INTO available_time VALUES (?, ?)").commit((self.ID, slot))
+                            SQLQuery("INSERT INTO available_time VALUES (?, ?)").commit((self.ID, slot[1]))
                         print("Your slots have been successfully added!")
                         logger.info("Added timeslot, DB transaction completed")
                         # input("Press Enter to continue...")
@@ -227,7 +222,8 @@ class GP(User):
                     bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                                "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                                                "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Confirmed = "
-                                               "'P' ORDER BY visit.Timeslot ASC").fetch_all(EncryptionHelper(), parameters=(self.ID,))
+                                               "'P' ORDER BY visit.Timeslot ASC").fetch_all(EncryptionHelper(),
+                                                                                            parameters=(self.ID,))
                     message = "with status 'pending'."
                     stage = 1
                 elif option_selection == "D":
@@ -251,21 +247,22 @@ class GP(User):
                     bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                                "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                                                "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Confirmed = "
-                                               "'P' ORDER BY visit.Timeslot ASC").fetch_all(EncryptionHelper(), parameters=(self.ID,))
+                                               "'P' ORDER BY visit.Timeslot ASC").fetch_all(EncryptionHelper(),
+                                                                                            parameters=(self.ID,))
                 elif option_selection == "D":
                     bookings_result = SQLQuery(
-                            "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
-                            "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
-                            "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ?"
-                            " AND visit.Timeslot <= ? ORDER BY visit.Timeslot ASC"
-                        ).fetch_all(EncryptionHelper(), (self.ID, selected_date,
-                                                         selected_date + datetime.timedelta(
-                                                             days=1)))
-                rows = GP.print_select_bookings(bookings_result, message)
-                if not rows:
+                        "SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
+                        "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
+                        "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ?"
+                        " AND visit.Timeslot <= ? ORDER BY visit.Timeslot ASC"
+                    ).fetch_all(EncryptionHelper(), (self.ID, selected_date,
+                                                     selected_date + datetime.timedelta(
+                                                         days=1)))
+                row = GP.print_select_bookings(bookings_result, message)
+                if not row:
                     stage = 0
                 else:
-                    self.booking_transaction(rows[0], rows[1])
+                    self.booking_transaction(row)
                     stage = 0
 
     @staticmethod
@@ -275,36 +272,27 @@ class GP(User):
         :param message: message to GP
         :return: list of bookings, or False if no bookings are present in search criteria
         """
-        bookings_table_raw = []
-        bookings_table = []
+        bookings_table = Paging.give_pointer(bookings_result)
         translation = {"T": "Accepted", "F": "Rejected", "P": "Pending Response"}
-        i = 0
-        for booking in bookings_result:
-            bookings_table.append([i + 1, booking[0], str(booking[1]), booking[2], booking[3],
-                                   booking[4], translation[booking[5]]])
-            bookings_table_raw.append([i + 1, booking[0], booking[1]])
-            i += 1
         print("You are viewing your bookings " + message)
         if len(bookings_table) == 0:
             print("No bookings match current search criteria.")
-            # stage = 0
-            # input("Press Enter to continue.")
             Parser.handle_input()
             return False
         else:
-            Parser.print_clean(tabulate(bookings_table,
-                                        headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
-                                                 "P. Last Name", "Confirmed"]))
+            Parser.print_clean()
+            Paging.show_page(1, bookings_table, 10, 7, ["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. Name",
+                                                        "P. Last Name", "Confirmed"])
+            print(translation)
             selected_entry = Parser.integer_parser(question="Select entry using number from Pointer column or "
                                                             "type '--back' to go back")
             if selected_entry == "--back":
                 return False
             else:
                 selected_row = bookings_table[selected_entry - 1]
-                selected_row_raw = bookings_table_raw[selected_entry - 1]
-                return selected_row, selected_row_raw
+                return selected_row
 
-    def booking_transaction(self, selected_row, selected_row_raw) -> bool:
+    def booking_transaction(self, selected_row) -> bool:
         """
         Method to change the status of a given booking for a GP.
         !IMPORTANT Should only be called from within GP.manage_bookings
@@ -312,10 +300,9 @@ class GP(User):
         :param: list selected_row_raw: As above but in raw format (see GP.manage_bookings)
         """
         while True:
-            print("You selected the following booking:")
-            print(
-                tabulate([selected_row], headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. First Name",
-                                                  "P. Last Name", "Confirmed"]))
+            Parser.print_clean("You selected the following booking:")
+            print(tabulate([selected_row], headers=["Pointer", "BookingNo", "timeslot", "Patient NHSNo", "P. Name",
+                                                    "P. Last Name", "Confirmed"]))
             user_input = Parser.selection_parser(
                 options={"C": "Confirm", "R": "Reject", "--back": "Back to previous page"})
             if user_input == "--back":
@@ -327,14 +314,14 @@ class GP(User):
                     pass
                 else:
                     SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE StaffID = ? AND Timeslot = ? AND BookingNo != ?"
-                             ).commit((self.ID, selected_row_raw[2], selected_row_raw[1]))
+                             ).commit((self.ID, selected_row[2], selected_row[1]))
                     logger.info("removing conflicting confirmed bookings")
                     SQLQuery("UPDATE Visit SET Confirmed = 'T' WHERE BookingNo = ?"
-                             ).commit((selected_row_raw[1],))
+                             ).commit((selected_row[1],))
                     logger.info("setting selected booking as confirmed, action successful")
                     return True
             elif user_input == "R":
-                SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE BookingNo = ?").commit((selected_row_raw[1],))
+                SQLQuery("UPDATE Visit SET Confirmed = 'F' WHERE BookingNo = ?").commit((selected_row[1],))
                 logger.info("removing confirmed bookings")
                 return True
 
@@ -418,7 +405,8 @@ class GP(User):
 
             # Parser.print_clean() #this one seems to be wrong
             user_input = Parser.selection_parser(
-                options={"D": "Edit diagnosis", "N": "Add notes", "P": "Edit prescriptions", "B":"Book followup appointment",
+                options={"D": "Edit diagnosis", "N": "Add notes", "P": "Edit prescriptions",
+                         "B": "Book followup appointment",
                          "--back": "go back to previous page"})
             if user_input == "--back":
                 return

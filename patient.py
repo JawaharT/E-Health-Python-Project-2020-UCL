@@ -57,7 +57,7 @@ class Patient(User):
             elif option_selection == "P":
                 logger.info("Patient reviewing his prescriptions")
                 p_selection = Parser.selection_parser(
-                    options={"A": "review by input bookingNo", "B": "review by select an appointment",
+                    options={"A": "review by input bookingNo", "B": "review by selecting an appointment",
                              "--back": "back"})
                 if p_selection == "--back":
                     continue

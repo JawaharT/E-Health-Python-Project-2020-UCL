@@ -385,3 +385,4 @@ class Paging:
         """
         print(tabulate(data, headers=headers_holder, tablefmt="fancy_grid", numalign="left"))
         return
+
