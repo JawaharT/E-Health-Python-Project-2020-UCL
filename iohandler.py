@@ -312,26 +312,48 @@ class Parser:
         transfer latin abbreviations into readable form.
         :param str question: Prompt for user
         """
+
+        csv_file = "abbreviation.txt"
+        with open(csv_file, "r") as csv_file:
+            data = csv.reader(csv_file, delimiter="=")
+            data_dict = {}
+            for row in data:
+                data_dict[row[0]] = row[1]
+            csv_file.close()
+
+        # print(data_dict)
         while True:
-            try:
-                Parser.print_clean(question)
-                input_string = Parser.handle_input(input_question="")
-                result = input_string.split(" ")
-                i = 0
-                for words in result:
-                    filename = "abbreviation.txt"
-                    access_mode = "r"
-                    with open(filename, access_mode) as csv_file:
-                        fetched_data = csv.reader(csv_file, delimiter="=")
-                        words = re.sub('[^a-zA-Z0-9-_.]', '', words)
-                        for row in fetched_data:
-                            if words.upper() == row[0]:
-                                result[i] = row[1]
-                        csv_file.close()
-                    i = i + 1
-                print(' '.join(result))
-            except KeyboardInterrupt:
+            Parser.print_clean(question)
+            input_string = Parser.handle_input(input_question="").upper()
+            if input_string in data_dict.keys():
+                print(input_string + " translates to: " + data_dict[input_string])
+                break
+            elif input_string == "--BACK":
+                return
+            else:
+                print("Does not exist. Try again, or enter --back to go back.")
                 continue
+
+        # while True:
+        #     try:
+        #         Parser.print_clean(question)
+        #         input_string = Parser.handle_input(input_question="")
+        #         result = input_string.split(" ")
+        #         i = 0
+        #         for words in result:
+        #             filename = "abbreviation.txt"
+        #             access_mode = "r"
+        #             with open(filename, access_mode) as csv_file:
+        #                 fetched_data = csv.reader(csv_file, delimiter="=")
+        #                 words = re.sub('[^a-zA-Z0-9-_.]', '', words)
+        #                 for row in fetched_data:
+        #                     if words.upper() == row[0]:
+        #                         result[i] = row[1]
+        #                 csv_file.close()
+        #             i = i + 1
+        #         print(' '.join(result))
+        #     except KeyboardInterrupt:
+        #         continue
 
 
 class Paging:
