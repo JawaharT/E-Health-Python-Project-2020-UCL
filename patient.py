@@ -461,7 +461,8 @@ class Patient(User):
 
             elif option_selection == "Y":
                 try:
-                    prescription = SQLQuery("SELECT BookingNo, Diagnosis, drugName, quantity, Instructions "
+                    prescription = SQLQuery("SELECT visit.BookingNo, visit.Diagnosis, prescription.drugName, "
+                                            "prescription.quantity, prescription.Instructions "
                                             "FROM visit JOIN prescription ON visit.BookingNo = prescription.BookingNo "
                                             "WHERE visit.BookingNo = ? "
                                             ).fetch_all(parameters=(selected_row[1]), decrypter=EncryptionHelper())
