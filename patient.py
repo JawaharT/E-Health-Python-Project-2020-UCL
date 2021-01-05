@@ -553,7 +553,7 @@ class Patient(User):
                 print(f"Your have rated already! you give {selected_row[2]} {selected_row[3]} a rate of {given_rate}")
                 input("Press Enter to continue...")
 
-    def review_prescriptions(self,selected_row):
+    def review_prescriptions(self, selected_bookingNo):
         """
         review selected prescriptions
         """
