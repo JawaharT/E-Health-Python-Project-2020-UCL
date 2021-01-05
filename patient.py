@@ -29,7 +29,7 @@ class Patient(User):
             option_selection = Parser.selection_parser(
                 options={"B": "book appointments", "I": "view upcoming appointments",
                          "C": "cancel an appointment", "R": "review/rate appointments",
-                         "V": "view your prescriptions", "--logout": "Logout"})
+                         "P": "view your prescriptions", "--logout": "Logout"})
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
                 logger.info("User Logged Out")
@@ -54,9 +54,18 @@ class Patient(User):
                 elif r_selection == "B":
                     logger.info("Patient rating his appointments")
                     self.rate_appointment()
-            elif option_selection == "V":
+            elif option_selection == "P":
                 logger.info("Patient reviewing his prescriptions")
-                self.review_prescriptions()
+                p_selection = Parser.selection_parser(
+                    options={"A": "review by input bookingNo", "B": "review by select an appointment",
+                             "--back": "back"})
+                if p_selection == "--back":
+                    continue
+                elif p_selection == "A":
+                    keyword = Parser.string_parser(f"Enter your bookingNo : ")
+                    self.review_prescriptions(keyword)
+                elif p_selection == "B":
+                    self.review_appointment()
 
     def book_appointment_start(self):
         """
@@ -549,23 +558,42 @@ class Patient(User):
         review selected prescriptions
         """
         while True:
+            query_string = "SELECT BookingNo, Diagnosis, Notes, PatientInfo " \
+                            "FROM visit " \
+                            " WHERE BookingNo = ? AND NHSNo = ?"
 
-            query_string = "SELECT prescription.BookingNo, visit.Diagnosis, visit.Notes,prescription.drugName, " \
-                       "prescription.quantity, prescription.Instructions " \
-                       "FROM visit JOIN prescription ON " \
-                       "visit.BookingNo = prescription.BookingNo WHERE visit.BookingNo = ? "
-
-            headers = ("BookingNo", "GP Name", "Last Name", "Patient Info", "Diagnosis",
-                       "Drug Name", "Quantity", "Instructions", "Notes")
+            headers_holder = ["BookingNo", "Diagnosis", "Notes", "PatientInfo"]
             query = SQLQuery(query_string)
-            all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
+            visit_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingNo,self.ID))
 
-            if len(list(all_data)) == 0:
-                Parser.print_clean("No Prescriptions Available.")
-                logger.info("No Prescriptions Available.")
+            query_string = "SELECT BookingNo, drugName, quantity, Instructions " \
+                           "FROM prescription " \
+                           "WHERE BookingNo = ? "
+            #headers_holder = ["BookingNo", "Diagnosis", "Notes", "Drug Name", "PatientInfo"]
+            query = SQLQuery(query_string)
+            prescription_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingNo,))
+
+            if len(list(visit_data)) == 0:
+                Parser.print_clean("No such bookingNo.")
+                Parser.handle_input("Press Enter to continue...")
+                Parser.print_clean()
+                return True
             else:
-                logger.info("View all your prescriptions")
-                print(tabulate(all_data, headers))
+                print(tabulate(visit_data, headers=headers_holder, tablefmt="fancy_grid", numalign="left"))
+
+                if len(list(prescription_data)) == 0:
+                    Parser.print_clean("No Prescriptions Available.")
+                    logger.info("No Prescriptions Available.")
+                else:
+                    print(tabulate([("BookingNo:", prescription_data[0][0]),
+                                    ("drugName: ", prescription_data[0][1]),
+                                    ("quantity: ", prescription_data[0][2]),
+                                    ("Instructions: ", prescription_data[0][3])
+                                    ]))
+
+                Parser.handle_input("Press Enter to continue...")
+                Parser.print_clean()
+                return True
 
     def first_login(self):
         Parser.print_clean("Welcome Patient {}. This is your first login. ".format(self.username))
