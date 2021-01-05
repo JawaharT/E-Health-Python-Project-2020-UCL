@@ -343,7 +343,7 @@ class Patient(User):
                                     ).fetch_all(parameters=(self.ID, dtime_now + delta(days=5)),
                                                 decrypter=EncryptionHelper())
             appointments_table = Paging.give_pointer(valid_cancel)
-            Parser.print_clean(f"You are viewing all the appointments can be cancelled.")
+            Parser.print_clean("You are viewing all the appointments can be cancelled.")
             
             if not appointments_table:
                 print("There are no Appointments can be cancelled.")
@@ -380,65 +380,97 @@ class Patient(User):
 
     def review_appointment(self):
         """
-        --view all past appointments
+        --view unattended appointments
+        --view attended appointments
+        --choose appointments to view prescription
+        --view prescriptions
         """
         stage = 0
         while stage == 0:
-            appointments = SQLQuery("SELECT bookingNo, NHSNo, firstName, lastName, Timeslot, Attended, StaffID FR"
-                                    "OM (visit JOIN Users ON visit.StaffID = Users.ID) WHERE NHSNo = ? AND Confirmed"
-                                    " = ? AND Timeslot <= ? "
-                                    ).fetch_all(parameters=(self.ID, "T", dtime_now),
-                                                decrypter=EncryptionHelper())
+            appointments = SQLQuery("SELECT bookingNo, Timeslot, firstName, PatientInfo, Confirmed, Attended, "
+                                    "NHSNo, StaffID "
+                                    "FROM (visit JOIN Users ON visit.StaffID = Users.ID) WHERE NHSNo = ?"
+                                    ).fetch_all(parameters=(self.ID,), decrypter=EncryptionHelper())
 
             attended_appointments = list(appt[0:5] for appt in appointments if appt[5] == "T")
             unattended_appointments = list(appt[0:5] for appt in appointments if appt[5] == "F")
-
-
             Parser.print_clean("You are viewing all your appointments: ")
 
             if not appointments:
-                print("You have no record")
-                logger.info("You have no record.")
+                print("You have no appointments")
+                logger.info("You have no appointments.")
                 Parser.handle_input()
                 return False
 
-            headers_holder = ["Pointer", "BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
-
-            if attended_appointments:
-                logger.info("Viewing your unattended appointments")
-                print("unattended appointments:")
-                Paging.better_form(Paging.give_pointer(attended_appointments), headers_holder)
+            headers_holder = ["Pointer", "BookingNo", "Timeslot", "GP FirstName", "PatientInfo", "Confirmed"]
 
             option_selection = Parser.selection_parser(
-                options={"P": "prescriptions", "U": "see unattended appointments", "--back": "back"})
+                options={"A": "View all attended appointments", "U": "view all unattended appointments",
+                         "--back": "back"})
             if option_selection == "--back":
                 return
-            elif option_selection == "P":
-                stage = 1
             elif option_selection == "U":
-                if unattended_appointments:
-                    logger.info("Viewing your attended appointments")
+                if len(unattended_appointments) == 0:
+                    print("You have no unattended bookings")
+                    logger.info("You have no unattended bookings.")
+                    Parser.handle_input()
+                    return False
+                else:
+                    logger.info("Viewing your unattended appointments")
                     print("Please do not miss your appointment")
-                    Paging.better_form(Paging.give_pointer(attended_appointments), headers_holder)
+                    Paging.better_form(Paging.give_pointer(unattended_appointments), headers_holder)
+
+            elif option_selection == "A":
+                if len(attended_appointments) == 0:
+                    print("You have no attended bookings")
+                    logger.info("You have no attended bookings.")
+                    Parser.handle_input()
+                    return False
+                else:
+                    stage = 1
 
         while stage == 1:
-            self.review_prescriptions()
+            logger.info("Viewing your attended appointments")
+            print("attended appointments:")
+            Paging.better_form(Paging.give_pointer(attended_appointments), headers_holder)
+            selected_appt = Parser.list_number_parser("Select an appointment to view your prescription.",
+                                                      (1, len(attended_appointments)), allow_multiple=False)
+            selected_row = attended_appointments[selected_appt - 1]
+            Parser.print_clean("Choose the appointments you want to see the prescription:")
+            Paging.better_form(Paging.give_pointer([selected_row]), headers_holder)
+            option_selection = Parser.selection_parser(options={"Y": "view the prescription",
+                                                                "N": "Go back and select attended appointments again",
+                                                                "--back": "Go back and view all appointments"})
+            if option_selection == "--back":
+                print("Return and select the type of your appointments again")
+                Parser.handle_input("Press Enter to continue...")
+                stage = 0
 
-        # while True:
-        #     query_string = "SELECT visit.BookingNo, visit.NHSNo, users.firstName, users.lastName, " \
-        #                     "visit.Timeslot, visit.PatientInfo, visit.Confirmed, visit.Attended, visit.Rating " \
-        #                     "FROM (visit INNER JOIN users ON visit.StaffID = users.ID) WHERE visit.NHSNo = ? "
-        #     headers = ("BookingNo", "NHSNo", "GP First Name", "Last", "Timeslot",
-        #                "Patient Info", "Confirmed", "Attended", "Rating")
-        #     query = SQLQuery(query_string)
-        #     all_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID,))
-        #
-        #     if len(list(all_data)) == 0:
-        #         Parser.print_clean("No Appointments Available.")
-        #         logger.info("No Appointments Available.")
-        #     else:
-        #         logger.info("View all your appointments")
-        #         print(tabulate(all_data, headers))
+            elif option_selection == "Y":
+                try:
+                    prescription = SQLQuery("SELECT BookingNo, Diagnosis, drugName, quantity, Instructions "
+                                            "FROM visit JOIN prescription ON visit.BookingNo = prescription.BookingNo "
+                                            "WHERE visit.BookingNo = ? "
+                                            ).fetch_all(parameters=(selected_row[1]), decrypter=EncryptionHelper())
+                    Parser.print_clean("You are viewing the prescription: ")
+
+                    if not prescription:
+                        print("This appointment do not have prescription")
+                        logger.info("No prescription shows.")
+                        Parser.handle_input()
+                        return False
+
+                    headers_holder = ["Pointer", "BookingNo", "Diagnosis", "drugName", "quantity", "Instructions"]
+                    print("This is your prescription.")
+                    Paging.better_form(Paging.give_pointer(prescription), headers_holder)
+
+                except Exception as e:
+                    print("Database Error...", e)
+                    logger.warning("Error in DB")
+            else:
+                print("Return and select your appointments again")
+                Parser.handle_input("Press Enter to continue...")
+                stage = 1
 
     def rate_appointment(self):
         """
