@@ -328,6 +328,49 @@ class User:
                         ]))
         return True
 
+    def edit_information(self) -> None:
+        while True:
+            main_logger.info("Edit " + self.username)
+            record_editor = Parser.selection_parser(options={"A": "Update Password", "B": "Update Birthday",
+                                                             "C": "Update First Name", "D": "Update Last Name",
+                                                             "E": "Update Phone Number", "F": "Update Home Address",
+                                                             "G": "Update Postcode", "--back": "back"})
+
+            menu = MenuHelper()
+            if record_editor == "--back":
+                Parser.print_clean()
+                return
+            elif record_editor == "A":
+                new_parameter_value = menu.register_new_password()
+                parameter = "passCode"
+            elif record_editor == "B":
+                new_parameter_value = menu.get_birthday()
+                parameter = "birthday"
+            elif record_editor == "C":
+                new_parameter_value = menu.get_name("first")
+                parameter = "firstName"
+            elif record_editor == "D":
+                new_parameter_value = menu.get_name("last")
+                parameter = "lastName"
+            elif record_editor == "E":
+                new_parameter_value = menu.valid_local_phone()
+                parameter = "phoneNo"
+            elif record_editor == "F":
+                new_parameter_value = menu.get_address()
+                parameter = "HomeAddress"
+            elif record_editor == "G":
+                new_parameter_value = menu.valid_postcode()
+                parameter = "postCode"
+            try:
+                from sqlite3 import DatabaseError
+                SQLQuery("UPDATE Users SET {0} = ? WHERE username = ?".format(parameter)).commit((new_parameter_value,
+                                                                                                  self.username))
+                print("Parameter updated successfully!")
+                main_logger.info("Updated record in database.")
+            except DatabaseError:
+                main_logger.warning("Database error!")
+                print("Error updating the database!")
+
 
 if __name__ == '__main__':
     """Main Program starts here."""

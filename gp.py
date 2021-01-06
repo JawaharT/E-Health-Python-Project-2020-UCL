@@ -29,7 +29,7 @@ class GP(User):
             self.print_information()
             option_selection = Parser.selection_parser(
                 options={"A": "View/Edit availability", "M": "Manage bookings", "V": "View/Start appointment",
-                         "--logout": "Logout"})
+                         "U": "update your profile", "--logout": "Logout"})
 
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
@@ -43,6 +43,8 @@ class GP(User):
                 self.manage_bookings()
             elif option_selection == "V":
                 self.view_appointment()
+            elif option_selection == "U":
+                self.edit_information()
 
     def edit_availability(self) -> None:
         """
