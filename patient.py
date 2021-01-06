@@ -457,6 +457,10 @@ class Patient(User):
 
             selected_appt = Parser.list_number_parser("Select an appointment to view your prescription.",
                                                       (1, len(show_attended_appointments)), allow_multiple=False)
+
+            if selected_appt == "--back":
+                Parser.print_clean()
+                return False
             selected_row = show_attended_appointments[int(selected_appt) - 1]
             Parser.print_clean("This is the appointment you have chosen:")
 
