@@ -475,8 +475,6 @@ class Patient(User):
 
             elif option_selection == "Y":
                 try:
-
-                    # print(selected_row[1])
                     selected_bookingno = selected_row[1]
                     self.review_prescriptions(selected_bookingno)
 
@@ -497,16 +495,12 @@ class Patient(User):
             patient_result = SQLQuery("SELECT bookingNo, firstName, lastName, Timeslot, Rating, StaffID FROM (Visit "
                                       "JOIN Users on Visit.StaffID = Users.ID) WHERE NHSNo = ? AND Attended = 'T' "
                                       ).fetch_all(parameters=(self.ID,), decrypter=EncryptionHelper())
-            # appointments_table = []
             if not patient_result:
                 print("You don't have any attended appointment")
                 logger.info("You don't have any attended appointment")
                 Parser.handle_input("Press Enter to continue...")
                 return False
 
-            # for count, appt in enumerate(patient_result, 1):
-            #     appointments_table.append([count, appt[0], appt[1], appt[2], appt[3], appt[4], appt[5]])
-            #
             appointments_table = Paging.give_pointer(patient_result)
 
             Parser.print_clean("These are appointments you have attended:")
@@ -538,8 +532,6 @@ class Patient(User):
                         else:
                             new_rate = selected_rate
 
-                        # print(selected_rate)
-                        # print(new_rate)
                         SQLQuery("UPDATE Visit SET Rating = ? WHERE BookingNo = ? ").commit(
                             (selected_rate, selected_row[1]))
                         SQLQuery("UPDATE GP SET Rating = ? WHERE ID = ? ").commit((new_rate, selected_row[6]))
@@ -575,7 +567,6 @@ class Patient(User):
             query_string = "SELECT BookingNo, drugName, quantity, Instructions " \
                            "FROM prescription " \
                            "WHERE BookingNo = ? "
-            # headers_holder = ["BookingNo", "Diagnosis", "Notes", "Drug Name", "PatientInfo"]
             query = SQLQuery(query_string)
             prescription_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingno,))
 
