@@ -29,7 +29,7 @@ class Patient(User):
             option_selection = Parser.selection_parser(
                 options={"B": "book appointments", "I": "view upcoming appointments",
                          "C": "cancel an appointment", "R": "review/rate appointments",
-                         "P": "view your prescriptions", "--logout": "Logout"})
+                         "P": "view your prescriptions", "U": "update your profile", "--logout": "Logout"})
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
                 logger.info("User Logged Out")
@@ -66,6 +66,8 @@ class Patient(User):
                     self.review_prescriptions(keyword)
                 elif p_selection == "B":
                     self.review_appointment()
+            elif option_selection == "U":
+                self.edit_information()
 
     def book_appointment_start(self):
         """
