@@ -8,7 +8,7 @@ from exceptions import DBRecordError
 import logging
 logger = logging.getLogger("main.Patient")
 
-print_clean = Parser.print_clean
+
 delta = datetime.timedelta
 date_now = datetime.datetime.now().date()
 dtime_now = datetime.datetime.now()
@@ -33,7 +33,7 @@ class Patient(User):
             if option_selection == "--logout":
                 # Quitting is required for logout to ensure all personal data is cleared from session
                 logger.info("User Logged Out")
-                print_clean("Logging you out...")
+                Parser.print_clean("Logging you out...")
                 Parser.user_quit()
             elif option_selection == "B":
                 logger.info("Patient booking appointments")
@@ -130,7 +130,7 @@ class Patient(User):
             selected_date = Parser.date_parser(question=f"Managing for Patient {self.username}.\n"
                                                         "Select a Date:\n")
             if selected_date == "--back":
-                print_clean()
+                Parser.print_clean()
                 return False
             result_table = self.fetch_format_appointments(selected_date)
             if not result_table:
@@ -359,7 +359,6 @@ class Patient(User):
                                "you can only cancel your appointments 5 days before them,if you really can not attend, "
                                "please contact your GP by (phone) to let him or her reject this appointment")
 
-
             if not appointments_table:
                 print("There are no Appointments can be cancelled.")
                 logger.info("There are no Appointments can be cancelled.")
@@ -381,7 +380,8 @@ class Patient(User):
             if confirmation == "Y":
                 try:
                     SQLQuery(f"BEGIN TRANSACTION; DELETE FROM visit WHERE BookingNo = {selected_row[1]}; "
-                             f"INSERT INTO available_time (StaffID,Timeslot) VALUES ({selected_row[6]},{selected_row[4]}; "
+                             f"INSERT INTO available_time (StaffID,Timeslot) "
+                             f"VALUES ({selected_row[6]},{selected_row[4]}; "
                              f"COMMIT "
                              ).commit(multiple_queries=True)
 
@@ -435,7 +435,8 @@ class Patient(User):
                 else:
                     logger.info("Viewing your unattended appointments")
                     print("Please do not miss your appointment")
-                    Paging.better_form(Paging.give_pointer([appt[0:4] for appt in unattended_appointments]), headers_holder)
+                    Paging.better_form(Paging.give_pointer([appt[0:4] for appt in unattended_appointments]),
+                                       headers_holder)
 
             elif option_selection == "A":
                 if len(attended_appointments) == 0:
@@ -469,9 +470,9 @@ class Patient(User):
             elif option_selection == "Y":
                 try:
 
-                    #print(selected_row[1])
-                    selected_bookingNo = selected_row[1]
-                    self.review_prescriptions(selected_bookingNo)
+                    # print(selected_row[1])
+                    selected_bookingno = selected_row[1]
+                    self.review_prescriptions(selected_bookingno)
 
                 except Exception as e:
                     print("Database Error...", e)
@@ -510,7 +511,7 @@ class Patient(User):
             selected_appt = Parser.list_number_parser("Select an appointment to rate by the Pointer.",
                                                       (1, len(appointments_table)), allow_multiple=False)
             if selected_appt == "--back":
-                print_clean()
+                Parser.print_clean()
                 return False
             selected_appt = int(selected_appt)
             selected_row = appointments_table[selected_appt - 1]
