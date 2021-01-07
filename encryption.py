@@ -49,21 +49,3 @@ class EncryptionHelper:
         message = decrypted_bits.decode()
         return message
 
-
-# if __name__ == "__main__": ##never uncomment this code unless you are very sure yu need to this will generate and
-    # overwrite the existing key might damage all data key = Fernet.generate_key() file = open('secure/GPDB.key',
-    # 'wb+')  # Open the file as wb to write bytes file.write(key)  # The key is type bytes still file.close()
-
-    # ## test fo encrypt and decrypt function
-    # EH = encryptionHelper()
-    # encrypted = EH.encryptToBits("testing testing 1234 ,.'!?$% &()^")
-    # print(type(encrypted))
-    # decrypted = EH.decryptMessage(encrypted)
-    # print(decrypted)
-
-    # ##test for hashing PW
-    # password = "1293495!!?$&"
-    # hash = passwordHelper.hashPW(password)
-    # print(type(hash))
-    # print(hash)
-    pass

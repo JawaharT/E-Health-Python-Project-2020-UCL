@@ -220,10 +220,8 @@ class Parser:
                             # map is a generator!!!
                             num_range = list(map(int, num_range))
                             list_num_range = list(range(min(num_range), max(num_range) + 1))
-                            # print(listNumRange)
                             result_final += list_num_range
                     result_final = list(set(result_final))
-                    # print(resultFinal)
                     for num in result_final:
                         if not min(full_num_range) <= num <= max(full_num_range):
                             raise ValueError
@@ -378,7 +376,3 @@ class Paging:
         """
         print(tabulate(data, headers=headers_holder, tablefmt="fancy_grid", numalign="left"))
         return
-
-
-test = [0, 0]
-print(Paging.give_pointer(test))

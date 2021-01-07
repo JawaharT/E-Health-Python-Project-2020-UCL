@@ -59,9 +59,10 @@ class GP(User):
                 Parser.print_clean()
                 return
             elif option_selection == "A":
-                today = datetime.datetime.combine(datetime.date.today(), datetime.time(0,0,0))
+                today = datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0, 0))
                 availability_result = Paging.give_pointer(SQLQuery("SELECT Timeslot FROM available_time WHERE StaffId "
-                                                                   "= ? AND Timeslot >= ?").fetch_all(parameters=(self.ID, today)))
+                                                                   "= ? AND Timeslot >= ?")
+                                                          .fetch_all(parameters=(self.ID, today)))
                 if len(availability_result) == 0:
                     print("You have no current availability recorded in the system.")
                 else:
@@ -357,16 +358,14 @@ class GP(User):
                 bookings_result = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                            "users.lastName, visit.Confirmed FROM visit INNER JOIN users ON "
                                            "visit.NHSNo = users.ID WHERE visit.StaffID = ? AND visit.Timeslot >= ? AND "
-                                           "visit.Timeslot <= ? AND visit.Confirmed = 'T' ORDER BY visit.Timeslot ASC").fetch_all(
-                    decrypter=EncryptionHelper(),
-                    parameters=(self.ID, selected_date, selected_date + datetime.timedelta(days=1)))
+                                           "visit.Timeslot <= ? AND visit.Confirmed = 'T' ORDER BY visit.Timeslot ASC")\
+                    .fetch_all(decrypter=EncryptionHelper(), parameters=(self.ID, selected_date,
+                                                                         selected_date + datetime.timedelta(days=1)))
                 message = f"for {selected_date.strftime('%Y-%m-%d')} (confirmed)."
-                # booking_no = GP.print_select_bookings(bookings_result, message)[1][1]
                 booking_no = GP.print_select_bookings(bookings_result, message)
                 if not booking_no:
                     stage = 0
                 else:
-                    # GP.start_appointment(booking_no)
                     GP.start_appointment(booking_no[1][1])
 
     @staticmethod
@@ -384,9 +383,10 @@ class GP(User):
         while True:
             booking_information = SQLQuery("SELECT visit.BookingNo, visit.Timeslot, visit.NHSNo, users.firstName, "
                                            "users.lastName, visit.Confirmed, users.birthday, users.phoneNo, "
-                                           "users.HomeAddress, users.postcode, visit.diagnosis, visit.notes, users.username FROM visit "
-                                           "INNER JOIN users ON visit.NHSNo = users.ID WHERE visit.BookingNo = ? "
-                                           ).fetch_all(decrypter=EncryptionHelper(), parameters=(booking_no,))
+                                           "users.HomeAddress, users.postcode, visit.diagnosis, visit.notes, "
+                                           "users.username FROM visit INNER JOIN users ON visit.NHSNo = users.ID "
+                                           " WHERE visit.BookingNo = ? ").fetch_all(decrypter=EncryptionHelper(),
+                                                                                    parameters=(booking_no,))
             print(tabulate([booking_information[0][:-3]],
                            headers=["BookingNo", "timeslot", "Patient NHSNo", "P. First Name", "P. Last Name",
                                     "Confirmed", "birthday", "phoneNo", "HomeAddress", "postcode"]))
@@ -489,7 +489,7 @@ class GP(User):
                 patient_object = Patient(patient_username)
                 logger.info(f"GP trying to book appiontment for patient :{patient_username}")
                 booking_result = patient_object.book_appointment_start()
-                if booking_result == True:
+                if booking_result:
                     print("booking successful")
                     logger.info(f"The booking is successful")
                 else:
