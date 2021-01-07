@@ -75,17 +75,17 @@ class Admin(User):
                 if record_viewer == "A":
                     user_type = "Patient"
                     query_string = "SELECT u.Username, u.birthday, u.firstName, u.lastName, " \
-                                   "u.phoneNo, u.HomeAddress, u.postCode, p.Gender, p.Introduction, p.Notice FROM " \
+                                   "u.phoneNo, u.HomeAddress, u.postCode, p.Gender, p.Notice FROM " \
                                    "USERS u, Patient p WHERE (p.NHSNo=u.ID) AND (u.UserType == ?) " \
                                    "AND (u.LoginCount >= 1)"
-                    headers += ("Gender", "Introduction", "Notice")
+                    headers += ("Gender", "Notice")
                 else:
                     user_type = "GP"
                     query_string = "SELECT u.Username, u.birthday, u.firstName, u.lastName, " \
                                    "u.phoneNo, u.HomeAddress, u.postCode, " \
-                                   "g.Speciality, g.Introduction FROM USERS u, GP g " \
+                                   "g.Speciality FROM USERS u, GP g " \
                                    "WHERE (g.ID=u.ID) AND (u.UserType == ?) AND (u.LoginCount >= 1)"
-                    headers += ("Speciality", "Introduction")
+                    headers += ("Speciality",)
                 parameters = (user_type,)
 
             logger.info("Selected table to view")
