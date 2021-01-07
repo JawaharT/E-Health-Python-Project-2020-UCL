@@ -59,8 +59,9 @@ class GP(User):
                 Parser.print_clean()
                 return
             elif option_selection == "A":
+                today = datetime.datetime.combine(datetime.date.today(), datetime.time(0,0,0))
                 availability_result = Paging.give_pointer(SQLQuery("SELECT Timeslot FROM available_time WHERE StaffId "
-                                                                   "= ? ").fetch_all(parameters=(self.ID,)))
+                                                                   "= ? AND Timeslot >= ?").fetch_all(parameters=(self.ID, today)))
                 if len(availability_result) == 0:
                     print("You have no current availability recorded in the system.")
                 else:

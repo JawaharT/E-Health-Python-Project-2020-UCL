@@ -1,7 +1,7 @@
 import time
 import datetime
 import sys
-from typing import Union
+from typing import Iterable, Union
 from exceptions import *
 from tabulate import tabulate
 import os
@@ -335,6 +335,7 @@ class Paging:
                 page += 1
                 if page > end:
                     print("already the last page")
+                    input("Press Enter to Continue...")
                     Paging.show_page(page - 1, all_data_table, step, index, headers_holder)
                 else:
                     Paging.show_page(page, all_data_table, step, index, headers_holder)
@@ -342,6 +343,7 @@ class Paging:
                 page -= 1
                 if page == 0:
                     print("already the first page")
+                    input("Press Enter to Continue...")
                     Paging.show_page(page + 1, all_data_table, step, index, headers_holder)
                 else:
                     Paging.show_page(page, all_data_table, step, index, headers_holder)
@@ -359,7 +361,10 @@ class Paging:
         result_table = []
         for count, item in enumerate(result):
             table_list = [count + 1]
-            table_list.extend(item)
+            if not isinstance(item, Iterable) or isinstance(item, str):
+                table_list.append(item)
+            else:
+                table_list.extend(item)
             result_table.append(table_list)
         return result_table
 
@@ -373,3 +378,7 @@ class Paging:
         """
         print(tabulate(data, headers=headers_holder, tablefmt="fancy_grid", numalign="left"))
         return
+
+
+test = [0, 0]
+print(Paging.give_pointer(test))
