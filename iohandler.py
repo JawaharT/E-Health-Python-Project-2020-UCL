@@ -119,29 +119,9 @@ class Parser:
                 Parser.print_clean("This is not a valid NHS Number!", e)
 
     @staticmethod
-    def admin_no_parser(question="Please input admin Staff Number") -> str:
-        """
-        Method to collect a valid admin Staff Number from user.
-
-        :param str question: Prompt for the user
-        """
-        while True:
-            try:
-                print(question)
-                result = Parser.handle_input(input_question="")
-                # testing if the rest of the string is integer
-                int(result[1:10])
-                if result[0] != 'A' or len(result) != 10:
-                    raise ValueError
-                return result
-            except (ValueError, TypeError) as e:
-                Parser.print_clean("Invalid Admin number, format required: A#########!", e)
-
-    @staticmethod
     def gp_no_parser(question="Please input GP Staff Number") -> str:
         """
         Method to collect a valid admin Staff Number from user.
-
         :param str question: Prompt for the user
         """
         while True:

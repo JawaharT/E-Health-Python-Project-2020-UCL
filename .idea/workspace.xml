@@ -28,8 +28,6 @@
   <component name="ChangeListManager">
     <list default="true" id="6a4cfd94-3cef-4724-ab47-65d697ca0487" name="Default Changelist" comment="Further changes to Patient">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GPDB.db" beforeDir="false" afterPath="$PROJECT_DIR$/GPDB.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/iohandler.py" beforeDir="false" afterPath="$PROJECT_DIR$/iohandler.py" afterDir="false" />
     </list>
     <list id="1d22392a-88a9-4a7b-a161-0f0aded2c85a" name="Fixing selection parser" comment="Fixing selection parser">
       <changelist_data name="patryk-wloch" email="p.wloch@ucl.ac.uk" date="1609678861000" />
@@ -74,7 +72,28 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.test">
+  <component name="RunManager" selected="Python.database">
+    <configuration name="database" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="E-Health-Python-Project-2020-UCL" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/database.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="E-Health-Python-Project-2020-UCL" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -119,6 +138,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.database" />
         <item itemvalue="Python.test" />
       </list>
     </recent_temporary>
