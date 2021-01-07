@@ -48,4 +48,3 @@ class EncryptionHelper:
         decrypted_bits = self.cipher.decrypt(ciphered_text)
         message = decrypted_bits.decode()
         return message
-
