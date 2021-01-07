@@ -47,7 +47,6 @@ class Parser:
                 Parser.print_clean(question + " Please input datetime in this format 'HH:MM'")
                 if allow_back:
                     print("Or enter '--back' to go back to previous page")
-                # user_input = input()
                 user_input = Parser.handle_input(input_question="")
                 if allow_back and user_input == '--back':
                     return user_input
@@ -64,12 +63,10 @@ class Parser:
             except ValueError:
                 print("This is not a valid time, or it is outside of the allowed working hours: 8:30 - "
                       "19:00!")
-                # input("Press Enter to continue...")
-                Parser.handle_input()
+                Parser.handle_input("Press Enter to continue...")
             except NotQuarterIntervalError:
                 print("Appointments are limited to 15 min sessions!")
-                # input("Press Enter to continue...")
-                Parser.handle_input()
+                Parser.handle_input("Press Enter to continue...")
 
     @staticmethod
     def date_parser(question, allow_back=True, allow_past=False) -> datetime:
@@ -85,7 +82,6 @@ class Parser:
                 Parser.print_clean(question + " Please input date in the following format 'YYYY-MM-DD'")
                 if allow_back:
                     print("Or enter '--back' to go back to previous page")
-                # user_input = input()
                 user_input = Parser.handle_input(input_question="")
                 if allow_back and user_input == '--back':
                     return user_input
@@ -102,8 +98,7 @@ class Parser:
             except ValueError:
                 print("This is not a valid date! Either the format is incorrect, it is earlier than "
                       "today, or it is more than 6 months ahead.")
-                # input("Press Enter to continue...")
-                Parser.handle_input()
+                Parser.handle_input("Press Enter to continue...")
 
     @staticmethod
     def nhs_no_parser(question="Please input your NHS Number") -> int:
@@ -115,7 +110,6 @@ class Parser:
         while True:
             try:
                 print(question)
-                # result = int(input())
                 result = int(Parser.handle_input(input_question=""))
                 if 1000000000 <= result <= 9999999999:
                     return result
@@ -134,15 +128,14 @@ class Parser:
         while True:
             try:
                 print(question)
-                # result = input()
                 result = Parser.handle_input(input_question="")
-                # testing if th rest o the string is integer
+                # testing if the rest of the string is integer
                 int(result[1:10])
                 if result[0] != 'A' or len(result) != 10:
                     raise ValueError
                 return result
             except (ValueError, TypeError) as e:
-                Parser.print_clean("Invalid Admin number, format required: A########!", e)
+                Parser.print_clean("Invalid Admin number, format required: A#########!", e)
 
     @staticmethod
     def gp_no_parser(question="Please input GP Staff Number") -> str:
@@ -154,15 +147,14 @@ class Parser:
         while True:
             try:
                 print(question)
-                # result = input()
                 result = Parser.handle_input(input_question="")
-                # testing if th rest o the string is integer
+                # testing if the rest of the string is integer
                 int(result[1:10])
                 if result[0] != 'G' or len(result) != 10:
                     raise ValueError
                 return result
             except (ValueError, TypeError) as e:
-                print("Invalid GP number, format required: G########!", e)
+                print("Invalid GP number, format required: G#########!", e)
 
     @staticmethod
     def selection_parser(options={"--back": "back"}) -> str:
@@ -216,7 +208,6 @@ class Parser:
                     if allow_back:
                         print("Or enter '--back' to go back to previous page")
                     result_final = []
-                    # result_raw = input()
                     result_raw = Parser.handle_input(input_question="")
                     if allow_back and result_raw == '--back':
                         return result_raw
@@ -241,7 +232,6 @@ class Parser:
                 else:
                     if allow_back:
                         print("Or enter '--back' to go back to previous page")
-                        # input_string = input()
                         input_string = Parser.handle_input(input_question="")
                     if allow_back and input_string == '--back':
                         return input_string
@@ -281,7 +271,6 @@ class Parser:
         while True:
             try:
                 Parser.print_clean(question)
-                # result = input()
                 result = Parser.handle_input(input_question="")
                 if result == "--quit":
                     Parser.user_quit()
@@ -332,7 +321,6 @@ class Paging:
             stop = start + step
             current = []
             for row in all_data_table[start: stop]:
-                # print(row)
                 current.append(row[0:index])
 
             print(tabulate(current, headers=headers_holder,
@@ -385,4 +373,3 @@ class Paging:
         """
         print(tabulate(data, headers=headers_holder, tablefmt="fancy_grid", numalign="left"))
         return
-
