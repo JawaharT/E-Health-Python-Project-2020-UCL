@@ -251,7 +251,7 @@ class MenuHelper:
         """
         while True:
             temp_postcode = Parser.string_parser("Please enter primary home postcode: ").strip().replace(" ", "")
-            if (len(temp_postcode) != 5) and (len(temp_postcode) != 7):
+            if not (5 <= len(temp_postcode) <= 8):
                 Parser.print_clean("Invalid Postcode. Please try again.\n")
             else:
                 Parser.print_clean("Valid Postcode.\n")

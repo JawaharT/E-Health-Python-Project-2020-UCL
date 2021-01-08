@@ -98,7 +98,7 @@ class Admin(User):
                 continue
 
             logger.info("Show existing records to admin through pages")
-            Paging.show_page(1, all_data, 2, len(headers), headers)
+            Paging.show_page(1, all_data, 8, len(headers), headers)
             print("Completed operation.\n")
 
             logger.info("Option to edit records")

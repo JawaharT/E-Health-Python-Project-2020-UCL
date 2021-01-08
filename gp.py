@@ -171,6 +171,9 @@ class GP(User):
                 end_time = Parser.time_parser(f"GP {self.username}: Each timeslot is  15 minutes long. You have "
                                               f"chosen to start from {str(selected_start)}. \nEnter the end"
                                               " of your last available appointment:")
+                if end_time <= start_time:
+                    print("The end time cannot be earlier than the start time!")
+                    continue
                 if end_time == "--back":
                     stage = 0
                 else:
@@ -366,7 +369,7 @@ class GP(User):
                 if not booking_no:
                     stage = 0
                 else:
-                    GP.start_appointment(booking_no[1][1])
+                    GP.start_appointment(booking_no[1])
 
     @staticmethod
     def start_appointment(booking_no):

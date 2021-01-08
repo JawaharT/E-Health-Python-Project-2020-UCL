@@ -6,8 +6,8 @@ from database import SQLQuery
 import datetime
 from exceptions import DBRecordError
 import logging
-logger = logging.getLogger("main.Patient")
 
+logger = logging.getLogger("main.Patient")
 
 delta = datetime.timedelta
 date_now = datetime.datetime.now().date()
@@ -19,6 +19,7 @@ class Patient(User):
     """
     patient Class with navigation options and various functionalities.
     """
+
     def main_menu(self) -> None:
         """
         Main Menu for Patient-type users.
@@ -76,8 +77,8 @@ class Patient(User):
         logger.info("Start booking an appointment")
         while True:
             print("You are viewing all available appointments for the next week. "
-                  "You can not book appointment for today and can only book appointment in 15 days. To view appointments up "
-                  "to 2 weeks ahead, use 'select by date' or 'select by GP' options below")
+                  "You can not book appointment for today and can only book appointment within the next 15 days. "
+                  "To view appointments up to 2 weeks ahead, use 'select by date' or 'select by GP' options below")
             result_table = self.fetch_format_appointments(date_now + delta(days=1), 8)
             if not result_table:
                 return False
@@ -88,8 +89,13 @@ class Patient(User):
 
             print("How would you like to choose? ")
             booking_selection = Parser.selection_parser(
-                options={"E": "select earliest available appointment",
+                options={"E": "select earliest available appointment", "S": "select from the above slots",
                          "G": "select by GP", "D": "select by date", "--back": "back"})
+            if booking_selection == "S":
+                appointment_to_book = Parser.list_number_parser("Enter a number from the Pointer column",
+                                                                (1, len(result_table)), allow_multiple=False)
+                if self.process_booking(result_table[appointment_to_book-1]):
+                    return True
             if booking_selection == "E":
                 if self.process_booking(result_table[0]):
                     return True
@@ -309,8 +315,8 @@ class Patient(User):
 
         while stage == 1:
             Parser.print_clean("You can only check in within an hour of a scheduled confirmed appointment.")
-            check_appt = list(enumerate([appt for appt in appointments if dtime_now - delta(hours=1) <=
-                                         strptime(appt[4], '%Y-%m-%d %H:%M:%S') <= dtime_now + delta(hours=1)], 1))
+            check_appt = [appt[0:5] for appt in appointments if dtime_now - delta(hours=1) <=
+                          strptime(appt[4], '%Y-%m-%d %H:%M:%S') <= dtime_now + delta(hours=1)]
             if not check_appt:
                 Parser.handle_input("Press Enter to continue...")
                 stage = 0
@@ -324,10 +330,10 @@ class Patient(User):
                 stage = 0
                 continue
             else:
-                appointment_check_in = check_appt[selected_appointment - 1][1]
+                appointment_check_in = check_appt[selected_appointment - 1]
                 print("This is the appointment you are checking in for: \n ")
                 headers_holder = ["BookingNo", "NHSNo", "GP Name", "Last Name", "Timeslot"]
-                Paging.better_form([appointment_check_in[0:5]], headers_holder)
+                Paging.better_form([appointment_check_in[0:6]], headers_holder)
 
                 confirm = Parser.selection_parser(options={"Y": "check-in", "N": "cancel check-in"})
                 if confirm == "Y":
@@ -560,8 +566,8 @@ class Patient(User):
         """
         while True:
             query_string = "SELECT BookingNo, Diagnosis, Notes, PatientInfo " \
-                            "FROM visit " \
-                            " WHERE BookingNo = ? AND NHSNo = ?"
+                           "FROM visit " \
+                           " WHERE BookingNo = ? AND NHSNo = ?"
 
             headers_holder = ["BookingNo", "Diagnosis", "Notes", "PatientInfo"]
             query = SQLQuery(query_string)
