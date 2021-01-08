@@ -1,4 +1,5 @@
 import sqlite3
+import sys
 from sqlite3 import Error
 
 from encryption import EncryptionHelper, PasswordHelper
@@ -161,3 +162,5 @@ if __name__ == '__main__':
             DB.recreate_database(database_path)
         except:
             print("Error recreating the database!")
+        else:
+            sys.quit()

@@ -7,6 +7,7 @@ from tabulate import tabulate
 import os
 
 
+
 class Parser:
     """
     Helper class for collecting and validating user inputs in a command-line interface.
@@ -150,7 +151,7 @@ class Parser:
                 if "--back" in options.keys():
                     del options["--back"]
                     options["--BACK"] = "back"
-                elif "--logout" in options.keys():
+                if "--logout" in options.keys():
                     del options["--logout"]
                     options["--LOGOUT"] = "logout"
 
@@ -158,12 +159,15 @@ class Parser:
                     print(f"Enter '{key}' to {options[key]}")
 
                 result = Parser.handle_input(input_question="").strip().upper()
-
-                if result == "--QUIT":
+                if result == "--HELP":
+                    from main import MenuHelper
+                    MenuHelper.help()
+                    continue
+                if result == "--QUIT" or result == "--LOGOUT":
                     Parser.user_quit()
                 if result not in options:
                     raise ValueError
-                if any(result == option for option in ["--BACK", "--LOGOUT"]):
+                if result == "--BACK":
                     result = result.lower()
                 return result
             except ValueError:

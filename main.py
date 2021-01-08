@@ -133,6 +133,22 @@ class MenuHelper:
         return True
 
     @staticmethod
+    def help():
+        Parser.print_clean("Welcome to Group 6 GP data management system.\n")
+        print("Before using the system, you need to register for a GP or Patient account, and before logging in, "
+              "it will need to be activated by one of the Administrator staff.\n")
+        print("This application is a command line-based interface, and as such, you will need to navigate it with "
+              "commands entered from the keyboard.\n")
+        print("Wherever you are prompted to select an option from a list, simply type in the relevant letter and press "
+              "Enter. These are not case-sensitive.\n")
+        print("Where sizeable datasets are displayed for you, sometimes, a paging functionality will be used. To "
+              "navigate the pages, enter A to go to the previous page, D to go to the next page, and C to exit the "
+              "browse and proceed to further options.\n")
+        print("You can logout at anytime by typing in --LOGOUT, or bring up this help function by typing in --HELP.\n")
+        Parser.handle_input("Press Enter to return...")
+        return
+
+    @staticmethod
     def get_check_username(user_group) -> str:
         """
         :param str user_group: Patient or GP
@@ -389,14 +405,17 @@ if __name__ == '__main__':
         Parser.user_quit()
 
     while True:
-        print("Welcome to Group 6 GP System")
-        option_selection = Parser.selection_parser(options={"R": "register", "L": "login", "--quit": "quit"})
+        Parser.print_clean("Welcome to Group 6 GP System")
+        option_selection = Parser.selection_parser(options={"R": "register", "L": "login", "H": "help",
+                                                            "--quit": "quit"})
 
         if option_selection == 'L':
             main_logger.debug("Selected Login")
             current_user = MenuHelper.login()
             MenuHelper.dispatcher(current_user["username"], current_user["user_type"])
-        else:
+        elif option_selection == 'R':
             main_logger.debug("New user registration started")
             result = MenuHelper.register()
             Parser.user_quit()
+        elif option_selection == "H":
+            MenuHelper.help()
