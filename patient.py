@@ -62,8 +62,8 @@ class Patient(User):
                 if p_selection == "--back":
                     continue
                 elif p_selection == "A":
-                    keyword = Parser.string_parser(f"Enter your bookingNo : ")
-                    self.review_prescriptions(keyword)
+                    selected_booking_no = Parser.string_parser(f"Enter your bookingNo : ")
+                    self.review_prescriptions(selected_booking_no)
                 elif p_selection == "B":
                     self.review_appointment()
             elif option_selection == "U":
@@ -71,17 +71,14 @@ class Patient(User):
 
     def book_appointment_start(self):
         """
-        choose a date -- choose a GP
-        --choose time
-        --give random number as bookingNo
-        --move from available_time
-        --insert in visit
+        Method to view appointments in next week and choose how they book for patients.
         """
         logger.info("Start booking an appointment")
         while True:
-            result_table = self.fetch_format_appointments(date_now + delta(days=1), 8)
-            print("You are viewing all available appointments for the next week. To view appointments up "
+            print("You are viewing all available appointments for the next week. "
+                  "You can not book appointment for today and can only book appointment in 15 days. To view appointments up "
                   "to 2 weeks ahead, use 'select by date' or 'select by GP' options below")
+            result_table = self.fetch_format_appointments(date_now + delta(days=1), 8)
             if not result_table:
                 return False
 
@@ -109,7 +106,12 @@ class Patient(User):
     @staticmethod
     def fetch_format_appointments(selected_date, selected_delta=1, gp_id='%'):
         """
-        view the GP's slots that can be booked by patient during selected time scope
+        Method to give a list of the GP's slots that can be booked by patient during selected time scope
+
+        :param timedelta selected_date: give the start of selected time scope
+        :param selected_delta: give the range of time scope, select one specific day with default of 1
+        :param str gp_id:  give the id of GP, select all GP with default
+        :return: list of available slots, or False if no available slots are present in search criteria
         """
         result = SQLQuery("SELECT firstName, lastName, Timeslot, available_time.StaffID FROM "
                           "(available_time JOIN Users ON available_time.StaffID = Users.ID) WHERE "
@@ -126,7 +128,8 @@ class Patient(User):
 
     def book_appointment_date(self):
         """
-        select a timeslot to book appointments
+        Method to select a timeslot to book appointments
+        !IMPORTANT Should only be called from within Patient.book_appointment_start
         """
         while True:
             selected_date = Parser.date_parser(question=f"Managing for Patient {self.username}.\n"
@@ -152,8 +155,8 @@ class Patient(User):
 
     def book_appointment_gp(self):
         """
-        ---select gp(distinct)
-        ---select timeslots for selected gp
+        Method to select a GP to book appointments
+        !IMPORTANT Should only be called from within Patient.book_appointment_start
         """
         while True:
             gp_result = SQLQuery("SELECT users.firstName, users.lastName, GP.Introduction, GP.ClinicAddress, "
@@ -205,9 +208,9 @@ class Patient(User):
 
     def process_booking(self, selected_row):
         """
-        ---booking appointments
-        ---view bookings
-        ---edit records(patient info)
+        Method to add the selected appointment to visit table in database and delete from available table
+
+        :param list selected_row: a list of details of selected time slot
         """
         encrypt = EncryptionHelper().encrypt_to_bits
         while True:
@@ -255,10 +258,10 @@ class Patient(User):
 
     def check_in_appointment(self):
         """
-            show all booking
-            if time later, allow to check in
-            change attend to T
-            """
+        Method to show all upcoming appointments and check in before the appointment
+        upcoming appointments include confirmed, pending, and rejected ones
+        patients can only check in within 1 hour before the appointment
+        """
         stage = 0
         while stage == 0:
             appointments = SQLQuery("SELECT bookingNo, NHSNo, firstName, lastName, Timeslot, Confirmed, StaffID FR"
@@ -346,10 +349,10 @@ class Patient(User):
 
     def cancel_appointment(self):
         """
-            bookings can be cancelled five days in advance
-            move from visit
-            insert in available time
-            """
+        Method to cancel the selected appointment
+        delete from visit table in database and add to available table
+        patients can only cancel appointments 5 days before them
+        """
         stage = 0
         while stage == 0:
             valid_cancel = SQLQuery("SELECT BookingNo, NHSNo, lastName, Timeslot, PatientInfo, StaffID FROM (visit "
@@ -399,10 +402,7 @@ class Patient(User):
 
     def review_appointment(self):
         """
-        --view unattended appointments
-        --view attended appointments
-        --choose appointments to view prescription
-        --view prescriptions
+        Method to review all passed appointments and can choose one for its prescription
         """
         stage = 0
         while stage == 0:
@@ -475,8 +475,8 @@ class Patient(User):
 
             elif option_selection == "Y":
                 try:
-                    selected_bookingno = selected_row[1]
-                    self.review_prescriptions(selected_bookingno)
+                    selected_booking_no = selected_row[1]
+                    self.review_prescriptions(selected_booking_no)
 
                 except Exception as e:
                     print("Database Error...", e)
@@ -488,7 +488,8 @@ class Patient(User):
 
     def rate_appointment(self):
         """
-        rate for the attended appointments that has not been attended yet
+        Method to rate appointments
+        each rate will change the average score for a GP
         """
         stage = 0
         while stage == 0:
@@ -551,9 +552,11 @@ class Patient(User):
                 print(f"Your have rated already! you give {selected_row[2]} {selected_row[3]} a rate of {given_rate}")
                 Parser.handle_input("Press Enter to continue...")
 
-    def review_prescriptions(self, selected_bookingno):
+    def review_prescriptions(self, selected_booking_no):
         """
-        review selected prescriptions
+         Method to review selected prescriptions
+
+        :param str selected_booking_no: the selected booking number to show the prescriptions of this appointment
         """
         while True:
             query_string = "SELECT BookingNo, Diagnosis, Notes, PatientInfo " \
@@ -562,13 +565,13 @@ class Patient(User):
 
             headers_holder = ["BookingNo", "Diagnosis", "Notes", "PatientInfo"]
             query = SQLQuery(query_string)
-            visit_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingno, self.ID))
+            visit_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_booking_no, self.ID))
 
             query_string = "SELECT BookingNo, drugName, quantity, Instructions " \
                            "FROM prescription " \
                            "WHERE BookingNo = ? "
             query = SQLQuery(query_string)
-            prescription_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_bookingno,))
+            prescription_data = query.fetch_all(decrypter=EncryptionHelper(), parameters=(selected_booking_no,))
 
             if len(list(visit_data)) == 0:
                 Parser.print_clean("No such bookingNo.")
