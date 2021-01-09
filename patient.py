@@ -249,7 +249,7 @@ class Patient(User):
                     logger.warning("Error in DB")
                     Parser.handle_input("Press Enter to continue...")
                     return False
-                info_input = encrypt(Parser.string_parser("Please enter your notes for GP before the visit: "))
+                info_input = encrypt(Parser.string_parser("Please state your illness to GP before the visit: "))
                 SQLQuery("UPDATE Visit SET PatientInfo = ? WHERE BookingNo = ? "
                          ).commit((info_input, booking_no))
                 print("Your information have been recorded successfully!")
