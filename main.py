@@ -250,7 +250,7 @@ class MenuHelper:
         :return: return a valid UK postcode
         """
         while True:
-            temp_postcode = Parser.string_parser("Please enter primary home postcode: ").strip().replace(" ", "")
+            temp_postcode = Parser.string_parser("Please enter your postcode: ").strip().replace(" ", "")
             if not (5 <= len(temp_postcode) <= 8):
                 Parser.print_clean("Invalid Postcode. Please try again.\n")
             else:
