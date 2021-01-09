@@ -530,8 +530,6 @@ class Patient(User):
                         SQLQuery("SELECT Rating FROM GP WHERE ID = ?").fetch_all(parameters=(selected_row[6],))[0][0])
                     rate_count = int(SQLQuery("SELECT COUNT(Rating) FROM Visit WHERE StaffID = ? AND Attended = 'T' "
                                               ).fetch_all(parameters=(selected_row[6],))[0][0])
-                    print(current_rate)
-                    print(rate_count)
                     if not selected_row[5]:
 
                         if current_rate != 0:
