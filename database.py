@@ -1,5 +1,4 @@
 import sqlite3
-import sys
 from sqlite3 import Error
 
 from encryption import EncryptionHelper, PasswordHelper
@@ -160,7 +159,7 @@ if __name__ == '__main__':
             DB = Database("GPDB.db")
             database_path = input("Enter the name of the SQL script to execute: ")
             DB.recreate_database(database_path)
-        except:
-            print("Error recreating the database!")
+        except Exception as e:
+            print("Error recreating the database!", e)
         else:
-            sys.quit()
+            quit()
