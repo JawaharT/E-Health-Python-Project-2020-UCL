@@ -1,0 +1,25 @@
+2021-01-11 11:36:07,546 - main - main - DEBUG - Connecting to database...
+2021-01-11 11:36:07,722 - main - main - DEBUG - Connected to database
+2021-01-11 11:36:13,241 - main - main - DEBUG - Selected Login
+2021-01-11 11:36:13,241 - main - main - DEBUG - Entered Login Sequence
+2021-01-11 11:36:13,242 - main - main - DEBUG - Username attempt 1
+2021-01-11 11:36:15,886 - main - main - DEBUG - UserName Entered: testAdmin124
+2021-01-11 11:36:15,898 - main - main - WARNING - User doesn't exist or invalid
+2021-01-11 11:36:15,911 - main - main - DEBUG - Username attempt 2
+2021-01-11 11:36:18,254 - main - main - DEBUG - UserName Entered: testAdmin
+2021-01-11 11:36:18,270 - main - main - INFO - testAdmin, user valid
+2021-01-11 11:36:20,356 - main - main - DEBUG - Entered user session creation sequence with user: testAdmin; type Admin
+2021-01-11 11:36:20,692 - main - main - DEBUG - <class '__main__.User'> created using Admin method
+2021-01-11 11:36:20,692 - main - main - DEBUG - <class '__main__.User'> created using Admin method
+2021-01-11 11:36:20,693 - main - main - INFO - user: testAdmin; type Admin: logged in
+2021-01-11 11:36:20,693 - main - main - INFO - user: testAdmin; type Admin: logged in
+2021-01-11 11:36:20,711 - main.Admin - admin - INFO - logged in as Admin
+2021-01-11 11:36:20,711 - main.Admin - admin - INFO - logged in as Admin
+2021-01-11 11:36:24,247 - main.Admin - admin - INFO - Admin viewing records
+2021-01-11 11:36:24,247 - main.Admin - admin - INFO - Admin viewing records
+2021-01-11 11:36:24,887 - main.Admin - admin - INFO - Selected table to view
+2021-01-11 11:36:24,887 - main.Admin - admin - INFO - Selected table to view
+2021-01-11 11:36:24,892 - main.Admin - admin - INFO - Show existing records to admin through pages
+2021-01-11 11:36:24,892 - main.Admin - admin - INFO - Show existing records to admin through pages
+2021-01-11 11:36:31,950 - main.Admin - admin - INFO - Option to edit records
+2021-01-11 11:36:31,950 - main.Admin - admin - INFO - Option to edit records

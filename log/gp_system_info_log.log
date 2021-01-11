@@ -1,0 +1,14 @@
+2021-01-11 11:36:15,898 - main - main - WARNING - User doesn't exist or invalid
+2021-01-11 11:36:18,270 - main - main - INFO - testAdmin, user valid
+2021-01-11 11:36:20,693 - main - main - INFO - user: testAdmin; type Admin: logged in
+2021-01-11 11:36:20,693 - main - main - INFO - user: testAdmin; type Admin: logged in
+2021-01-11 11:36:20,711 - main.Admin - admin - INFO - logged in as Admin
+2021-01-11 11:36:20,711 - main.Admin - admin - INFO - logged in as Admin
+2021-01-11 11:36:24,247 - main.Admin - admin - INFO - Admin viewing records
+2021-01-11 11:36:24,247 - main.Admin - admin - INFO - Admin viewing records
+2021-01-11 11:36:24,887 - main.Admin - admin - INFO - Selected table to view
+2021-01-11 11:36:24,887 - main.Admin - admin - INFO - Selected table to view
+2021-01-11 11:36:24,892 - main.Admin - admin - INFO - Show existing records to admin through pages
+2021-01-11 11:36:24,892 - main.Admin - admin - INFO - Show existing records to admin through pages
+2021-01-11 11:36:31,950 - main.Admin - admin - INFO - Option to edit records
+2021-01-11 11:36:31,950 - main.Admin - admin - INFO - Option to edit records
